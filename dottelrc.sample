@@ -1,0 +1,32 @@
+$telrc = {
+          'profile' => {
+                       'default' => { 'password' => 'DINGLEHOPPER!', 'user' => $ENV{USER}, 
+                                      'sshoptions' => [ 'UserKnownHostsFile=/dev/null', 'StrictHostKeyChecking=no' ] },
+                       'casa' => { 'logoutcmd' => 'logout', 'handlers' =>  { '\cZ' => \&handle_ctrl_z } },
+                       'zhone' => { 'user' => 'admin', 'method' => 'telnet', 'prompt' => '>', 'enablecmd' => 'priv' },
+                       'dlink' => { 'logoutcmd' => 'logout', 'method' => 'telnet', 'handlers' => { '\177' => \&handle_backspace } },
+                       'mikrotik' => { 'logoutcmd' => '/quit' },
+                       'at' => { 'logoutcmd' => 'logout', 'ciphertype' => 'des', 'user' => 'engr' },
+                       'hatteras' => { 'ciphertype' => 'des' }
+                     },
+          'rtr' => [   # this is an array so order matters
+                   { 'regex' => '^cerf$', 'method' => 'telnet', 'hostname' => 'route-server.cerf.net', 'prompt' => 'route-server>' },
+                   { 'regex' => '^att$', 'user' => 'rviews', 'method' => 'telnet', 'hostname' => 'route-server.ip.att.net', 'prompt' => 'route-server>' },
+                   { 'regex' => '^ix$', 'user' => 'rviews', 'method' => 'telnet', 
+                                  'hostname' => 'route-views.oregon-ix.net', 'prompt' => 'route-views>', 'noenable' => 1 },
+                   { 'regex' => '^quagga$', 'method' => 'telnet', 'hostname' => '127.0.0.1', port => 2605 },
+                   { 'regex' => '^monitor', 'user' => 'ubnt', 'method' => 'ssh' }, 
+                   { 'profile' => 'default+casa', 'regex' => '^casa1-' },
+                   { 'profile' => 'zhone', 'regex' => '^dsl' },
+                   { 'profile' => 'default+hatteras', 'regex' => '^hat1' },
+                   { 'profile' => 'mikrotik', 'regex' => '^gw1-mkt-site' },
+                   { 'profile' => 'at', 'regex' => '^(ds|sw|mfh3).*(site-name).*' },
+                   { 'profile' => 'default', 'regex' => '.*' }
+                 ],
+        'banners' => {
+                'Bay Networks BayStack' => 'baystack',
+                'DES-3(5|3)(50|26) (Ethernet|Fast Ethernet)' => 'dlink',
+                'Casa Systems' => 'casa',
+        },
+};
+

@@ -1,0 +1,250 @@
+#!/usr/bin/perl 
+
+use strict;
+use Expect;
+use Getopt::Std;
+use Hash::Merge::Simple qw (merge);
+
+use v5.14;  # for given and say
+
+
+# TODO: impossibly hard things I'd like to have
+# Colorizied router text? -- interact removes expect.pm from most logic.  It
+# still reads handles for interrupt lines but doesn't write them (letting the program pass it's
+# output to the handles raw)
+# Scrollback buffer across sessions -- interact again fucks with this, but you
+# also get the interesting questions about what device you're logged into, and
+# how to handle readline type scrollback through the text (can't be handled by
+# the remote system because then you can't make the up arrow remove your
+# current text and place new stuff.. without resorting to something like
+# sending a clear line and then $exp->send("more text"); which might be
+# doable, but not something I'd want to have turned on all the time.
+
+my $session = new Expect;
+$Expect::Log_Stdout=1;
+my $stdin = Expect->exp_init(\*STDIN);
+
+my %opts;
+getopts('lrc:t:', \%opts);
+my $timeout = $opts{t} ? $opts{t} : 90;
+my $logoutcmd;
+
+my @configs = ( "/etc/telrc", "/usr/local/etc/telrc", "$ENV{HOME}/.telrc2", "$ENV{TELRC}" );
+our $telrc;
+my $config;
+
+foreach my $conf (@configs) {
+    if (-r $conf) {
+        require $conf;
+        push(@{$config->{'telrc_file'}}, $conf);
+        $config = merge($config, $telrc);
+    }
+}
+
+# install sig handler for window size change
+$SIG{WINCH} = \&winch;
+
+sub winch {
+    eval { $session->slave->clone_winsize_from(\*STDIN); };
+    kill WINCH => $session->pid if $session->pid;
+    $SIG{WINCH} = \&winch;
+}
+
+while(@ARGV) {
+    my $router = shift;
+    $router =~ s#/tftpboot/##;
+    $router =~ s/-confg//;
+    main($router);
+}
+
+sub rtr_find {
+    my $host = shift;
+    my $result;
+
+    foreach my $h (@{$config->{rtr}}) {
+        my $h2 = $h->{regex};
+        if ($host =~ /$h2/i) {
+            $result=$h;     
+            last;
+        }
+    }
+    return $result;
+}
+
+sub load_profile {
+    my $rtr = shift;
+    my $profile = shift;
+    if (!defined($profile)) {
+        $profile = $rtr->{profile};
+    }
+    my @profiles = split(/\+/, $profile);
+    foreach(@profiles) {
+        $rtr = merge($rtr, $config->{profile}{$_});
+        if ($rtr->{handlers}) {
+            foreach my $v (keys %{$rtr->{handlers}}) {
+                $stdin->set_seq($v, $rtr->{handlers}{$v}, [ \$session ]);
+            }
+        }
+    }
+    return $rtr;
+}
+
+sub main {
+    my $router = shift;
+    my @methods = ( "ssh", "telnet" );
+    my $port;  # undefined unless set on the CLI.  It will be overriden by load_profile or method defaults
+
+    # TODO: support for URI methods, like ssh:// telnet://
+    # if specified, the CLI method should override whatever is in the router
+    # profile (preferably)
+
+    if ($router =~ /(\S+):(\d+)/) {
+        # check for name:port, assume telnet if a port is specified and protocol is not
+        $router = $1;
+        $port = $2;
+        @methods = ( "telnet" );
+    } 
+     
+    my $rtr = rtr_find($router);
+    if (!defined($rtr)) {
+        warn "Nothing found in configuration for $rtr\n";
+        next;
+    }
+    
+    $rtr = load_profile($rtr) if (defined($rtr->{profile}));
+
+    # if hostname is defined as a method then call it to determine the real hostname
+    # if it's not then treat it as an alias.
+    if (defined($rtr->{hostname})) {
+        if (ref($rtr->{hostname}) eq 'CODE') {
+            $router = &{$rtr->{hostname}}($router);
+        } else {
+            $router = $rtr->{hostname};
+        }
+    }
+
+    $rtr->{ciphertype} ||= "3des";
+    @methods = split(/,/, $rtr->{method}) if (defined($rtr->{method}));
+    
+    my $ssho = '-o StrictHostKeyChecking=no';
+    if ($rtr->{sshoptions} > -1) {
+        my @sshoptions = @{$rtr->{sshoptions}} if (defined($rtr->{sshoptions}));
+        $ssho = '-o '. join(' -o ', @sshoptions);
+    }
+    my $prompt = $rtr->{prompt};
+    $prompt ||= 'puppies'; # Basically just needs to be a value that will never show up, and if it does we ignore it.
+   
+    my $allied_shit=0;
+    # handle MOTD profile loading
+    my @banners;
+    foreach my $banner (keys %{$config->{banners}}) {
+        push @banners, [ $banner, sub { $rtr = load_profile($rtr, $config->{banners}{$banner}); exp_continue; } ];
+    }
+
+    METHOD: for (@methods) { 
+        $session->soft_close() if ($session->pid());
+        $port ||= $rtr->{port};
+
+        given ($_) {
+            when ('ssh') { my $p=$port; $p ||= 22; $session = Expect->spawn("ssh -p $p -l $rtr->{user} $ssho -c $rtr->{ciphertype} $router"); }
+            when ('telnet') { my $p=$port; $p ||= 23; $session = Expect->spawn("telnet $router $p"); }
+            default { die "No program defined for method $_\n"; }
+        } 
+
+        $session->expect($timeout,
+                @banners,
+                # fucking shitty allied telesyn
+                [ qr/User Access Verification - RADIUS/ => sub { $allied_shit=1;
+                    $session->send("$rtr->{user}\r$rtr->{password}\r"); exp_continue } ],
+                [ qr/User Access Verification - Local/ => sub { 
+                    $session->send("$rtr->{user}\r$rtr->{password}\r"); last METHOD; } ],
+                [ qr/[Uu]ser[Nn]ame:|Login:/ => sub {
+                    $session->send("$rtr->{user}\r") unless($allied_shit); exp_continue; } ],
+                # we need to handle enable in a better way than this
+                [ qr/[Pp]ass[Ww]ord/ => sub { 
+                    if ($allied_shit) { 
+                        exp_continue; 
+                    } else {
+                        $session->send("$rtr->{password}\r");
+                        if ($rtr->{enablecmd}) {
+                            $session->send($rtr->{enablecmd} .  "\r$rtr->{password}\r");
+                        }
+                        last METHOD;
+                    }
+                } ],
+                # try adding c- to the front of the name in DNS fail.. if fail again then exit
+                # we need to make this a callback in telrc, like we need to do
+                # for handle_f5 and stuff.
+                [ qr/Name or service not known|hostname nor servname provided, or not known|could not resolve / => sub
+                    { 
+                       if ($router !~ /^c-/) {
+                           $router = "c-$router"; redo METHOD;
+                       } else {
+                           warn "unknown host: $router\n";
+                           # skip to next host if this one doesn't exist
+                           return;
+                       }
+                    }
+                ],
+                [ qr/$prompt/ => sub { last METHOD unless($prompt eq 'puppies'); exp_continue; } ],
+                [ qr/Corrupted/ => sub { next METHOD; } ],
+                [ qr/cipher type 3des/ => sub { $rtr->{ciphertype}="des"; redo METHOD; } ],
+                [ qr/ssh_exchange_identification/ => sub { next METHOD; } ],
+                [ qr/[Cc]onnection (refused|closed)/ => sub { next METHOD; } ],
+                [ qr/key_verify failed/ => sub { next METHOD; } ],
+                [ 'eof' => sub { next METHOD; } ],
+                [ 'timeout' => sub { next METHOD; } ],
+        );
+    }
+
+
+    $rtr->{logoutcmd} ||= "exit";
+    logging($router) if ($opts{l});
+    conn($rtr);
+}
+
+sub logging {
+    my $router = shift;
+    unlink ("/tmp/$router.log") if (-f "/tmp/$router.log");
+    $session->log_file("/tmp/$router.log");
+}
+
+
+# handlers currently have to be part of the tel file because .telrc doesn't
+# know about the $session variable so it can't use it
+sub handle_backspace {
+    $session->send("\b");
+    return 1;
+}
+
+sub handle_ctrl_z {
+    $session->send("exit\r");
+    return 1;
+}
+
+sub conn {
+    my $rtr = shift;
+    winch();
+    $session->send("term len 0\r") if ($opts{l});
+
+    if ($opts{c})
+    {
+        $session->expect(10,'-re','#');
+        $session->send("term len 0\r");
+        $session->expect(10,'-re','#');
+        my @args = split(/;/, $opts{c});
+        foreach my $arg (@args) {
+            $session->send("$arg\r");
+            $session->expect(10,'-re','#');
+        }
+        $session->send($rtr->{logoutcmd} ."\r");
+    } else
+    {
+        $session->interact($stdin, '\cD');
+        # q\b is to end anything that's at a More prompt or other dialog and
+        # get you back to the command prompt
+        $session->send("q\b" . $rtr->{logoutcmd}. "\r");
+    }
+    $session->soft_close();
+}
+

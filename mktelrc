@@ -1,0 +1,24 @@
+#!/bin/bash
+
+read -p "Enter username (default = $USER): " user
+read -s -p "Password: " pass
+echo 
+if [ "x$user" = "x" ]; then
+   user=$USER
+fi
+   
+TMPFILE=`mktemp mktelrc.XXXXXX`
+
+cat <<EOF>$TMPFILE
+\$telrc = {
+          'profile' => { 
+                'default' => { 
+                        'user' => '$user',
+                        'password' => '$pass' 
+                } 
+          }
+};
+EOF
+
+mv -i $TMPFILE $HOME/.telrc2
+chmod 400 $HOME/.telrc2
