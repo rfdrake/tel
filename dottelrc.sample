@@ -2,11 +2,11 @@ $telrc = {
           'profile' => {
                        'default' => { 'password' => 'DINGLEHOPPER!', 'user' => $ENV{USER}, 
                                       'sshoptions' => [ 'UserKnownHostsFile=/dev/null', 'StrictHostKeyChecking=no' ] },
-                       'casa' => { 'logoutcmd' => 'logout', 'handlers' =>  { '\cZ' => \&handle_ctrl_z } },
+                       'casa' => { 'handlers' =>  { '\cZ' => \&handle_ctrl_z } },
                        'zhone' => { 'user' => 'admin', 'method' => 'telnet', 'prompt' => '>', 'enablecmd' => 'priv' },
-                       'dlink' => { 'logoutcmd' => 'logout', 'method' => 'telnet', 'handlers' => { '\177' => \&handle_backspace } },
+                       'dlink' => { 'method' => 'telnet', 'handlers' => { '\177' => \&handle_backspace } },
                        'mikrotik' => { 'logoutcmd' => '/quit' },
-                       'at' => { 'logoutcmd' => 'logout', 'ciphertype' => 'des', 'user' => 'engr' },
+                       'at' => { 'ciphertype' => 'des', 'user' => 'engr' },
                        'hatteras' => { 'ciphertype' => 'des' }
                      },
           'rtr' => [   # this is an array so order matters
@@ -21,7 +21,6 @@ $telrc = {
                    { 'profile' => 'default+hatteras', 'regex' => '^hat1' },
                    { 'profile' => 'mikrotik', 'regex' => '^gw1-mkt-site' },
                    { 'profile' => 'at', 'regex' => '^(ds|sw|mfh3).*(site-name).*' },
-                   { 'profile' => 'default', 'regex' => '.*' }
                  ],
         'banners' => {
                 'Bay Networks BayStack' => 'baystack',

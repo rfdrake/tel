@@ -29,6 +29,7 @@ getopts('lrc:t:', \%opts);
 my $timeout = $opts{t} ? $opts{t} : 90;
 my $logoutcmd;
 
+
 my @configs = ( "/etc/telrc", "/usr/local/etc/telrc", "$ENV{HOME}/.telrc2", "$ENV{TELRC}" );
 our $telrc;
 my $config;
@@ -41,6 +42,7 @@ foreach my $conf (@configs) {
     }
 }
 
+
 # install sig handler for window size change
 $SIG{WINCH} = \&winch;
 
@@ -50,11 +52,12 @@ sub winch {
     $SIG{WINCH} = \&winch;
 }
 
+
 while(@ARGV) {
     my $router = shift;
     $router =~ s#/tftpboot/##;
     $router =~ s/-confg//;
-    main($router);
+    tel($router);
 }
 
 sub rtr_find {
@@ -89,7 +92,7 @@ sub load_profile {
     return $rtr;
 }
 
-sub main {
+sub tel {
     my $router = shift;
     my @methods = ( "ssh", "telnet" );
     my $port;  # undefined unless set on the CLI.  It will be overriden by load_profile or method defaults
@@ -97,6 +100,7 @@ sub main {
     # TODO: support for URI methods, like ssh:// telnet://
     # if specified, the CLI method should override whatever is in the router
     # profile (preferably)
+    # need to support a auto_cmds str that they can use to send cmds during login
 
     if ($router =~ /(\S+):(\d+)/) {
         # check for name:port, assume telnet if a port is specified and protocol is not
@@ -104,13 +108,10 @@ sub main {
         $port = $2;
         @methods = ( "telnet" );
     } 
-     
-    my $rtr = rtr_find($router);
-    if (!defined($rtr)) {
-        warn "Nothing found in configuration for $rtr\n";
-        next;
-    }
-    
+   
+    # default profile always loads before anything else
+    my $rtr = load_profile(undef, 'default');  
+    $rtr = rtr_find($router);
     $rtr = load_profile($rtr) if (defined($rtr->{profile}));
 
     # if hostname is defined as a method then call it to determine the real hostname
@@ -131,14 +132,15 @@ sub main {
         my @sshoptions = @{$rtr->{sshoptions}} if (defined($rtr->{sshoptions}));
         $ssho = '-o '. join(' -o ', @sshoptions);
     }
-    my $prompt = $rtr->{prompt};
-    $prompt ||= 'puppies'; # Basically just needs to be a value that will never show up, and if it does we ignore it.
    
     my $allied_shit=0;
-    # handle MOTD profile loading
-    my @banners;
+    # handle MOTD profile loading, and other things parsed from the config
+    my @dynamic;
     foreach my $banner (keys %{$config->{banners}}) {
-        push @banners, [ $banner, sub { $rtr = load_profile($rtr, $config->{banners}{$banner}); exp_continue; } ];
+        push @dynamic, [ $banner, sub { $rtr = load_profile($rtr, $config->{banners}{$banner}); exp_continue; } ];
+    }
+    if (defined($rtr->{prompt})) {
+        push @dynamic, [ qr/$rtr->{prompt}/, sub { last METHOD; } ];
     }
 
     METHOD: for (@methods) { 
@@ -152,7 +154,7 @@ sub main {
         } 
 
         $session->expect($timeout,
-                @banners,
+                @dynamic,
                 # fucking shitty allied telesyn
                 [ qr/User Access Verification - RADIUS/ => sub { $allied_shit=1;
                     $session->send("$rtr->{user}\r$rtr->{password}\r"); exp_continue } ],
@@ -186,7 +188,6 @@ sub main {
                        }
                     }
                 ],
-                [ qr/$prompt/ => sub { last METHOD unless($prompt eq 'puppies'); exp_continue; } ],
                 [ qr/Corrupted/ => sub { next METHOD; } ],
                 [ qr/cipher type 3des/ => sub { $rtr->{ciphertype}="des"; redo METHOD; } ],
                 [ qr/ssh_exchange_identification/ => sub { next METHOD; } ],
@@ -198,7 +199,7 @@ sub main {
     }
 
 
-    $rtr->{logoutcmd} ||= "exit";
+    $rtr->{logoutcmd} ||= "logout";
     logging($router) if ($opts{l});
     conn($rtr);
 }
