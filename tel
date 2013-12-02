@@ -109,9 +109,9 @@ sub tel {
         @methods = ( "telnet" );
     } 
    
-    # default profile always loads before anything else
-    my $rtr = load_profile(undef, 'default');  
-    $rtr = rtr_find($router);
+    my $rtr = rtr_find($router);
+    # default profile always loads before anything else (rtr_find needs to go first though)
+    $rtr = load_profile($rtr, 'default');  
     $rtr = load_profile($rtr) if (defined($rtr->{profile}));
 
     # if hostname is defined as a method then call it to determine the real hostname
@@ -128,7 +128,7 @@ sub tel {
     @methods = split(/,/, $rtr->{method}) if (defined($rtr->{method}));
     
     my $ssho = '-o StrictHostKeyChecking=no';
-    if ($rtr->{sshoptions} > -1) {
+    if (defined($rtr->{sshoptions}) && $rtr->{sshoptions} > -1) {
         my @sshoptions = @{$rtr->{sshoptions}} if (defined($rtr->{sshoptions}));
         $ssho = '-o '. join(' -o ', @sshoptions);
     }
