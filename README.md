@@ -1,4 +1,4 @@
-# Tel: A login script for routers
+# Tel: A login script for routers and other devices
 
 If you've worked at a NOC at any point in time you've probably got one of
 these.  It's probably written in Expect and probably sends your username and
@@ -65,11 +65,28 @@ common tasks can be automated and even advanced commands can be scripted
 through Perl's Expect.pm.  Most of that is available directly in the telrc
 files without modifying the code in tel.
 
-# I don't need to convince you!
+# clogin style arguments
 
-I'm not your mommy and this isn't brussel sprouts.  This has been refined over
-3 jobs and about 10 years to be very effective in my particular environment.
+## use '-c' command line to send commands
 
-Use it, or modify it for your own use if you think it's useful.
+Example: 
+    tel -c 'show ver; show ip int br' sw1-cisco-device
 
-Or don't.
+## or use -x to send a script to run
+
+Example:
+    cat <<EOF>commands.txt
+    conf t
+     int vlan2
+      description Hello
+    end
+    wr
+    EOF
+
+    tel -x commands.txt sw1-cisco-device
+    
+
+# Bugs and stuff
+
+Use it, or modify it for your own use if you think it's useful.  Please let me
+know if you find bugs or want new features.

@@ -7,25 +7,12 @@ use Hash::Merge::Simple qw (merge);
 
 use v5.14;  # for given and say
 
-
-# TODO: impossibly hard things I'd like to have
-# Colorizied router text? -- interact removes expect.pm from most logic.  It
-# still reads handles for interrupt lines but doesn't write them (letting the program pass it's
-# output to the handles raw)
-# Scrollback buffer across sessions -- interact again fucks with this, but you
-# also get the interesting questions about what device you're logged into, and
-# how to handle readline type scrollback through the text (can't be handled by
-# the remote system because then you can't make the up arrow remove your
-# current text and place new stuff.. without resorting to something like
-# sending a clear line and then $exp->send("more text"); which might be
-# doable, but not something I'd want to have turned on all the time.
-
 my $session = new Expect;
 $Expect::Log_Stdout=1;
 my $stdin = Expect->exp_init(\*STDIN);
 
 my %opts;
-getopts('lrc:t:', \%opts);
+getopts('lx:c:t:', \%opts);
 my $timeout = $opts{t} ? $opts{t} : 90;
 my $logoutcmd;
 
@@ -97,10 +84,6 @@ sub login {
     my @methods = ( "ssh", "telnet" );
     my $connected = 0;
     my $port;  # undefined unless set on the CLI.  It will be overriden by load_profile or method defaults
-
-    # TODO: support for URI methods, like ssh:// telnet://
-    # if specified, the CLI method should override whatever is in the router
-    # profile (preferably)
 
     if ($router =~ /(\S+):(\d+)/) {
         # check for name:port, assume telnet if a port is specified and protocol is not
@@ -228,22 +211,34 @@ sub handle_ctrl_z {
 
 sub conn {
     my $rtr = shift;
-    winch();
-    $session->send("term len 0\r") if ($opts{l});
+    my $autocmds = shift;
+    my $prompt = $rtr->{prompt};
+    $prompt ||= '#';
 
-    if ($opts{c})
-    {
-        $session->expect(10,'-re','#');
+    winch();
+
+    my @args = split(/;/, $opts{c});
+    if ($opts{x}) {
+        open(X, '<', $opts{x});
+        @args = <X>;
+        close X;
+    } 
+
+    if (@args) {
+        $session->expect(10,'-re',$prompt);
         $session->send("term len 0\r");
-        $session->expect(10,'-re','#');
-        my @args = split(/;/, $opts{c});
+        $session->expect(10,'-re',$prompt);
         foreach my $arg (@args) {
             $session->send("$arg\r");
-            $session->expect(10,'-re','#');
+            $session->expect(10,'-re',$prompt);
         }
         $session->send($rtr->{logoutcmd} ."\r");
-    } else
-    {
+    } else {
+        $session->send("term len 0\r") if ($opts{l});
+        foreach my $arg (@{$autocmds}) {
+            $session->send("$arg\r");
+            $session->expect(10,'-re',$prompt);
+        }
         $session->interact($stdin, '\cD');
         # q\b is to end anything that's at a More prompt or other dialog and
         # get you back to the command prompt

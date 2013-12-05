@@ -5,7 +5,12 @@ script.  There have been times when I've realized that objects would better
 suite the circumstances of what I was doing, but I've stayed away from that to
 keep this friendly for the NOC people who just want an executable to run.
 
-# banner
+# flags and things
+
+This is a list of possible flags you might include in telrc to provide various
+features for different types of devices.
+
+## banner
 
 The banner flag is a global flag that is used to load a profile if it's seen
 during the login of a device.  It allows regular expressions.
@@ -21,11 +26,11 @@ Example:  Dlink doesn't use the normal backspace, it uses \b.  We check for a
 banner screen that says DES-3(\d\d\d) and load the dlink profile when we see
 it.
 
-# hostname
+## hostname
 
 Hostname is a router directive.  It has two uses which are outlined below.
 
-## hostname (aliases)
+### hostname (aliases)
 
 Sometimes you want to connect to a device with a hostname that isn't in DNS.
 Maybe the DNS name is long and you want to abbriviate it, or maybe you want to
@@ -37,7 +42,7 @@ You can also use this to provide a port in the case that
 
     { 'regex' => '^gw1-dinglehopper', 'hostname' => 'shiny' },
 
-## hostname (CODE ref)
+### hostname (CODE ref)
 
 In very rare cases, you may want to take the hostname and rewrite it for 
 some reason.  If you need to do this you can pass an anonymous subroutine 
@@ -53,7 +58,7 @@ replace it with a circuit ID from your database:
 Even this is unrealistic, but I can't think of something generic to show right
 now.
 
-# handlers
+## handlers
 
 This is a rtr or profile directive.  It's used to override a key sequence.
 It takes a key or key combination and a function reference for arguments.
@@ -74,12 +79,16 @@ The return 1; is required if you want the session to continue after the
 handler is run.  So if you wanted to exit the router on f12 you could return
 0;
 
-# port
+## port
 
 Router or profile directive to indicate what port to connect on. 
 
+## autocmds
 
-# hostsearch
+Router or profile directive to run commands automatically when logging in.
+
+
+## hostsearch
 
 This is a profile or router directive.
 
@@ -100,4 +109,12 @@ an alias like this:
 
     'hostsearch' => sub { "c-$_[0]"; }
 
+
+# wishlist
+
+1.  Colorized router text, so "show int" errors would show up easily
+2.  scrollback buffer across multiple sessions
+3.  URI methods on the command line, so you could say telnet://routername or ssh://routername if you wanted to override the method
+4.  A testing framework.  How can we simulate login to devices?  Do we ignore that and just modularize the code and test small parts of it?
+5.  If it doesn't currently work, handle noenable/no aaa properly
 
