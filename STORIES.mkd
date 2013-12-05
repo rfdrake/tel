@@ -79,3 +79,25 @@ handler is run.  So if you wanted to exit the router on f12 you could return
 Router or profile directive to indicate what port to connect on. 
 
 
+# hostsearch
+
+This is a profile or router directive.
+
+Arguments: routername
+Returns: a new routername
+
+Usage: this is just like hostname in that it modifies the name during the
+connection stage.  The difference here is that it tries to connect using the
+supplied name first, assuming that DNS will be available and such.
+
+If the connection fails it calls your user supplied routine, which can,
+depending on how you write it, do a database lookup, a fuzzy match on the
+name, or any other modification.
+
+In my case, some of our commercial devices use a prefix of "c-" to designate
+them, but we don't always type it when we're making a connection.  So we have
+an alias like this:
+
+    'hostsearch' => sub { "c-$_[0]"; }
+
+

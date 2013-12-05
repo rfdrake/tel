@@ -57,17 +57,17 @@ while(@ARGV) {
     my $router = shift;
     $router =~ s#/tftpboot/##;
     $router =~ s/-confg//;
-    tel($router);
+    login($router);
 }
 
 sub rtr_find {
     my $host = shift;
-    my $result;
+    my $result = shift;
 
     foreach my $h (@{$config->{rtr}}) {
         my $h2 = $h->{regex};
         if ($host =~ /$h2/i) {
-            $result=$h;     
+            $result=merge($result, $h);
             last;
         }
     }
@@ -92,15 +92,15 @@ sub load_profile {
     return $rtr;
 }
 
-sub tel {
+sub login {
     my $router = shift;
     my @methods = ( "ssh", "telnet" );
+    my $connected = 0;
     my $port;  # undefined unless set on the CLI.  It will be overriden by load_profile or method defaults
 
     # TODO: support for URI methods, like ssh:// telnet://
     # if specified, the CLI method should override whatever is in the router
     # profile (preferably)
-    # need to support a auto_cmds str that they can use to send cmds during login
 
     if ($router =~ /(\S+):(\d+)/) {
         # check for name:port, assume telnet if a port is specified and protocol is not
@@ -109,9 +109,9 @@ sub tel {
         @methods = ( "telnet" );
     } 
    
-    my $rtr = rtr_find($router);
-    # default profile always loads before anything else (rtr_find needs to go first though)
-    $rtr = load_profile($rtr, 'default');  
+    # default profile always loads before anything else
+    my $rtr = load_profile(undef, 'default');  
+    $rtr = rtr_find($router, $rtr);
     $rtr = load_profile($rtr) if (defined($rtr->{profile}));
 
     # if hostname is defined as a method then call it to determine the real hostname
@@ -140,7 +140,7 @@ sub tel {
         push @dynamic, [ $banner, sub { $rtr = load_profile($rtr, $config->{banners}{$banner}); exp_continue; } ];
     }
     if (defined($rtr->{prompt})) {
-        push @dynamic, [ qr/$rtr->{prompt}/, sub { last METHOD; } ];
+        push @dynamic, [ qr/$rtr->{prompt}/, sub { $connected=1; last METHOD; } ];
     }
 
     METHOD: for (@methods) { 
@@ -159,7 +159,7 @@ sub tel {
                 [ qr/User Access Verification - RADIUS/ => sub { $allied_shit=1;
                     $session->send("$rtr->{user}\r$rtr->{password}\r"); exp_continue } ],
                 [ qr/User Access Verification - Local/ => sub { 
-                    $session->send("$rtr->{user}\r$rtr->{password}\r"); last METHOD; } ],
+                    $session->send("$rtr->{user}\r$rtr->{password}\r"); $connected=1; last METHOD; } ],
                 [ qr/[Uu]ser[Nn]ame:|Login:/ => sub {
                     $session->send("$rtr->{user}\r") unless($allied_shit); exp_continue; } ],
                 # we need to handle enable in a better way than this
@@ -171,20 +171,21 @@ sub tel {
                         if ($rtr->{enablecmd}) {
                             $session->send($rtr->{enablecmd} .  "\r$rtr->{password}\r");
                         }
+                        $connected=1;    
                         last METHOD;
                     }
                 } ],
-                # try adding c- to the front of the name in DNS fail.. if fail again then exit
-                # we need to make this a callback in telrc, like we need to do
-                # for handle_f5 and stuff.
                 [ qr/Name or service not known|hostname nor servname provided, or not known|could not resolve / => sub
                     { 
-                       if ($router !~ /^c-/) {
-                           $router = "c-$router"; redo METHOD;
-                       } else {
-                           warn "unknown host: $router\n";
-                           # skip to next host if this one doesn't exist
-                           return;
+                        # if host lookup fails then check to see if there is an alternate method defined
+                        if ($rtr->{hostsearch} && !$rtr->{hostsearched}) {
+                            $router = &{$rtr->{hostsearch}}($router);
+                            $rtr->{hostsearched}=1;
+                            redo METHOD;
+                        } else {
+                            warn "unknown host: $router\n";
+                            # skip to next host if this one doesn't exist
+                            last METHOD;
                        }
                     }
                 ],
@@ -198,10 +199,14 @@ sub tel {
         );
     }
 
+    if (!$connected) {
+        warn "Connection to $router failed.\n";
+        return;
+    }
 
     $rtr->{logoutcmd} ||= "logout";
     logging($router) if ($opts{l});
-    conn($rtr);
+    conn($rtr, $rtr->{autocmds});
 }
 
 sub logging {
@@ -211,15 +216,13 @@ sub logging {
 }
 
 
-# handlers currently have to be part of the tel file because .telrc doesn't
-# know about the $session variable so it can't use it
 sub handle_backspace {
-    $session->send("\b");
+    ${$_[0]}->send("\b");
     return 1;
 }
 
 sub handle_ctrl_z {
-    $session->send("exit\r");
+    ${$_[0]}->send("exit\r");
     return 1;
 }
 
