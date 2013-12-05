@@ -86,6 +86,12 @@ Router or profile directive to indicate what port to connect on.
 ## autocmds
 
 Router or profile directive to run commands automatically when logging in.
+This is an array reference so it requires the square brackets surrounding the
+arguments.
+
+Example:
+
+    'autocmds' => [ 'sh ver', 'sh ip int br' ],
 
 
 ## hostsearch

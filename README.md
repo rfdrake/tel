@@ -90,3 +90,5 @@ Example:
 
 Use it, or modify it for your own use if you think it's useful.  Please let me
 know if you find bugs or want new features.
+
+# Copyright 2013, Robert Drake
