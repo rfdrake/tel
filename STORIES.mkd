@@ -73,7 +73,7 @@ I pass a reference to the $session handler as argument one.
 As an example, if you wanted f5 to run a "sh ver" on cisco routers you could
 do this:
 
-    handlers => { '\[15~ => sub { ${$_[0]}->send("sh ver\r"); return 1; } }
+    handlers => { '\[15~' => sub { ${$_[0]}->send("sh ver\r"); return 1; } }
 
 The return 1; is required if you want the session to continue after the
 handler is run.  So if you wanted to exit the router on f12 you could return
