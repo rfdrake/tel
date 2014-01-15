@@ -4,6 +4,16 @@ use strict;
 use Expect;
 use Getopt::Std;
 use Hash::Merge::Simple qw (merge);
+use Module::Load;
+
+my $has_keyring = 1;
+my $keyring;
+eval {
+    load Passwd::Keyring::Auto;
+    $keyring = get_keyring(app=>"tel script", group=>"Device Passwords");
+    1;
+} or $has_keyring = 0;
+
 
 use v5.14;  # for given and say
 
@@ -79,6 +89,26 @@ sub load_profile {
     return $rtr;
 }
 
+sub get_password {
+    my $rtr = shift;
+    my $router = shift;
+
+    # only use keyring if the password hasn't been found in our config files
+    if ($rtr->{password} ne '') {
+        return $rtr->{password};
+    }
+
+    if ($has_keyring) {
+        my $password = $keyring->get_password($rtr->{username}, $router);
+        if (!$password) {
+            # ... somehow interactively prompt for password
+            $keyring->set_password($rtr->{username}, $password, $router);
+        }
+    } else {
+        return $rtr->{password};
+    }
+}
+
 sub login {
     my $router = shift;
     my @methods = ( "ssh", "telnet" );
@@ -107,7 +137,7 @@ sub login {
         }
     }
 
-    $rtr->{ciphertype} ||= "3des";
+    my $cipher = '-c ' . $rtr->{ciphertype} if ($rtr->{ciphertype});
     @methods = split(/,/, $rtr->{method}) if (defined($rtr->{method}));
     
     my $ssho = '-o StrictHostKeyChecking=no';
@@ -131,7 +161,7 @@ sub login {
         $port ||= $rtr->{port};
 
         given ($_) {
-            when ('ssh') { my $p=$port; $p ||= 22; $session = Expect->spawn("ssh -p $p -l $rtr->{user} $ssho -c $rtr->{ciphertype} $router"); }
+            when ('ssh') { my $p=$port; $p ||= 22; $session = Expect->spawn("ssh -p $p -l $rtr->{user} $ssho $cipher $router"); }
             when ('telnet') { my $p=$port; $p ||= 23; $session = Expect->spawn("telnet $router $p"); }
             default { die "No program defined for method $_\n"; }
         } 
