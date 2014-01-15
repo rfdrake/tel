@@ -137,7 +137,6 @@ sub login {
         }
     }
 
-    my $cipher = '-c ' . $rtr->{ciphertype} if ($rtr->{ciphertype});
     @methods = split(/,/, $rtr->{method}) if (defined($rtr->{method}));
     
     my $ssho = '-o StrictHostKeyChecking=no';
@@ -157,6 +156,7 @@ sub login {
     }
 
     METHOD: for (@methods) { 
+        my $cipher = '-c ' . $rtr->{ciphertype} if ($rtr->{ciphertype});
         $session->soft_close() if ($session->pid());
         $port ||= $rtr->{port};
 
@@ -203,7 +203,9 @@ sub login {
                     }
                 ],
                 [ qr/Corrupted/ => sub { next METHOD; } ],
-                [ qr/cipher type 3des/ => sub { $rtr->{ciphertype}="des"; redo METHOD; } ],
+                # almost never needed anymore.  Some people might not want a
+                # fallback to des.  If anyone does we need to make it optional
+                #[ qr/cipher type \S+ not supported/ => sub { $rtr->{ciphertype}="des"; redo METHOD; } ],
                 [ qr/ssh_exchange_identification/ => sub { next METHOD; } ],
                 [ qr/[Cc]onnection (refused|closed)/ => sub { next METHOD; } ],
                 [ qr/key_verify failed/ => sub { next METHOD; } ],
