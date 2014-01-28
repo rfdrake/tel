@@ -91,7 +91,7 @@ sub load_profile {
 
 sub get_password {
     my $rtr = shift;
-    my $router = shift;
+    my $router = $rtr->{real_hostname};
 
     # only use keyring if the password hasn't been found in our config files
     if ($rtr->{password} ne '') {
@@ -99,10 +99,10 @@ sub get_password {
     }
 
     if ($has_keyring) {
-        my $password = $keyring->get_password($rtr->{username}, $router);
+        my $password = $keyring->get_password($rtr->{profile}, $router);
         if (!$password) {
             # ... somehow interactively prompt for password
-            $keyring->set_password($rtr->{username}, $password, $router);
+            $keyring->set_password($rtr->{profile}, $password, $router);
         }
     } else {
         return $rtr->{password};
@@ -136,6 +136,7 @@ sub login {
             $router = $rtr->{hostname};
         }
     }
+    $rtr->{real_hostname}=$router;
 
     @methods = split(/,/, $rtr->{method}) if (defined($rtr->{method}));
     
@@ -170,19 +171,20 @@ sub login {
                 @dynamic,
                 # fucking shitty allied telesyn
                 [ qr/User Access Verification - RADIUS/ => sub { $allied_shit=1;
-                    $session->send("$rtr->{user}\r$rtr->{password}\r"); exp_continue } ],
+                    $session->send("$rtr->{user}\r".get_password()."\r"); exp_continue } ],
                 [ qr/User Access Verification - Local/ => sub { 
-                    $session->send("$rtr->{user}\r$rtr->{password}\r"); $connected=1; last METHOD; } ],
+                    $session->send("$rtr->{user}\r".get_password()."\r"); $connected=1; last METHOD; } ],
                 [ qr/[Uu]ser[Nn]ame:|Login:/ => sub {
                     $session->send("$rtr->{user}\r") unless($allied_shit); exp_continue; } ],
-                # we need to handle enable in a better way than this
+                # we need to handle enable in a better way than this.  Enable
+                # should support different password than regular if need be.
                 [ qr/[Pp]ass[Ww]ord/ => sub { 
                     if ($allied_shit) { 
                         exp_continue; 
                     } else {
-                        $session->send("$rtr->{password}\r");
+                        $session->send(get_password($rtr) ."\r");
                         if ($rtr->{enablecmd}) {
-                            $session->send($rtr->{enablecmd} .  "\r$rtr->{password}\r");
+                            $session->send($rtr->{enablecmd} .  "\r".get_password($rtr, 'enable')."\r");
                         }
                         $connected=1;    
                         last METHOD;

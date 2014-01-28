@@ -86,7 +86,16 @@ Example:
     tel -x commands.txt sw1-cisco-device
     
 
-# Bugs and stuff
+# Bugs
+
+1.  Sending a "#" to the router via -c will match that as a prompt if that is what
+    your prompt is set for.  clear_accum doesn't fix this.. need to put more
+    thought into it.
+
+2.  I never added enablepass because my enable password was the same as access
+    password.  Need to think about how to do this.
+
+# Information
 
 Use it, or modify it for your own use if you think it's useful.  Please let me
 know if you find bugs or want new features.
