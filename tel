@@ -5,6 +5,7 @@ use Expect;
 use Getopt::Std;
 use Hash::Merge::Simple qw (merge);
 use Module::Load;
+use feature qw ( switch );
 
 my $has_keyring = 1;
 my $keyring;
@@ -15,7 +16,6 @@ eval {
 } or $has_keyring = 0;
 
 
-use v5.14;  # for given and say
 
 my $session = new Expect;
 $Expect::Log_Stdout=1;
