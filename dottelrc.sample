@@ -1,6 +1,6 @@
 $telrc = {
           'profile' => {
-                       'default' => { 'password' => 'DINGLEHOPPER!', 'user' => $ENV{USER}, 
+                       'default' => { 'password' => 'DINGLEHOPPER!', 'user' => $ENV{USER},
                                       'sshoptions' => [ 'UserKnownHostsFile=/dev/null', 'StrictHostKeyChecking=no' ] },
                        'casa' => { 'handlers' =>  { '\cZ' => \&handle_ctrl_z } },
                        'zhone' => { 'user' => 'admin', 'method' => 'telnet', 'prompt' => '>', 'enablecmd' => 'priv' },
@@ -12,15 +12,15 @@ $telrc = {
           'rtr' => [   # this is an array so order matters
                    { 'regex' => '^cerf$', 'method' => 'telnet', 'hostname' => 'route-server.cerf.net', 'prompt' => 'route-server>' },
                    { 'regex' => '^att$', 'user' => 'rviews', 'method' => 'telnet', 'hostname' => 'route-server.ip.att.net', 'prompt' => 'route-server>' },
-                   { 'regex' => '^ix$', 'user' => 'rviews', 'method' => 'telnet', 
+                   { 'regex' => '^ix$', 'user' => 'rviews', 'method' => 'telnet',
                                   'hostname' => 'route-views.oregon-ix.net', 'prompt' => 'route-views>', 'noenable' => 1 },
                    { 'regex' => '^quagga$', 'method' => 'telnet', 'hostname' => '127.0.0.1', port => 2605 },
-                   { 'regex' => '^monitor', 'user' => 'ubnt', 'method' => 'ssh' }, 
+                   { 'regex' => '^ubi', 'user' => 'ubnt', 'method' => 'ssh' },
                    { 'profile' => 'casa', 'regex' => '^casa1-' },
                    { 'profile' => 'zhone', 'regex' => '^dsl' },
-                   { 'profile' => 'hatteras', 'regex' => '^hat1' },
+                   { 'profile' => 'hatteras', 'regex' => '^hat' },
                    { 'profile' => 'mikrotik', 'regex' => '^gw1-mkt-site' },
-                   { 'profile' => 'at', 'regex' => '^(ds|sw|mfh3).*(site-name).*' },
+                   { 'profile' => 'at', 'regex' => '^(ds|sw).*(site-name).*' },
                  ],
         'banners' => {
                 'Bay Networks BayStack' => 'baystack',

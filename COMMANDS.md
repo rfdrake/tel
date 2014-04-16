@@ -2,7 +2,7 @@
 
 I'm trying to keep the dependencies down and keep the feel of this being a
 script.  There have been times when I've realized that objects would better
-suite the circumstances of what I was doing, but I've stayed away from that to
+suit the circumstances of what I was doing, but I've stayed away from that to
 keep this friendly for the NOC people who just want an executable to run.
 
 # flags and things
@@ -38,15 +38,15 @@ set options, like username or login method when you connect on one name, then
 use different options on another name.  You can do this with the hostname
 directive.
 
-You can also use this to provide a port in the case that 
+You can also use this to provide a port in the case that
 
     { 'regex' => '^gw1-dinglehopper', 'hostname' => 'shiny' },
 
 ### hostname (CODE ref)
 
-In very rare cases, you may want to take the hostname and rewrite it for 
-some reason.  If you need to do this you can pass an anonymous subroutine 
-as the hostname and tel will run it with the original hostname as the 
+In very rare cases, you may want to take the hostname and rewrite it for
+some reason.  If you need to do this you can pass an anonymous subroutine
+as the hostname and tel will run it with the original hostname as the
 argument.  The return value should be the new hostname.
 
 My use case for this is probably unique so I won't mention it, but as an
@@ -63,12 +63,12 @@ now.
 This is a rtr or profile directive.  It's used to override a key sequence.
 It takes a key or key combination and a function reference for arguments.
 
-Syntax: 
+Syntax:
 
    handlers => { 'key' => \&function, 'another key' => \&function2 },
 
 
-I pass a reference to the $session handler as argument one. 
+I pass a reference to the $session handler as argument one.
 
 As an example, if you wanted f5 to run a "sh ver" on cisco routers you could
 do this:
@@ -81,7 +81,7 @@ handler is run.  So if you wanted to exit the router on f12 you could return
 
 ## port
 
-Router or profile directive to indicate what port to connect on. 
+Router or profile directive to indicate what port to connect on.
 
 ## autocmds
 
@@ -114,6 +114,13 @@ them, but we don't always type it when we're making a connection.  So we have
 an alias like this:
 
     'hostsearch' => sub { "c-$_[0]"; }
+
+## password
+
+If a password is blank in the config file then the script will attempt to use
+a Keyring for authentication.  It uses the Passwd::Keyring::Auto module for
+this if it's installed.  If the password isn't found it will prompt you for it
+and store it in the keyring.
 
 
 # wishlist
