@@ -88,8 +88,6 @@ sub load_profile {
     my $replace = shift;
     my $stdin = $self->{'stdin'};
     my $config = $self->{'config'};
-    # need to check this because we specifically need the pointer to the live
-    # expect session, which this may be a copy of it..
     my $session = $self->{'session'};
     my $rtr;
     if (!$replace) {
@@ -106,7 +104,6 @@ sub load_profile {
         }
     }
     $self->{'profile'}=$rtr;
-    return $self->{'profile'};
 }
 
 sub get_password {
@@ -190,8 +187,8 @@ sub login {
         $port ||= $rtr->{port};
 
         given ($_) {
-            when ('ssh') { my $p=$port; $p ||= 22; $session = Expect->spawn("ssh -p $p -l $rtr->{user} $ssho $cipher $hostname"); }
-            when ('telnet') { my $p=$port; $p ||= 23; $session = Expect->spawn("telnet $hostname $p"); }
+            when ('ssh') { my $p=$port; $p ||= 22; $session->spawn("ssh -p $p -l $rtr->{user} $ssho $cipher $hostname"); }
+            when ('telnet') { my $p=$port; $p ||= 23; $session->spawn("telnet $hostname $p"); }
             default { die "No program defined for method $_\n"; }
         }
 
@@ -199,9 +196,9 @@ sub login {
                 @dynamic,
                 # fucking shitty allied telesyn
                 [ qr/User Access Verification - RADIUS/ => sub { $allied_shit=1;
-                    $session->send("$rtr->{user}\r".get_password()."\r"); exp_continue } ],
+                    $session->send("$rtr->{user}\r".$self->get_password()."\r"); exp_continue } ],
                 [ qr/User Access Verification - Local/ => sub {
-                    $session->send("$rtr->{user}\r".get_password()."\r"); $connected=1; last METHOD; } ],
+                    $session->send("$rtr->{user}\r".$self->get_password()."\r"); $connected=1; last METHOD; } ],
                 [ qr/[Uu]ser[Nn]ame:|Login:/ => sub {
                     $session->send("$rtr->{user}\r") unless($allied_shit); exp_continue; } ],
                 # we need to handle enable in a better way than this.  Enable
@@ -210,9 +207,9 @@ sub login {
                     if ($allied_shit) {
                         exp_continue;
                     } else {
-                        $session->send(get_password($rtr) ."\r");
+                        $session->send($self->get_password() ."\r");
                         if ($rtr->{enablecmd}) {
-                            $session->send($rtr->{enablecmd} . "\r".get_password($rtr, 'enable')."\r");
+                            $session->send($rtr->{enablecmd} . "\r".$self->get_password('enable')."\r");
                         }
                         $connected=1;
                         last METHOD;
