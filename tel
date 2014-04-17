@@ -1,4 +1,4 @@
-#!/usr/bin/perl 
+#!/usr/bin/perl
 
 use strict;
 package Local::Tel;
@@ -8,20 +8,10 @@ use Hash::Merge::Simple qw (merge);
 use Module::Load;
 use feature qw ( switch );
 
-__PACKAGE__->main unless caller;
+__PACKAGE__->main() unless caller;
 
 sub main {
-    my $session = new Expect;
     $Expect::Log_Stdout=1;
-
-    # install sig handler for window size change
-    $SIG{WINCH} = \&winch;
-
-    sub winch {
-        eval { $session->slave->clone_winsize_from(\*STDIN); };
-        kill WINCH => $session->pid if $session->pid;
-        $SIG{WINCH} = \&winch;
-    }
 
     my @configs = ( "/etc/telrc", "/usr/local/etc/telrc", "$ENV{HOME}/.telrc2", "$ENV{TELRC}" );
     our $telrc;
@@ -47,46 +37,65 @@ sub main {
         1;
     } or $has_keyring = 0;
 
-
-    my $tel = bless {
+    my $self = {
         'config' => $config,
-        'session' => $session,
+        'session' => new Expect,
         'timeout' => $timeout,
         'opts' => $opts,
         'has_keyring' => $has_keyring,
         'keyring' => $keyring,
-        'logoutcmd' => 'logout',
         'stdin' => Expect->exp_init(\*STDIN),
-    }, "Local::Tel";
+    };
 
-    while(@ARGV) {
-        my $router = shift;
-        $router =~ s#/tftpboot/##;
-        $router =~ s/-confg//;
-        $tel->login($router);
+    bless($self, 'Local::Tel');
+
+    # install sig handler for window size change
+    $SIG{WINCH} = \&winch;
+
+    sub winch {
+        eval { $self->{session}->slave->clone_winsize_from(\*STDIN); };
+        kill WINCH => $self->{session}->pid if $self->{session}->pid;
+        $SIG{WINCH} = \&winch;
+    }
+
+    for (@ARGV) {
+        s#/tftpboot/##;
+        s/-confg//;
+        $self->login($_);
     }
 }
 
+# find the router by hostname/regex and load the config associated with it
 sub rtr_find {
+    my $self = shift;
     my $host = shift;
-    my $result = shift;
+    my $profile = $self->{'profile'};
+    my $config = $self->{'config'};
 
     foreach my $h (@{$config->{rtr}}) {
         my $h2 = $h->{regex};
         if ($host =~ /$h2/i) {
-            $result=merge($result, $h);
+            $profile=merge($profile, $h);
             last;
         }
     }
-    return $result;
+    $self->{'profile'}=$profile;
 }
 
 sub load_profile {
-    my $rtr = shift;
+    my $self = shift;
     my $profile = shift;
-    if (!defined($profile)) {
-        $profile = $rtr->{profile};
+    my $replace = shift;
+    my $stdin = $self->{'stdin'};
+    my $config = $self->{'config'};
+    # need to check this because we specifically need the pointer to the live
+    # expect session, which this may be a copy of it..
+    my $session = $self->{'session'};
+    my $rtr;
+    if (!$replace) {
+        $rtr = $self->{'profile'};
     }
+
     my @profiles = split(/\+/, $profile);
     foreach(@profiles) {
         $rtr = merge($rtr, $config->{profile}{$_});
@@ -96,11 +105,13 @@ sub load_profile {
             }
         }
     }
-    return $rtr;
+    $self->{'profile'}=$rtr;
+    return $self->{'profile'};
 }
 
 sub get_password {
-    my $rtr = shift;
+    my $self = shift;
+    my $rtr = $self->{profile};
     my $router = $rtr->{real_hostname};
 
     # only use keyring if the password hasn't been found in our config files
@@ -108,11 +119,11 @@ sub get_password {
         return $rtr->{password};
     }
 
-    if ($has_keyring) {
-        my $password = $keyring->get_password($rtr->{profile}, $router);
+    if ($self->{has_keyring}) {
+        my $password = $self->{keyring}->get_password($rtr->{profile}, $router);
         if (!$password) {
             # ... somehow interactively prompt for password
-            $keyring->set_password($rtr->{profile}, $password, $router);
+            $self->{keyring}->set_password($rtr->{profile}, $password, $router);
         }
     } else {
         return $rtr->{password};
@@ -121,34 +132,39 @@ sub get_password {
 
 sub login {
     my $self = shift;
+    my $hostname = shift;
+    my $config = $self->{'config'};
     my $session = $self->{'session'};
-    my $router = shift;
     my @methods = ( "ssh", "telnet" );
     my $connected = 0;
     my $port;  # undefined unless set on the CLI.  It will be overriden by load_profile or method defaults
 
-    if ($router =~ /(\S+):(\d+)/) {
+    if ($hostname =~ /(\S+):(\d+)/) {
         # check for name:port, assume telnet if a port is specified and protocol is not
-        $router = $1;
+        $hostname = $1;
         $port = $2;
         @methods = ( "telnet" );
     }
 
-    # default profile always loads before anything else
-    my $rtr = load_profile(undef, 'default');
-    $rtr = rtr_find($router, $rtr);
-    $rtr = load_profile($rtr) if (defined($rtr->{profile}));
+    # default profile always loads before anything else.  Replace == 1 
+    $self->load_profile('default', 1);
+    $self->rtr_find($hostname);
+    # this looks silly, but we're looking for a profile name that is set
+    # inside the loaded profile we pulled out of rtr_find.
+    $self->load_profile($self->{profile}->{profile}) if (defined($self->{profile}->{profile}));
+
+    my $rtr = $self->{profile};
 
     # if hostname is defined as a method then call it to determine the real hostname
     # if it's not then treat it as an alias.
     if (defined($rtr->{hostname})) {
         if (ref($rtr->{hostname}) eq 'CODE') {
-            $router = &{$rtr->{hostname}}($router);
+            $hostname = &{$rtr->{hostname}}($hostname);
         } else {
-            $router = $rtr->{hostname};
+            $hostname = $rtr->{hostname};
         }
     }
-    $rtr->{real_hostname}=$router;
+    $rtr->{real_hostname}=$hostname;
 
     @methods = split(/,/, $rtr->{method}) if (defined($rtr->{method}));
 
@@ -168,23 +184,23 @@ sub login {
         push @dynamic, [ qr/$rtr->{prompt}/, sub { $connected=1; last METHOD; } ];
     }
 
-    METHOD: for (@methods) { 
+    METHOD: for (@methods) {
         my $cipher = '-c ' . $rtr->{ciphertype} if ($rtr->{ciphertype});
         $session->soft_close() if ($session->pid());
         $port ||= $rtr->{port};
 
         given ($_) {
-            when ('ssh') { my $p=$port; $p ||= 22; $session = Expect->spawn("ssh -p $p -l $rtr->{user} $ssho $cipher $router"); }
-            when ('telnet') { my $p=$port; $p ||= 23; $session = Expect->spawn("telnet $router $p"); }
+            when ('ssh') { my $p=$port; $p ||= 22; $session = Expect->spawn("ssh -p $p -l $rtr->{user} $ssho $cipher $hostname"); }
+            when ('telnet') { my $p=$port; $p ||= 23; $session = Expect->spawn("telnet $hostname $p"); }
             default { die "No program defined for method $_\n"; }
-        } 
+        }
 
-        $session->expect($timeout,
+        $session->expect($self->{timeout},
                 @dynamic,
                 # fucking shitty allied telesyn
                 [ qr/User Access Verification - RADIUS/ => sub { $allied_shit=1;
                     $session->send("$rtr->{user}\r".get_password()."\r"); exp_continue } ],
-                [ qr/User Access Verification - Local/ => sub { 
+                [ qr/User Access Verification - Local/ => sub {
                     $session->send("$rtr->{user}\r".get_password()."\r"); $connected=1; last METHOD; } ],
                 [ qr/[Uu]ser[Nn]ame:|Login:/ => sub {
                     $session->send("$rtr->{user}\r") unless($allied_shit); exp_continue; } ],
@@ -196,7 +212,7 @@ sub login {
                     } else {
                         $session->send(get_password($rtr) ."\r");
                         if ($rtr->{enablecmd}) {
-                            $session->send($rtr->{enablecmd} .  "\r".get_password($rtr, 'enable')."\r");
+                            $session->send($rtr->{enablecmd} . "\r".get_password($rtr, 'enable')."\r");
                         }
                         $connected=1;
                         last METHOD;
@@ -206,11 +222,11 @@ sub login {
                     {
                         # if host lookup fails then check to see if there is an alternate method defined
                         if ($rtr->{hostsearch} && !$rtr->{hostsearched}) {
-                            $router = &{$rtr->{hostsearch}}($router);
+                            $hostname = &{$rtr->{hostsearch}}($hostname);
                             $rtr->{hostsearched}=1;
                             redo METHOD;
                         } else {
-                            warn "unknown host: $router\n";
+                            warn "unknown host: $hostname\n";
                             # skip to next host if this one doesn't exist
                             last METHOD;
                        }
@@ -229,19 +245,20 @@ sub login {
     }
 
     if (!$connected) {
-        warn "Connection to $router failed.\n";
+        warn "Connection to $hostname failed.\n";
         return;
     }
 
     $rtr->{logoutcmd} ||= "logout";
-    logging($router) if ($opts{l});
-    conn($rtr, $rtr->{autocmds});
+    $self->logging($hostname) if ($self->{opts}->{l});
+    $self->conn($rtr->{autocmds});
 }
 
 sub logging {
+    my $self = shift;
     my $router = shift;
     unlink ("/tmp/$router.log") if (-f "/tmp/$router.log");
-    $session->log_file("/tmp/$router.log");
+    $self->{session}->log_file("/tmp/$router.log");
 }
 
 
@@ -256,16 +273,19 @@ sub handle_ctrl_z {
 }
 
 sub conn {
-    my $rtr = shift;
+    my $self = shift;
     my $autocmds = shift;
+    my $session = $self->{session};
+    my $rtr = $self->{profile};
+    my $opts = $self->{opts};
     my $prompt = $rtr->{prompt};
     $prompt ||= '#';
 
     winch();
 
-    my @args = split(/;/, $opts{c});
-    if ($opts{x}) {
-        open(X, '<', $opts{x});
+    my @args = split(/;/, $opts->{c});
+    if ($opts->{x}) {
+        open(X, '<', $opts->{x});
         @args = <X>;
         close X;
     }
@@ -280,12 +300,12 @@ sub conn {
         }
         $session->send($rtr->{logoutcmd} ."\r");
     } else {
-        $session->send("term len 0\r") if ($opts{l});
+        $session->send("term len 0\r") if ($opts->{l});
         foreach my $arg (@{$autocmds}) {
             $session->send("$arg\r");
             $session->expect(10,'-re',$prompt);
         }
-        $session->interact($stdin, '\cD');
+        $session->interact($self->{stdin}, '\cD');
         # q\b is to end anything that's at a More prompt or other dialog and
         # get you back to the command prompt
         $session->send("q\b" . $rtr->{logoutcmd}. "\r");
