@@ -1,10 +1,3 @@
-# Why doesn't this use modules
-
-I'm trying to keep the dependencies down and keep the feel of this being a
-script.  There have been times when I've realized that objects would better
-suit the circumstances of what I was doing, but I've stayed away from that to
-keep this friendly for the NOC people who just want an executable to run.
-
 # flags and things
 
 This is a list of possible flags you might include in telrc to provide various
@@ -128,6 +121,5 @@ and store it in the keyring.
 1.  Colorized router text, so "show int" errors would show up easily
 2.  scrollback buffer across multiple sessions
 3.  URI methods on the command line, so you could say telnet://routername or ssh://routername if you wanted to override the method
-4.  A testing framework.  How can we simulate login to devices?  Do we ignore that and just modularize the code and test small parts of it?
-5.  If it doesn't currently work, handle noenable/no aaa properly
+4.  If it doesn't currently work, handle noenable/no aaa properly
 
