@@ -1,60 +1,70 @@
 #!/usr/bin/perl 
 
 use strict;
+package Local::Tel;
 use Expect;
 use Getopt::Std;
 use Hash::Merge::Simple qw (merge);
 use Module::Load;
 use feature qw ( switch );
 
-my $has_keyring = 1;
-my $keyring;
-eval {
-    load Passwd::Keyring::Auto;
-    $keyring = get_keyring(app=>"tel script", group=>"Device Passwords");
-    1;
-} or $has_keyring = 0;
+__PACKAGE__->main unless caller;
 
+sub main {
+    my $session = new Expect;
+    $Expect::Log_Stdout=1;
 
-
-my $session = new Expect;
-$Expect::Log_Stdout=1;
-my $stdin = Expect->exp_init(\*STDIN);
-
-my %opts;
-getopts('lx:c:t:', \%opts);
-my $timeout = $opts{t} ? $opts{t} : 90;
-my $logoutcmd;
-
-
-my @configs = ( "/etc/telrc", "/usr/local/etc/telrc", "$ENV{HOME}/.telrc2", "$ENV{TELRC}" );
-our $telrc;
-my $config;
-
-foreach my $conf (@configs) {
-    if (-r $conf) {
-        require $conf;
-        push(@{$config->{'telrc_file'}}, $conf);
-        $config = merge($config, $telrc);
-    }
-}
-
-
-# install sig handler for window size change
-$SIG{WINCH} = \&winch;
-
-sub winch {
-    eval { $session->slave->clone_winsize_from(\*STDIN); };
-    kill WINCH => $session->pid if $session->pid;
+    # install sig handler for window size change
     $SIG{WINCH} = \&winch;
-}
+
+    sub winch {
+        eval { $session->slave->clone_winsize_from(\*STDIN); };
+        kill WINCH => $session->pid if $session->pid;
+        $SIG{WINCH} = \&winch;
+    }
+
+    my @configs = ( "/etc/telrc", "/usr/local/etc/telrc", "$ENV{HOME}/.telrc2", "$ENV{TELRC}" );
+    our $telrc;
+    my $config;
+
+    foreach my $conf (@configs) {
+        if (-r $conf) {
+            require $conf;
+            push(@{$config->{'telrc_file'}}, $conf);
+            $config = merge($config, $telrc);
+        }
+    }
+
+    my $opts;
+    getopts('lx:c:t:', $opts);
+    my $timeout = $opts->{t} ? $opts->{t} : 90;
+
+    my $has_keyring = 1;
+    my $keyring;
+    eval {
+        load Passwd::Keyring::Auto;
+        $keyring = get_keyring(app=>"tel script", group=>"Device Passwords");
+        1;
+    } or $has_keyring = 0;
 
 
-while(@ARGV) {
-    my $router = shift;
-    $router =~ s#/tftpboot/##;
-    $router =~ s/-confg//;
-    login($router);
+    my $tel = bless {
+        'config' => $config,
+        'session' => $session,
+        'timeout' => $timeout,
+        'opts' => $opts,
+        'has_keyring' => $has_keyring,
+        'keyring' => $keyring,
+        'logoutcmd' => 'logout',
+        'stdin' => Expect->exp_init(\*STDIN),
+    }, "Local::Tel";
+
+    while(@ARGV) {
+        my $router = shift;
+        $router =~ s#/tftpboot/##;
+        $router =~ s/-confg//;
+        $tel->login($router);
+    }
 }
 
 sub rtr_find {
@@ -110,6 +120,8 @@ sub get_password {
 }
 
 sub login {
+    my $self = shift;
+    my $session = $self->{'session'};
     my $router = shift;
     my @methods = ( "ssh", "telnet" );
     my $connected = 0;
@@ -120,10 +132,10 @@ sub login {
         $router = $1;
         $port = $2;
         @methods = ( "telnet" );
-    } 
-   
+    }
+
     # default profile always loads before anything else
-    my $rtr = load_profile(undef, 'default');  
+    my $rtr = load_profile(undef, 'default');
     $rtr = rtr_find($router, $rtr);
     $rtr = load_profile($rtr) if (defined($rtr->{profile}));
 
@@ -139,13 +151,13 @@ sub login {
     $rtr->{real_hostname}=$router;
 
     @methods = split(/,/, $rtr->{method}) if (defined($rtr->{method}));
-    
+
     my $ssho = '-o StrictHostKeyChecking=no';
     if (defined($rtr->{sshoptions}) && $rtr->{sshoptions} > -1) {
         my @sshoptions = @{$rtr->{sshoptions}} if (defined($rtr->{sshoptions}));
         $ssho = '-o '. join(' -o ', @sshoptions);
     }
-   
+
     my $allied_shit=0;
     # handle MOTD profile loading, and other things parsed from the config
     my @dynamic;
@@ -178,20 +190,20 @@ sub login {
                     $session->send("$rtr->{user}\r") unless($allied_shit); exp_continue; } ],
                 # we need to handle enable in a better way than this.  Enable
                 # should support different password than regular if need be.
-                [ qr/[Pp]ass[Ww]ord/ => sub { 
-                    if ($allied_shit) { 
-                        exp_continue; 
+                [ qr/[Pp]ass[Ww]ord/ => sub {
+                    if ($allied_shit) {
+                        exp_continue;
                     } else {
                         $session->send(get_password($rtr) ."\r");
                         if ($rtr->{enablecmd}) {
                             $session->send($rtr->{enablecmd} .  "\r".get_password($rtr, 'enable')."\r");
                         }
-                        $connected=1;    
+                        $connected=1;
                         last METHOD;
                     }
                 } ],
                 [ qr/Name or service not known|hostname nor servname provided, or not known|could not resolve / => sub
-                    { 
+                    {
                         # if host lookup fails then check to see if there is an alternate method defined
                         if ($rtr->{hostsearch} && !$rtr->{hostsearched}) {
                             $router = &{$rtr->{hostsearch}}($router);
@@ -256,7 +268,7 @@ sub conn {
         open(X, '<', $opts{x});
         @args = <X>;
         close X;
-    } 
+    }
 
     if (@args) {
         $session->expect(10,'-re',$prompt);
