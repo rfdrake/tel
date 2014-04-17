@@ -11,43 +11,13 @@ use feature qw ( switch );
 __PACKAGE__->main() unless caller;
 
 sub main {
-    $Expect::Log_Stdout=1;
-
-    my @configs = ( "/etc/telrc", "/usr/local/etc/telrc", "$ENV{HOME}/.telrc2", "$ENV{TELRC}" );
-    our $telrc;
-    my $config;
-
-    foreach my $conf (@configs) {
-        if (-r $conf) {
-            require $conf;
-            push(@{$config->{'telrc_file'}}, $conf);
-            $config = merge($config, $telrc);
-        }
-    }
+    my $self = Local::Tel->new();
+    $self->{config} = load_config();
 
     my $opts;
     getopts('lx:c:t:', $opts);
-    my $timeout = $opts->{t} ? $opts->{t} : 90;
-
-    my $has_keyring = 1;
-    my $keyring;
-    eval {
-        load Passwd::Keyring::Auto;
-        $keyring = get_keyring(app=>"tel script", group=>"Device Passwords");
-        1;
-    } or $has_keyring = 0;
-
-    my $self = {
-        'config' => $config,
-        'session' => new Expect,
-        'timeout' => $timeout,
-        'opts' => $opts,
-        'has_keyring' => $has_keyring,
-        'keyring' => $keyring,
-        'stdin' => Expect->exp_init(\*STDIN),
-    };
-
-    bless($self, 'Local::Tel');
+    $self->{timeout} = $opts->{t} ? $opts->{t} : 90;
+    $self->{opts} = $opts;
 
     # install sig handler for window size change
     $SIG{WINCH} = \&winch;
@@ -63,6 +33,44 @@ sub main {
         s/-confg//;
         $self->login($_);
     }
+}
+
+sub load_config {
+    my @configs = ( "/etc/telrc", "/usr/local/etc/telrc", "$ENV{HOME}/.telrc2", "$ENV{TELRC}" );
+    our $telrc;
+    my $config;
+
+    foreach my $conf (@configs) {
+        if (-r $conf) {
+            require $conf;
+            push(@{$config->{'telrc_file'}}, $conf);
+            $config = merge($config, $telrc);
+        }
+    }
+
+    return $config;
+}
+
+sub new {
+    $Expect::Log_Stdout=1;
+
+    my $has_keyring = 1;
+    my $keyring;
+    eval {
+        load Passwd::Keyring::Auto;
+        $keyring = get_keyring(app=>"tel script", group=>"Device Passwords");
+        1;
+    } or $has_keyring = 0;
+
+    my $self = {
+        'session' => new Expect,
+        'stdin' => Expect->exp_init(\*STDIN),
+        'has_keyring' => $has_keyring,
+        'keyring' => $keyring,
+    };
+
+    bless($self, 'Local::Tel');
+    return $self;
 }
 
 # find the router by hostname/regex and load the config associated with it
