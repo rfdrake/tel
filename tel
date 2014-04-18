@@ -13,7 +13,7 @@ __PACKAGE__->main() unless caller;
 sub main {
     my $self = Local::Tel->new();
     $self->{config} = load_config();
-    $self->{session}->Log_Stdout=1;
+    $self->{session}->log_stdout(1);
 
     my $opts;
     getopts('lx:c:t:', $opts);
