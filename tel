@@ -19,15 +19,6 @@ sub main {
     $self->{timeout} = $opts->{t} ? $opts->{t} : 90;
     $self->{opts} = $opts;
 
-    # install sig handler for window size change
-    $SIG{WINCH} = \&winch;
-
-    sub winch {
-        eval { $self->{session}->slave->clone_winsize_from(\*STDIN); };
-        kill WINCH => $self->{session}->pid if $self->{session}->pid;
-        $SIG{WINCH} = \&winch;
-    }
-
     for (@ARGV) {
         s#/tftpboot/##;
         s/-confg//;
@@ -52,9 +43,20 @@ sub load_config {
 }
 
 # Expect won't let you reuse a connection that has spawned a process, so we
-# need this to reinitialize the session when a method fails
+# need this to reinitialize the session when a method fails or we're loading a
+# new router.
 sub init_session {
     my $session = new Expect;
+
+    # install sig handler for window size change
+    $SIG{WINCH} = \&winch;
+
+    sub winch {
+        eval { $session->slave->clone_winsize_from(\*STDIN); };
+        kill WINCH => $session->pid if $session->pid;
+        $SIG{WINCH} = \&winch;
+    }
+
     $session->log_stdout(1);
     return $session;
 }
@@ -69,7 +71,6 @@ sub new {
     } or $has_keyring = 0;
 
     my $self = {
-        'session' => init_session(),
         'stdin' => Expect->exp_init(\*STDIN),
         'has_keyring' => $has_keyring,
         'keyring' => $keyring,
@@ -145,7 +146,6 @@ sub login {
     my $self = shift;
     my $hostname = shift;
     my $config = $self->{'config'};
-    my $session = $self->{'session'};
     my @methods = ( "ssh", "telnet" );
     my $connected = 0;
     my $port;  # undefined unless set on the CLI.  It will be overriden by load_profile or method defaults
@@ -197,7 +197,8 @@ sub login {
 
     METHOD: for (@methods) {
         my $cipher = '-c ' . $rtr->{ciphertype} if ($rtr->{ciphertype});
-        $session->soft_close() if ($session->pid());
+        my $session = $self->{'session'};
+        $session->soft_close() if ($session && $session->pid());
         $self->{session} = init_session();
         $session=$self->{session};
 
