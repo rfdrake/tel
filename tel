@@ -80,6 +80,19 @@ sub new {
     return $self;
 }
 
+sub handle_backspace {
+    ${$_[0]}->send("\b");
+    return 1;
+}
+
+sub handle_ctrl_z {
+    ${$_[0]}->send("exit\r");
+    return 1;
+}
+
+
+# everything below here is a method
+
 # find the router by hostname/regex and load the config associated with it
 sub rtr_find {
     my $self = shift;
@@ -274,17 +287,6 @@ sub logging {
     my $router = shift;
     unlink ("/tmp/$router.log") if (-f "/tmp/$router.log");
     $self->{session}->log_file("/tmp/$router.log");
-}
-
-
-sub handle_backspace {
-    ${$_[0]}->send("\b");
-    return 1;
-}
-
-sub handle_ctrl_z {
-    ${$_[0]}->send("exit\r");
-    return 1;
 }
 
 sub conn {
