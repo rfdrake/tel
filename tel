@@ -13,7 +13,6 @@ __PACKAGE__->main() unless caller;
 sub main {
     my $self = Local::Tel->new();
     $self->{config} = load_config();
-    $self->{session}->log_stdout(1);
 
     my $opts;
     getopts('lx:c:t:', $opts);
@@ -52,6 +51,14 @@ sub load_config {
     return $config;
 }
 
+# Expect won't let you reuse a connection that has spawned a process, so we
+# need this to reinitialize the session when a method fails
+sub init_session {
+    my $session = new Expect;
+    $session->log_stdout(1);
+    return $session;
+}
+
 sub new {
     my $has_keyring = 1;
     my $keyring;
@@ -62,7 +69,7 @@ sub new {
     } or $has_keyring = 0;
 
     my $self = {
-        'session' => new Expect,
+        'session' => init_session(),
         'stdin' => Expect->exp_init(\*STDIN),
         'has_keyring' => $has_keyring,
         'keyring' => $keyring,
@@ -191,6 +198,9 @@ sub login {
     METHOD: for (@methods) {
         my $cipher = '-c ' . $rtr->{ciphertype} if ($rtr->{ciphertype});
         $session->soft_close() if ($session->pid());
+        $self->{session} = init_session();
+        $session=$self->{session};
+
         $port ||= $rtr->{port};
 
         given ($_) {
