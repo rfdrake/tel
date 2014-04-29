@@ -217,11 +217,9 @@ sub login {
 
         $port ||= $rtr->{port};
 
-        given ($_) {
-            when ('ssh') { my $p=$port; $p ||= 22; $session->spawn("ssh -p $p -l $rtr->{user} $ssho $cipher $hostname"); }
-            when ('telnet') { my $p=$port; $p ||= 23; $session->spawn("telnet $hostname $p"); }
-            default { die "No program defined for method $_\n"; }
-        }
+        if ($_ eq 'ssh') { my $p=$port; $p ||= 22; $session->spawn("ssh -p $p -l $rtr->{user} $ssho $cipher $hostname"); }
+        elsif ($_ eq 'telnet') { my $p=$port; $p ||= 23; $session->spawn("telnet $hostname $p"); }
+        else { die "No program defined for method $_\n"; }
 
         $session->expect($self->{timeout},
                 @dynamic,
