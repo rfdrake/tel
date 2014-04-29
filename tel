@@ -132,6 +132,7 @@ sub load_profile {
         }
     }
     $self->{'profile'}=$rtr;
+    return $self->{'profile'};
 }
 
 sub get_password {
@@ -201,8 +202,8 @@ sub login {
     my $allied_shit=0;
     # handle MOTD profile loading, and other things parsed from the config
     my @dynamic;
-    foreach my $banner (keys %{$config->{banners}}) {
-        push @dynamic, [ $banner, sub { $rtr = load_profile($rtr, $config->{banners}{$banner}); exp_continue; } ];
+    foreach my $profile (keys %{$config->{banners}}) {
+        push @dynamic, [ $profile, sub { $rtr = $self->load_profile($config->{banners}{$profile}); exp_continue; } ];
     }
     if (defined($rtr->{prompt})) {
         push @dynamic, [ qr/$rtr->{prompt}/, sub { $connected=1; last METHOD; } ];
