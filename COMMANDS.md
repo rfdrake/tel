@@ -115,6 +115,34 @@ a Keyring for authentication.  It uses the Passwd::Keyring::Auto module for
 this if it's installed.  If the password isn't found it will prompt you for it
 and store it in the keyring.
 
+We also support retrieving the password from KeePass if the File::KeePass
+module is available.
+
+### keepass file
+
+If you set this argument to a file then it will attempt to read the password
+from keepass.
+
+    keepass_file => $ENV{HOME} . "/keepass.kdbx",
+
+### keepass title
+
+Setting keepass title tells it where to lookup the password in the file.  If
+this is needed but not set we exit with a warning.
+
+    keepass_title => 'my router password',
+
+### keepass masterpwd
+
+I don't advise you to store your keepass password anywhere in plaintext, but
+if you want to pass it to the script in an environment variable then you can
+specify it here
+
+    keepass_masterpwd => $ENV{KEEPASSPASSWORD},
+
+Alternatively, I'm not sure how it'll work yet but maybe we could get the
+keepass password from a keyring lookup, or cache it in some other way.
+
 
 # wishlist
 
