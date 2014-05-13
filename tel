@@ -81,7 +81,7 @@ sub new {
 }
 
 sub handle_backspace {
-    ${$_[0]}->send("\b");
+    ${$_[0]}->expect->send("\b");
     return 1;
 }
 
@@ -91,7 +91,17 @@ sub handle_ctrl_z {
 }
 
 
-# everything below here is a method
+# everything below here is a method.  Everything above is a function.
+###################################################################################################################
+
+
+sub send {
+    return shift->{'session'}->send(@_);
+}
+
+sub expect {
+    return shift->{'session'};
+}
 
 # find the router by hostname/regex and load the config associated with it
 sub rtr_find {
@@ -127,7 +137,7 @@ sub load_profile {
         $rtr = merge($rtr, $config->{profile}{$_});
         if ($rtr->{handlers}) {
             foreach my $v (keys %{$rtr->{handlers}}) {
-                $stdin->set_seq($v, $rtr->{handlers}{$v}, [ \$session ]);
+                $stdin->set_seq($v, $rtr->{handlers}{$v}, [ \$self ]);
             }
         }
     }
