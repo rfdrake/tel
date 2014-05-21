@@ -95,7 +95,7 @@ sub new {
         'keyring' => $keyring,
     };
 
-    bless($self, 'Local::Tel');
+    bless($self, 'Expect::Tel');
     return $self;
 }
 
