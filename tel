@@ -1,17 +1,36 @@
 #!/usr/bin/perl
 
 use strict;
-package Local::Tel;
+package Expect::Tel;
 use Expect;
 use Getopt::Std;
 use Hash::Merge::Simple qw (merge);
 use Module::Load;
-use feature qw ( switch );
+use v5.10;
+our $VERSION = eval '0.15';
 
 __PACKAGE__->main() unless caller;
 
+=head1 VERSION
+
+0.15
+
+=head1 AUTHOR
+
+Robert Drake, C<< <rdrake at cpan.org> >>
+
+=head1 COPYRIGHT & LICENSE
+
+Copyright 2006 Robert Drake, all rights reserved.
+
+This program is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+=cut
+
+
 sub main {
-    my $self = Local::Tel->new();
+    my $self = Expect::Tel->new();
     $self->{config} = load_config();
 
     my $opts;
@@ -339,3 +358,4 @@ sub conn {
     $session->soft_close();
 }
 
+1;
