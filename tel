@@ -46,7 +46,9 @@ sub main {
 }
 
 sub load_config {
+    my $override = shift;
     my @configs = ( "/etc/telrc", "/usr/local/etc/telrc", "$ENV{HOME}/.telrc2", "$ENV{TELRC}" );
+    unshift(@configs, $override) if ($override);
     our $telrc;
     my $config;
 
@@ -100,7 +102,7 @@ sub new {
 }
 
 sub handle_backspace {
-    ${$_[0]}->expect->send("\b");
+    ${$_[0]}->send("\b");
     return 1;
 }
 
@@ -119,7 +121,7 @@ sub send {
 }
 
 sub expect {
-    return shift->{'session'};
+    return shift->{'session'}->expect(@_);
 }
 
 # find the router by hostname/regex and load the config associated with it
@@ -147,7 +149,11 @@ sub load_profile {
     my $config = $self->{'config'};
     my $session = $self->{'session'};
     my $rtr;
+
+    return if (!defined($profile));
+
     if (!$replace) {
+        # load the existing profile if we aren't replacing it.
         $rtr = $self->{'profile'};
     }
 
@@ -185,27 +191,40 @@ sub get_password {
     }
 }
 
+# this sets up the session.  If there already is a session open it closes and
+# opens a new one.
+sub connect {
+    my $self = shift;
+    my @arguments = shift;
+    my $session = $self->{'session'};
+    $session->soft_close() if ($session && $session->pid());
+    $self->{session} = init_session();
+    $session=$self->{session};
+
+    $session->spawn(@arguments);
+}
+
 sub login {
     my $self = shift;
     my $hostname = shift;
     my $config = $self->{'config'};
-    my @methods = ( "ssh", "telnet" );
     my $connected = 0;
-    my $port;  # undefined unless set on the CLI.  It will be overriden by load_profile or method defaults
+    my @methods = qw ( ssh telnet );
+    my $port;
 
-    if ($hostname =~ /(\S+):(\d+)/) {
+    if ($hostname =~ /(\s+):(\d+)/) {
         # check for name:port, assume telnet if a port is specified and protocol is not
         $hostname = $1;
         $port = $2;
         @methods = ( "telnet" );
     }
 
-    # default profile always loads before anything else.  Replace == 1 
+    # default profile always loads before anything else.  Replace == 1
     $self->load_profile('default', 1);
     $self->rtr_find($hostname);
     # this looks silly, but we're looking for a profile name that is set
     # inside the loaded profile we pulled out of rtr_find.
-    $self->load_profile($self->{profile}->{profile}) if (defined($self->{profile}->{profile}));
+    $self->load_profile($self->{profile}->{profile});
 
     my $rtr = $self->{profile};
 
@@ -223,8 +242,8 @@ sub login {
     @methods = split(/,/, $rtr->{method}) if (defined($rtr->{method}));
 
     my $ssho = '-o StrictHostKeyChecking=no';
-    if (defined($rtr->{sshoptions}) && $rtr->{sshoptions} > -1) {
-        my @sshoptions = @{$rtr->{sshoptions}} if (defined($rtr->{sshoptions}));
+    if (defined($rtr->{sshoptions}) && scalar $rtr->{sshoptions} > 0) {
+        my @sshoptions = @{$rtr->{sshoptions}};
         $ssho = '-o '. join(' -o ', @sshoptions);
     }
 
@@ -234,41 +253,43 @@ sub login {
     foreach my $profile (keys %{$config->{banners}}) {
         push @dynamic, [ $profile, sub { $rtr = $self->load_profile($config->{banners}{$profile}); exp_continue; } ];
     }
+
     if (defined($rtr->{prompt})) {
         push @dynamic, [ qr/$rtr->{prompt}/, sub { $connected=1; last METHOD; } ];
     }
 
     METHOD: for (@methods) {
         my $cipher = '-c ' . $rtr->{ciphertype} if ($rtr->{ciphertype});
-        my $session = $self->{'session'};
-        $session->soft_close() if ($session && $session->pid());
-        $self->{session} = init_session();
-        $session=$self->{session};
 
-        $port ||= $rtr->{port};
+        $port ||= $rtr->{port};  # if port isn't set by the above hostname:port get it from the profile.
+        # if it's not set in the profile or code above, it gets set in the
+        # method below, but needs to be reset on each loop to change from
+        # telnet to ssh defaults
+        my $p = $port;
 
-        if ($_ eq 'ssh') { my $p=$port; $p ||= 22; $session->spawn("ssh -p $p -l $rtr->{user} $ssho $cipher $hostname"); }
-        elsif ($_ eq 'telnet') { my $p=$port; $p ||= 23; $session->spawn("telnet $hostname $p"); }
+        if ($_ eq 'ssh')        { $p ||= 22; $self->connect("ssh -p $p -l $rtr->{user} $ssho $cipher $hostname"); }
+        elsif ($_ eq 'telnet')  { $p ||= 23; $self->connect("telnet $hostname $p"); }
+        elsif ($_ eq 'loop')    { $self->connect("loopback.pl"); }
         else { die "No program defined for method $_\n"; }
 
-        $session->expect($self->{timeout},
+        $self->expect($self->{timeout},
                 @dynamic,
                 # fucking shitty allied telesyn
                 [ qr/User Access Verification - RADIUS/ => sub { $allied_shit=1;
-                    $session->send("$rtr->{user}\r".$self->get_password()."\r"); exp_continue } ],
+                    $self->send("$rtr->{user}\r".$self->get_password()."\r"); exp_continue } ],
                 [ qr/User Access Verification - Local/ => sub {
-                    $session->send("$rtr->{user}\r".$self->get_password()."\r"); $connected=1; last METHOD; } ],
+                    $self->send("$rtr->{user}\r".$self->get_password()."\r"); $connected=1; last METHOD; } ],
                 [ qr/[Uu]ser[Nn]ame:|Login:/ => sub {
-                    $session->send("$rtr->{user}\r") unless($allied_shit); exp_continue; } ],
+                    $self->send("$rtr->{user}\r") unless($allied_shit); exp_continue; } ],
                 # we need to handle enable in a better way than this.  Enable
                 # should support different password than regular if need be.
                 [ qr/[Pp]ass[Ww]ord/ => sub {
                     if ($allied_shit) {
                         exp_continue;
                     } else {
-                        $session->send($self->get_password() ."\r");
+                        $self->send($self->get_password() ."\r");
                         if ($rtr->{enablecmd}) {
-                            $session->send($rtr->{enablecmd} . "\r".$self->get_password('enable')."\r");
+                            $self->send($rtr->{enablecmd} . "\r".$self->get_password('enable')."\r");
                         }
                         $connected=1;
                         last METHOD;
