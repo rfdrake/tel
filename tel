@@ -42,13 +42,16 @@ sub main {
         s#/tftpboot/##;
         s/-confg//;
         $self->login($_);
+        if ($self->connected) {
+            $self->conn($self->{'profile'}->{autocmds});
+        }
     }
 }
 
 sub load_config {
     my $override = shift;
     my @configs = ( "/etc/telrc", "/usr/local/etc/telrc", "$ENV{HOME}/.telrc2", "$ENV{TELRC}" );
-    unshift(@configs, $override) if ($override);
+    @configs = qw ( $override ) if ($override);
     our $telrc;
     my $config;
 
@@ -93,6 +96,7 @@ sub new {
 
     my $self = {
         'stdin' => Expect->exp_init(\*STDIN),
+        'connected' => 0,
         'has_keyring' => $has_keyring,
         'keyring' => $keyring,
     };
@@ -141,53 +145,52 @@ sub rtr_find {
     $self->{'profile'}=$profile;
 }
 
-sub load_profile {
+sub profile {
     my $self = shift;
-    my $profile = shift;
+    my $profile_arg = shift;
     my $replace = shift;
     my $stdin = $self->{'stdin'};
     my $config = $self->{'config'};
     my $session = $self->{'session'};
-    my $rtr;
+    my $profile = $self->{'profile'};
 
-    return if (!defined($profile));
+    return $profile if (!defined($profile_arg));
 
-    if (!$replace) {
-        # load the existing profile if we aren't replacing it.
-        $rtr = $self->{'profile'};
+    if ($replace) {
+        # wipe out the old profile if we're replacing it.
+        $profile = {};
     }
 
-    my @profiles = split(/\+/, $profile);
-    foreach(@profiles) {
-        $rtr = merge($rtr, $config->{profile}{$_});
-        if ($rtr->{handlers}) {
-            foreach my $v (keys %{$rtr->{handlers}}) {
-                $stdin->set_seq($v, $rtr->{handlers}{$v}, [ \$self ]);
+    foreach(split(/\+/, $profile_arg)) {
+        $profile = merge($profile, $config->{profile}{$_});
+        if ($profile->{handlers}) {
+            foreach my $v (keys %{$profile->{handlers}}) {
+                $stdin->set_seq($v, $profile->{handlers}{$v}, [ \$self ]);
             }
         }
     }
-    $self->{'profile'}=$rtr;
-    return $self->{'profile'};
+    $self->{'profile'}=$profile;
+    return $profile;
 }
 
 sub get_password {
     my $self = shift;
-    my $rtr = $self->{profile};
-    my $router = $rtr->{real_hostname};
+    my $profile = $self->profile;
+    my $router = $profile->{real_hostname};
 
     # only use keyring if the password hasn't been found in our config files
-    if ($rtr->{password} ne '') {
-        return $rtr->{password};
+    if ($profile->{password} ne '') {
+        return $profile->{password};
     }
 
     if ($self->{has_keyring}) {
-        my $password = $self->{keyring}->get_password($rtr->{profile}, $router);
+        my $password = $self->{keyring}->get_password($profile->{profile}, $router);
         if (!$password) {
             # ... somehow interactively prompt for password
-            $self->{keyring}->set_password($rtr->{profile}, $password, $router);
+            $self->{keyring}->set_password($profile->{profile}, $password, $router);
         }
     } else {
-        return $rtr->{password};
+        return $profile->{password};
     }
 }
 
@@ -196,12 +199,28 @@ sub get_password {
 sub connect {
     my $self = shift;
     my @arguments = shift;
+
+    $self->connected(0);
     my $session = $self->{'session'};
     $session->soft_close() if ($session && $session->pid());
     $self->{session} = init_session();
     $session=$self->{session};
 
     $session->spawn(@arguments);
+}
+
+# connected, returns connection status.  Sets status if given input.
+# this isn't the session state, but an indicator that our session has
+# gotten through the login stage and is now waiting for input.
+
+sub connected {
+    my $self = shift;
+    my $status = shift;
+    if ($status) {
+        $self->{connected}=$status;
+    }
+
+    return $self->{connected};
 }
 
 sub login {
@@ -220,13 +239,11 @@ sub login {
     }
 
     # default profile always loads before anything else.  Replace == 1
-    $self->load_profile('default', 1);
+    $self->profile('default', 1);
     $self->rtr_find($hostname);
     # this looks silly, but we're looking for a profile name that is set
     # inside the loaded profile we pulled out of rtr_find.
-    $self->load_profile($self->{profile}->{profile});
-
-    my $rtr = $self->{profile};
+    my $rtr = $self->profile($self->{profile}->{profile});
 
     # if hostname is defined as a method then call it to determine the real hostname
     # if it's not then treat it as an alias.
@@ -251,11 +268,11 @@ sub login {
     # handle MOTD profile loading, and other things parsed from the config
     my @dynamic;
     foreach my $profile (keys %{$config->{banners}}) {
-        push @dynamic, [ $profile, sub { $rtr = $self->load_profile($config->{banners}{$profile}); exp_continue; } ];
+        push @dynamic, [ $profile, sub { $rtr = $self->profile($config->{banners}{$profile}); exp_continue; } ];
     }
 
     if (defined($rtr->{prompt})) {
-        push @dynamic, [ qr/$rtr->{prompt}/, sub { $connected=1; last METHOD; } ];
+        push @dynamic, [ qr/$rtr->{prompt}/, sub { $self->connected(1); last METHOD; } ];
     }
 
     METHOD: for (@methods) {
@@ -269,7 +286,8 @@ sub login {
 
         if ($_ eq 'ssh')        { $p ||= 22; $self->connect("ssh -p $p -l $rtr->{user} $ssho $cipher $hostname"); }
         elsif ($_ eq 'telnet')  { $p ||= 23; $self->connect("telnet $hostname $p"); }
-        elsif ($_ eq 'loop')    { $self->connect("loopback.pl"); }
+        # for testing. can pass an expect script to the other side and use it's output as our input.
+        elsif ($_ eq 'exec')    { $self->connect($hostname); }
         else { die "No program defined for method $_\n"; }
 
         $self->expect($self->{timeout},
@@ -278,7 +296,7 @@ sub login {
                 [ qr/User Access Verification - RADIUS/ => sub { $allied_shit=1;
                     $self->send("$rtr->{user}\r".$self->get_password()."\r"); exp_continue } ],
                 [ qr/User Access Verification - Local/ => sub {
-                    $self->send("$rtr->{user}\r".$self->get_password()."\r"); $connected=1; last METHOD; } ],
+                    $self->send("$rtr->{user}\r".$self->get_password()."\r"); $self->connected(1); last METHOD; } ],
                 [ qr/[Uu]ser[Nn]ame:|Login:/ => sub {
                     $self->send("$rtr->{user}\r") unless($allied_shit); exp_continue; } ],
                 # we need to handle enable in a better way than this.  Enable
@@ -291,7 +309,7 @@ sub login {
                         if ($rtr->{enablecmd}) {
                             $self->send($rtr->{enablecmd} . "\r".$self->get_password('enable')."\r");
                         }
-                        $connected=1;
+                        $self->connected(1);
                         last METHOD;
                     }
                 } ],
@@ -321,14 +339,13 @@ sub login {
         );
     }
 
-    if (!$connected) {
+    if (!$self->connected) {
         warn "Connection to $hostname failed.\n";
         return;
     }
 
     $rtr->{logoutcmd} ||= "logout";
     $self->logging($hostname) if ($self->{opts}->{l});
-    $self->conn($rtr->{autocmds});
 }
 
 sub logging {
@@ -341,10 +358,11 @@ sub logging {
 sub conn {
     my $self = shift;
     my $autocmds = shift;
-    my $session = $self->{session};
-    my $rtr = $self->{profile};
+    my $profile = $self->profile;
+    # still needed for soft_close and interact
+    my $session = $self->{'session'};
     my $opts = $self->{opts};
-    my $prompt = $rtr->{prompt};
+    my $prompt = $profile->{prompt};
     $prompt ||= '#';
 
     winch();
@@ -357,24 +375,24 @@ sub conn {
     }
 
     if (@args) {
-        $session->expect(10,'-re',$prompt);
-        $session->send("term len 0\r");
-        $session->expect(10,'-re',$prompt);
+        $self->expect(10,'-re',$prompt);
+        $self->send("term len 0\r");
+        $self->expect(10,'-re',$prompt);
         foreach my $arg (@args) {
-            $session->send("$arg\r");
-            $session->expect(10,'-re',$prompt);
+            $self->send("$arg\r");
+            $self->expect(10,'-re',$prompt);
         }
-        $session->send($rtr->{logoutcmd} ."\r");
+        $self->send($profile->{logoutcmd} ."\r");
     } else {
-        $session->send("term len 0\r") if ($opts->{l});
+        $self->send("term len 0\r") if ($opts->{l});
         foreach my $arg (@{$autocmds}) {
-            $session->send("$arg\r");
-            $session->expect(10,'-re',$prompt);
+            $self->send("$arg\r");
+            $self->expect(10,'-re',$prompt);
         }
         $session->interact($self->{stdin}, '\cD');
         # q\b is to end anything that's at a More prompt or other dialog and
         # get you back to the command prompt
-        $session->send("q\b" . $rtr->{logoutcmd}. "\r");
+        $self->send("q\b" . $profile->{logoutcmd}. "\r");
     }
     $session->soft_close();
 }
