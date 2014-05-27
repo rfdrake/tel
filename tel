@@ -43,6 +43,7 @@ sub main {
         s/-confg//;
         $self->login($_);
         if ($self->connected) {
+            $self->enable();
             $self->conn($self->{'profile'}->{autocmds});
         }
     }
@@ -250,6 +251,24 @@ sub connected {
     return $self->{connected};
 }
 
+# if enablecmd is set then this method attempts to enable the user
+
+sub enable {
+    my $self = shift;
+    my $profile = $self->profile;
+
+    if ($profile->{enablecmd}) {
+        $self->send($profile->{enablecmd} . "\r");
+
+        # we need to be able to handle routers that prompt for username and password
+        # need to check the results to see if enable succeeded
+        $self->expect($self->{timeout}, [ qr/[Pp]assword:/ => sub { $self->send($self->password('enable') . "\r"); } ]);
+    }
+
+    $self->{enabled}=1;
+    return $self->{enabled};
+}
+
 sub login {
     my $self = shift;
     my $hostname = shift;
@@ -328,9 +347,6 @@ sub login {
                         exp_continue;
                     } else {
                         $self->send($self->password() ."\r");
-                        if ($rtr->{enablecmd}) {
-                            $self->send($rtr->{enablecmd} . "\r".$self->password('enable')."\r");
-                        }
                         $self->connected(1);
                         last METHOD;
                     }
