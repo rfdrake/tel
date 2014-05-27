@@ -66,25 +66,6 @@ sub load_config {
     return $config;
 }
 
-# Expect won't let you reuse a connection that has spawned a process, so we
-# need this to reinitialize the session when a method fails or we're loading a
-# new router.
-sub init_session {
-    my $session = new Expect;
-
-    # install sig handler for window size change
-    $SIG{WINCH} = \&winch;
-
-    sub winch {
-        eval { $session->slave->clone_winsize_from(\*STDIN); };
-        kill WINCH => $session->pid if $session->pid;
-        $SIG{WINCH} = \&winch;
-    }
-
-    $session->log_stdout(1);
-    return $session;
-}
-
 sub new {
     my $has_keyring = 1;
     my $keyring;
@@ -128,7 +109,8 @@ sub expect {
     return shift->{'session'}->expect(@_);
 }
 
-# find the router by hostname/regex and load the config associated with it
+# find the router by hostname/regex and load the config associated with it.
+# Load a profile for it if there is one.
 sub rtr_find {
     my $self = shift;
     my $host = shift;
@@ -143,6 +125,12 @@ sub rtr_find {
         }
     }
     $self->{'profile'}=$profile;
+
+    if (defined($profile->{profile})) {
+        return $self->profile($profile->{profile});
+    }
+
+    return $profile;
 }
 
 sub profile {
@@ -194,6 +182,35 @@ sub get_password {
     }
 }
 
+# Expect won't let you reuse a connection that has spawned a process, so you
+# can call this with an argument to reset the session.  If called without an
+# argument it will return the current session (If it exists) or create a new
+# session.
+sub session {
+    my $self = shift;
+    my $renew = shift;
+
+    return $self->{'session'} if (!$renew && defined($self->{'session'}));
+    my $session = $self->{'session'};
+
+    $session->soft_close() if ($session && $session->pid());
+    $session = new Expect;
+
+    # install sig handler for window size change
+    $SIG{WINCH} = \&winch;
+
+    sub winch {
+        eval { $session->slave->clone_winsize_from(\*STDIN); };
+        kill WINCH => $session->pid if $session->pid;
+        $SIG{WINCH} = \&winch;
+    }
+
+    $session->log_stdout(1);
+    $self->{'session'} = $session;
+    return $session;
+}
+
+
 # this sets up the session.  If there already is a session open it closes and
 # opens a new one.
 sub connect {
@@ -201,12 +218,9 @@ sub connect {
     my @arguments = shift;
 
     $self->connected(0);
-    my $session = $self->{'session'};
-    $session->soft_close() if ($session && $session->pid());
-    $self->{session} = init_session();
-    $session=$self->{session};
-
+    my $session = $self->session(1);
     $session->spawn(@arguments);
+    return $session;
 }
 
 # connected, returns connection status.  Sets status if given input.
@@ -240,10 +254,7 @@ sub login {
 
     # default profile always loads before anything else.  Replace == 1
     $self->profile('default', 1);
-    $self->rtr_find($hostname);
-    # this looks silly, but we're looking for a profile name that is set
-    # inside the loaded profile we pulled out of rtr_find.
-    my $rtr = $self->profile($self->{profile}->{profile});
+    my $rtr = $self->rtr_find($hostname);
 
     # if hostname is defined as a method then call it to determine the real hostname
     # if it's not then treat it as an alias.
@@ -352,15 +363,13 @@ sub logging {
     my $self = shift;
     my $router = shift;
     unlink ("/tmp/$router.log") if (-f "/tmp/$router.log");
-    $self->{session}->log_file("/tmp/$router.log");
+    $self->session->log_file("/tmp/$router.log");
 }
 
 sub conn {
     my $self = shift;
     my $autocmds = shift;
     my $profile = $self->profile;
-    # still needed for soft_close and interact
-    my $session = $self->{'session'};
     my $opts = $self->{opts};
     my $prompt = $profile->{prompt};
     $prompt ||= '#';
@@ -389,12 +398,12 @@ sub conn {
             $self->send("$arg\r");
             $self->expect(10,'-re',$prompt);
         }
-        $session->interact($self->{stdin}, '\cD');
+        $self->session->interact($self->{stdin}, '\cD');
         # q\b is to end anything that's at a More prompt or other dialog and
         # get you back to the command prompt
         $self->send("q\b" . $profile->{logoutcmd}. "\r");
     }
-    $session->soft_close();
+    $self->session->soft_close();
 }
 
 1;
