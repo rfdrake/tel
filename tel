@@ -161,14 +161,29 @@ sub profile {
     return $profile;
 }
 
-sub get_password {
+# This pulls the password from the config.  If the password is blank it checks
+# to see if you have Keyring support, or Keepass support, then tries to load
+# the password from there.
+# By default it will pull the regular password.  To pull the enable password
+# you can call it with $self->password('enable');
+sub password {
     my $self = shift;
+    my $type = shift;
     my $profile = $self->profile;
     my $router = $profile->{real_hostname};
 
-    # only use keyring if the password hasn't been found in our config files
-    if ($profile->{password} ne '') {
-        return $profile->{password};
+    $type ||= 'password';
+
+    warn "Unknown password type $type" if ($type ne 'password' && $type ne 'enable');
+
+    if ($profile->{$type} ne '') {
+        return $profile->{$type};
+    }
+
+    # if enable is blank but password has something then use the same password
+    # for enable.
+    if ($type eq 'enable' and $profile->{$type} eq '' && $profile->{'password'} ne '') {
+        return $profile->{'password'};
     }
 
     if ($self->{has_keyring}) {
@@ -177,8 +192,6 @@ sub get_password {
             # ... somehow interactively prompt for password
             $self->{keyring}->set_password($profile->{profile}, $password, $router);
         }
-    } else {
-        return $profile->{password};
     }
 }
 
@@ -305,20 +318,18 @@ sub login {
                 @dynamic,
                 # fucking shitty allied telesyn
                 [ qr/User Access Verification - RADIUS/ => sub { $allied_shit=1;
-                    $self->send("$rtr->{user}\r".$self->get_password()."\r"); exp_continue } ],
+                    $self->send("$rtr->{user}\r".$self->password()."\r"); exp_continue } ],
                 [ qr/User Access Verification - Local/ => sub {
-                    $self->send("$rtr->{user}\r".$self->get_password()."\r"); $self->connected(1); last METHOD; } ],
+                    $self->send("$rtr->{user}\r".$self->password()."\r"); $self->connected(1); last METHOD; } ],
                 [ qr/[Uu]ser[Nn]ame:|Login:/ => sub {
                     $self->send("$rtr->{user}\r") unless($allied_shit); exp_continue; } ],
-                # we need to handle enable in a better way than this.  Enable
-                # should support different password than regular if need be.
                 [ qr/[Pp]ass[Ww]ord/ => sub {
                     if ($allied_shit) {
                         exp_continue;
                     } else {
-                        $self->send($self->get_password() ."\r");
+                        $self->send($self->password() ."\r");
                         if ($rtr->{enablecmd}) {
-                            $self->send($rtr->{enablecmd} . "\r".$self->get_password('enable')."\r");
+                            $self->send($rtr->{enablecmd} . "\r".$self->password('enable')."\r");
                         }
                         $self->connected(1);
                         last METHOD;
