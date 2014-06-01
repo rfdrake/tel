@@ -34,14 +34,39 @@ sub main {
     $self->{config} = load_config();
 
     my $opts;
-    getopts('lx:c:t:', $opts);
+    getopts('lx:c:t:p:', $opts);
     $self->{timeout} = $opts->{t} ? $opts->{t} : 90;
     $self->{opts} = $opts;
 
     for (@ARGV) {
         s#/tftpboot/##;
         s/-confg//;
-        $self->login($_);
+
+        my $hostname = $_;
+        # default profile always loads before anything else.  replace == 1
+        $self->profile('default', 1);
+        $self->{port}=$opts->{p}; # default to whatever port is set with -p
+        $self->{methods} = [ "ssh", "telnet" ];
+
+        if ($hostname =~ /(\S+):(\d+)/) {
+            $self->{port} = $2;
+            $self->{methods} = [ "telnet" ];
+            $hostname = $1;
+        }
+
+        # load profile based on the hostname
+        $self->rtr_find($hostname);
+        # if rtr->hostname is defined as code then call it to determine the real hostname
+        # if it's not then treat it as an alias.
+        if (defined($self->profile->{hostname})) {
+            if (ref($self->profile->{hostname}) eq 'CODE') {
+                $hostname = &{$self->profile->{hostname}}($hostname);
+            } else {
+                $hostname = $self->profile->{hostname};
+            }
+        }
+
+        $self->login($hostname);
         if ($self->connected) {
             $self->enable();
             $self->conn($self->{'profile'}->{autocmds});
@@ -63,7 +88,6 @@ sub load_config {
             $config = merge($config, $telrc);
         }
     }
-
     return $config;
 }
 
@@ -108,6 +132,17 @@ sub send {
 
 sub expect {
     return shift->{'session'}->expect(@_);
+}
+
+sub banners {
+    my $self = shift;
+    return $self->{banners} if ($self->{banners});
+    my $config = $self->{'config'};
+
+    while (my ($regex, $profile) = each %{$config->{banners}}) {
+        push @{$self->{banners}}, [ $regex, sub { $self->profile($profile); exp_continue; } ];
+    }
+    return $self->{banners};
 }
 
 # find the router by hostname/regex and load the config associated with it.
@@ -272,33 +307,14 @@ sub enable {
 sub login {
     my $self = shift;
     my $hostname = shift;
-    my $config = $self->{'config'};
-    my @methods = qw ( ssh telnet );
-    my $port;
 
-    if ($hostname =~ /(\S+):(\d+)/) {
-        # check for name:port, assume telnet if a port is specified and protocol is not
-        $hostname = $1;
-        $port = $2;
-        @methods = ( "telnet" );
-    }
+    # dumb stuff to alias $rtr to the contents of $self->{'profile'}
+    # needed because we reload the profile in the expect loop and can't update
+    # the alias.
+    our $rtr;
+    *rtr = \$self->{'profile'};
 
-    # default profile always loads before anything else.  Replace == 1
-    $self->profile('default', 1);
-    my $rtr = $self->rtr_find($hostname);
-
-    # if hostname is defined as a method then call it to determine the real hostname
-    # if it's not then treat it as an alias.
-    if (defined($rtr->{hostname})) {
-        if (ref($rtr->{hostname}) eq 'CODE') {
-            $hostname = &{$rtr->{hostname}}($hostname);
-        } else {
-            $hostname = $rtr->{hostname};
-        }
-    }
-    $rtr->{real_hostname}=$hostname;
-
-    @methods = split(/,/, $rtr->{method}) if (defined($rtr->{method}));
+    @{$self->{methods}} = split(/,/, $rtr->{method}) if (defined($rtr->{method}));
 
     my $ssho = '-o StrictHostKeyChecking=no';
     if (defined($rtr->{sshoptions}) && scalar $rtr->{sshoptions} > 0) {
@@ -306,25 +322,22 @@ sub login {
         $ssho = '-o '. join(' -o ', @sshoptions);
     }
 
-    my $allied_shit=0;
+    my $cipher = '-c ' . $rtr->{ciphertype} if ($rtr->{ciphertype});
+
     # handle MOTD profile loading, and other things parsed from the config
     my @dynamic;
-    foreach my $profile (keys %{$config->{banners}}) {
-        push @dynamic, [ $profile, sub { $rtr = $self->profile($config->{banners}{$profile}); exp_continue; } ];
-    }
-
     if (defined($rtr->{prompt})) {
         push @dynamic, [ qr/$rtr->{prompt}/, sub { $self->connected(1); last METHOD; } ];
     }
 
-    METHOD: for (@methods) {
-        my $cipher = '-c ' . $rtr->{ciphertype} if ($rtr->{ciphertype});
+    METHOD: for (@{$self->{methods}}) {
+        my $allied_shit=0;
 
-        $port ||= $rtr->{port};  # if port isn't set by the above hostname:port get it from the profile.
+        $self->{port} ||= $rtr->{port};  # if port isn't set get it from the profile.
         # if it's not set in the profile or code above, it gets set in the
         # method below, but needs to be reset on each loop to change from
         # telnet to ssh defaults
-        my $p = $port;
+        my $p = $self->{port};
 
         if ($_ eq 'ssh')        { $p ||= 22; $self->connect("ssh -p $p -l $rtr->{user} $ssho $cipher $hostname"); }
         elsif ($_ eq 'telnet')  { $p ||= 23; $self->connect("telnet $hostname $p"); }
@@ -333,6 +346,7 @@ sub login {
         else { die "No program defined for method $_\n"; }
 
         $self->expect($self->{timeout},
+                @{$self->banners()},
                 @dynamic,
                 # fucking shitty allied telesyn
                 [ qr/User Access Verification - RADIUS/ => sub { $allied_shit=1;
