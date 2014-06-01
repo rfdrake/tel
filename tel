@@ -273,11 +273,10 @@ sub login {
     my $self = shift;
     my $hostname = shift;
     my $config = $self->{'config'};
-    my $connected = 0;
     my @methods = qw ( ssh telnet );
     my $port;
 
-    if ($hostname =~ /(\s+):(\d+)/) {
+    if ($hostname =~ /(\S+):(\d+)/) {
         # check for name:port, assume telnet if a port is specified and protocol is not
         $hostname = $1;
         $port = $2;
