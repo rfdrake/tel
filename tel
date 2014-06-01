@@ -39,34 +39,13 @@ sub main {
     $self->{opts} = $opts;
 
     for (@ARGV) {
-        s#/tftpboot/##;
-        s/-confg//;
-
-        my $hostname = $_;
         # default profile always loads before anything else.  replace == 1
         $self->profile('default', 1);
         $self->{port}=$opts->{p}; # default to whatever port is set with -p
         $self->{methods} = [ "ssh", "telnet" ];
 
-        if ($hostname =~ /(\S+):(\d+)/) {
-            $self->{port} = $2;
-            $self->{methods} = [ "telnet" ];
-            $hostname = $1;
-        }
-
-        # load profile based on the hostname
-        $self->rtr_find($hostname);
-        # if rtr->hostname is defined as code then call it to determine the real hostname
-        # if it's not then treat it as an alias.
-        if (defined($self->profile->{hostname})) {
-            if (ref($self->profile->{hostname}) eq 'CODE') {
-                $hostname = &{$self->profile->{hostname}}($hostname);
-            } else {
-                $hostname = $self->profile->{hostname};
-            }
-        }
-
-        $self->login($hostname);
+        $self->hostname($_);
+        $self->login($self->hostname);
         if ($self->connected) {
             $self->enable();
             $self->conn($self->{'profile'}->{autocmds});
@@ -122,9 +101,9 @@ sub handle_ctrl_z {
 }
 
 
-# everything below here is a method.  Everything above is a function.
-###################################################################################################################
+=head1 METHODS
 
+=cut
 
 sub send {
     return shift->{'session'}->send(@_);
@@ -133,6 +112,56 @@ sub send {
 sub expect {
     return shift->{'session'}->expect(@_);
 }
+
+
+=head2 hostname
+
+   $hostname = $self->hostname("hostname");
+
+Called to parse the hostname provided by the user when first making a
+connection.  If the hostname has special attributes like a port designation,
+it's parsed here.
+
+This also looks up the profile for the hostname to see if it needs to be
+translated because of an alias.  The final hostname is stored and returned.
+
+
+=cut
+
+sub hostname {
+    my $self = shift;
+    my $hostname = shift;
+
+    if (!defined($hostname)) {
+        return $self->{hostname};
+    }
+
+    $hostname =~ s#/tftpboot/##;
+    $hostname =~ s/-confg//;
+
+
+    if ($hostname =~ /(\S+):(\d+)/) {
+        $self->{port} = $2;
+        $self->{methods} = [ "telnet" ];
+        $hostname = $1;
+    }
+
+    # load profile based on the hostname
+    $self->rtr_find($hostname);
+
+    # if rtr->hostname is defined as code then call it to determine the real hostname
+    # if it's not then treat it as an alias.
+    if (defined($self->profile->{hostname})) {
+        if (ref($self->profile->{hostname}) eq 'CODE') {
+            $hostname = &{$self->profile->{hostname}}($hostname);
+        } else {
+            $hostname = $self->profile->{hostname};
+        }
+    }
+    $self->{hostname} = $hostname;
+    return $self->{hostname};
+}
+
 
 sub banners {
     my $self = shift;
@@ -162,6 +191,7 @@ sub rtr_find {
     }
     $self->{'profile'}=$profile;
 
+    # if the host specified a profile to load then load it here
     if (defined($profile->{profile})) {
         return $self->profile($profile->{profile});
     }
