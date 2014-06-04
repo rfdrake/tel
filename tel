@@ -33,15 +33,15 @@ sub main {
     my $self = Expect::Tel->new();
     $self->{config} = load_config();
 
-    my $opts;
-    getopts('lx:c:t:p:', $opts);
-    $self->{timeout} = $opts->{t} ? $opts->{t} : 90;
-    $self->{opts} = $opts;
+    my %opts;
+    getopts('lx:c:t:p:', \%opts);
+    $self->{timeout} = $opts{t} ? $opts{t} : 90;
+    $self->{opts} = \%opts;
 
     for (@ARGV) {
         # default profile always loads before anything else.  replace == 1
         $self->profile('default', 1);
-        $self->{port}=$opts->{p}; # default to whatever port is set with -p
+        $self->{port}=$opts{p}; # default to whatever port is set with -p
         $self->{methods} = [ "ssh", "telnet" ];
 
         $self->hostname($_);
