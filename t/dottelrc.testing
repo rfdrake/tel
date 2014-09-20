@@ -1,0 +1,10 @@
+$telrc = {
+          'profile' => {
+                       'default' => { 'password' => 'testvty', 'user' => $ENV{USER},
+                                      'sshoptions' => [ 'UserKnownHostsFile=/dev/null', 'StrictHostKeyChecking=no' ] },
+                     },
+          'rtr' => [   # this is an array so order matters
+                   { 'regex' => 'loopback', 'method' => 'exec', enable => 'testenable', enablecmd => 'enable' },
+                ],
+};
+

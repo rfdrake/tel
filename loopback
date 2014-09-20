@@ -1,0 +1,99 @@
+#!/usr/bin/perl
+
+use IO::Stty;
+use strict;
+
+print "Password:";
+IO::Stty::stty(\*STDIN,'-echo');
+my $password = <STDIN>;
+IO::Stty::stty(\*STDIN,'echo');
+print "\n";
+warn "Provided vty password is $password";
+
+print "router-name>";
+
+# get "enable" command
+my $temp = <STDIN>;
+
+print "Password:";
+IO::Stty::stty(\*STDIN,'-echo');
+$password = <STDIN>;
+IO::Stty::stty(\*STDIN,'echo');
+print "\n";
+warn "Provided enable password is $password";
+
+
+sub shver {
+    return <<'EOF';
+Cisco Internetwork Operating System Software
+IOS (tm) s72033_rp Software (s72033_rp-ADVIPSERVICESK9_WAN-M), Version
+12.2(18)SXF15a, RELEASE SOFTWARE (fc1)
+Technical Support: http://www.cisco.com/techsupport
+Copyright (c) 1986-2008 by cisco Systems, Inc.
+Compiled Tue 21-Oct-08 00:04 by kellythw
+Image text-base: 0x40101040, data-base: 0x42DDF3D0
+
+ROM: System Bootstrap, Version 12.2(14r)S9, RELEASE SOFTWARE (fc1)
+BOOTLDR: s72033_rp Software (s72033_rp-ADVIPSERVICESK9_WAN-M), Version
+12.2(18)SXF15a, RELEASE SOFTWARE (fc1)
+
+router-name uptime is 4 years, 4 weeks, 5 days, 22 hours, 8 minutes
+Time since router-name switched to active is 4 years, 4 weeks, 5 days, 6 hours,
+2 minutes
+System returned to ROM by Stateful Switchover (SP by power on)
+System restarted at 00:58:15 EDT Mon Apr 19 2010
+System image file is "disk0:s72033-advipservicesk9_wan-mz.122-18.SXF15a.bin"
+
+
+This product contains cryptographic features and is subject to United
+States and local country laws governing import, export, transfer and
+use. Delivery of Cisco cryptographic products does not imply
+third-party authority to import, export, distribute or use encryption.
+Importers, exporters, distributors and users are responsible for
+compliance with U.S. and local country laws. By using this product you
+agree to comply with applicable laws and regulations. If you are unable
+to comply with U.S. and local laws, return this product immediately.
+
+A summary of U.S. laws governing Cisco cryptographic products may be found at:
+http://www.cisco.com/wwl/export/crypto/tool/stqrg.html
+
+If you require further assistance please contact us by sending email to
+export\@cisco.com.
+
+cisco WS-C6509 (R7000) processor (revision 2.0) with 458720K/65536K bytes of
+memory.
+Processor board ID SCA04300165
+SR71000 CPU at 600Mhz, Implementation 0x504, Rev 1.2, 512KB L2 Cache
+Last reset from power-on
+SuperLAT software (copyright 1990 by Meridian Technology Corp).
+X.25 software, Version 3.0.0.
+Bridging software.
+TN3270 Emulation software.
+24 Virtual Ethernet/IEEE 802.3 interfaces
+48 FastEthernet/IEEE 802.3 interfaces
+56 Gigabit Ethernet/IEEE 802.3 interfaces
+4 Ten Gigabit Ethernet/IEEE 802.3 interfaces
+1917K bytes of non-volatile configuration memory.
+8192K bytes of packet buffer memory.
+
+65536K bytes of Flash internal SIMM (Sector size 512K).
+Configuration register is 0x2102
+
+EOF
+
+}
+
+
+my $input;
+do {
+    if ($input eq "sh ver") {
+        print shver();
+    }
+    print "router-name#";
+    $input = <STDIN>;
+    if (!defined($input)) {
+        print "exit\n";
+        exit;
+    }
+    chomp($input);
+} until ($input eq "logout" || $input eq "exit");

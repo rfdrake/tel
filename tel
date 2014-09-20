@@ -436,6 +436,45 @@ sub logging {
     $self->session->log_file("/tmp/$router.log");
 }
 
+=head2 interact
+
+This is like the Expect.pm interact, only it's designed to watch the input
+buffer from the remote host and modify it if needed.
+
+TODO: this currently doesn't handle backspace correctly.  it leaves the old
+value in the buffer.
+
+Suprisingly, ctrl-a, up arrow and other navigation works.
+
+Doesn't handle hotkeys yet (set_seq)
+
+=cut
+
+sub interact {
+    my $infile = shift;
+    my $escape = shift;
+    my $exp = $self->{'session'};
+
+    my $in_object = Expect->exp_init($infile);
+    my @handles = ($in_object, $exp);
+
+    $exp->set_group($in_object);
+    $in_object->set_group($exp);
+    my $stty = $in_object->exp_stty("-g");
+    $in_object->exp_stty("raw -echo");
+
+    CONTROL:
+    while(1) {
+        Expect::expect(10, '-i', \@handles,
+            [ 'eof', sub { last CONTROL; } ],
+            [ '-ex', $escape, sub { last CONTROL; } ],
+        );
+    }
+
+    # restore stty
+    $in_object->exp_stty($stty);
+}
+
 sub conn {
     my $self = shift;
     my $autocmds = shift;
@@ -469,6 +508,7 @@ sub conn {
             $self->expect(10,'-re',$prompt);
         }
         $self->session->interact($self->{stdin}, '\cD');
+#        $self->interact($self->{stdin}, '\cD');
         # q\b is to end anything that's at a More prompt or other dialog and
         # get you back to the command prompt
         $self->send("q\b" . $profile->{logoutcmd}. "\r");
