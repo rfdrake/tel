@@ -146,8 +146,7 @@ keepass password from a keyring lookup, or cache it in some other way.
 
 # wishlist
 
-1.  Colorized router text, so "show int" errors would show up easily
-2.  scrollback buffer across multiple sessions
-3.  URI methods on the command line, so you could say telnet://routername or ssh://routername if you wanted to override the method
-4.  If it doesn't currently work, handle noenable/no aaa properly
+1.  scrollback buffer across multiple sessions
+2.  URI methods on the command line, so you could say telnet://routername or ssh://routername if you wanted to override the method
+3.  If it doesn't currently work, handle noenable/no aaa properly
 
