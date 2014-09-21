@@ -3,11 +3,14 @@
 use strict;
 package Expect::Tel;
 use Expect;
+use POSIX qw(:sys_wait_h :unistd_h); # For WNOHANG and isatty
 use Getopt::Std;
 use Hash::Merge::Simple qw (merge);
 use Module::Load;
 use v5.10;
 our $VERSION = eval '0.15';
+
+require './rtrcolor.pl';
 
 __PACKAGE__->main() unless caller;
 
@@ -451,28 +454,410 @@ Doesn't handle hotkeys yet (set_seq)
 =cut
 
 sub interact {
-    my $infile = shift;
-    my $escape = shift;
-    my $exp = $self->{'session'};
+    my $self = shift->{'session'};  # go ahead and use session as self
+    my $in_object = shift;
+    my $escape_sequence = shift;
 
-    my $in_object = Expect->exp_init($infile);
-    my @handles = ($in_object, $exp);
+    my ($return_value);
+    my @old_group = $self->set_group();
+    # we know the input is STDIN and that it's an object.
+    my $out_object = Expect->exp_init(\*STDOUT);
+    $out_object->manual_stty(1);
+    $self->set_group($out_object);
 
-    $exp->set_group($in_object);
-    $in_object->set_group($exp);
-    my $stty = $in_object->exp_stty("-g");
-    $in_object->exp_stty("raw -echo");
+    $in_object->set_group($self);
+    $in_object->set_seq($escape_sequence,undef) if defined($escape_sequence);
+    # interconnect normally sets stty -echo raw. Interact really sort
+    # of implies we don't do that by default. If anyone wanted to they could
+    # set it before calling interact, of use interconnect directly.
+    my $old_manual_stty_val = $self->manual_stty();
+    $self->manual_stty(1);
+    # I think this is right. Don't send stuff from in_obj to stdout by default.
+    # in theory whatever 'self' is should echo what's going on.
+    my $old_log_stdout_val = $self->log_stdout();
+    $self->log_stdout(0);
+    $in_object->log_stdout(0);
+    # Allow for the setting of an optional EOF escape function.
+    #  $in_object->set_seq('EOF',undef);
+    #  $self->set_seq('EOF',undef);
+    interconnect($self,$in_object);
+    $self->log_stdout($old_log_stdout_val);
+    $self->set_group(@old_group);
+    # If old_group was undef, make sure that occurs. This is a slight hack since
+    # it modifies the value directly.
+    # Normally an undef passed to set_group will return the current groups.
+    # It is possible that it may be of worth to make it possible to undef
+    # The current group without doing this.
+    unless (@old_group) {
+        @{${*$self}{exp_Listen_Group}} = ();
+    }
+    $self->manual_stty($old_manual_stty_val);
+    return $return_value;
+}
 
-    CONTROL:
-    while(1) {
-        Expect::expect(10, '-i', \@handles,
-            [ 'eof', sub { last CONTROL; } ],
-            [ '-ex', $escape, sub { last CONTROL; } ],
-        );
+sub interconnect {
+	my (@handles) = @_;
+
+	#  my ($handle)=(shift); call as Expect::interconnect($spawn1,$spawn2,...)
+	my ( $nread );
+	my ( $rout, $emask, $eout );
+	my ( $escape_character_buffer );
+	my ( $read_mask, $temp_mask ) = ( '', '' );
+
+	# Get read/write handles
+	foreach my $handle (@handles) {
+		$temp_mask = '';
+		vec( $temp_mask, $handle->fileno(), 1 ) = 1;
+
+		# Under Linux w/ 5.001 the next line comes up w/ 'Uninit var.'.
+		# It appears to be impossible to make the warning go away.
+		# doing something like $temp_mask='' unless defined ($temp_mask)
+		# has no effect whatsoever. This may be a bug in 5.001.
+		$read_mask = $read_mask | $temp_mask;
+	}
+	if ($Expect::Debug) {
+		print STDERR "Read handles:\r\n";
+		foreach my $handle (@handles) {
+			print STDERR "\tRead handle: ";
+			print STDERR "'${*$handle}{exp_Pty_Handle}'\r\n";
+			print STDERR "\t\tListen Handles:";
+			foreach my $write_handle ( @{ ${*$handle}{exp_Listen_Group} } ) {
+				print STDERR " '${*$write_handle}{exp_Pty_Handle}'";
+			}
+			print STDERR ".\r\n";
+		}
+	}
+
+	#  I think if we don't set raw/-echo here we may have trouble. We don't
+	# want a bunch of echoing crap making all the handles jabber at each other.
+	foreach my $handle (@handles) {
+		unless ( ${*$handle}{"exp_Manual_Stty"} ) {
+
+			# This is probably O/S specific.
+			${*$handle}{exp_Stored_Stty} = $handle->exp_stty('-g');
+			print STDERR "Setting tty for ${*$handle}{exp_Pty_Handle} to 'raw -echo'.\r\n"
+				if ${*$handle}{"exp_Debug"};
+			$handle->exp_stty("raw -echo");
+		}
+		foreach my $write_handle ( @{ ${*$handle}{exp_Listen_Group} } ) {
+			unless ( ${*$write_handle}{"exp_Manual_Stty"} ) {
+				${*$write_handle}{exp_Stored_Stty} =
+					$write_handle->exp_stty('-g');
+				print STDERR "Setting ${*$write_handle}{exp_Pty_Handle} to 'raw -echo'.\r\n"
+					if ${*$handle}{"exp_Debug"};
+				$write_handle->exp_stty("raw -echo");
+			}
+		}
+	}
+
+	print STDERR "Attempting interconnection\r\n" if $Expect::Debug;
+
+	# Wait until the process dies or we get EOF
+	# In the case of !${*$handle}{exp_Pid} it means
+	# the handle was exp_inited instead of spawned.
+	CONNECT_LOOP:
+
+	# Go until we have a reason to stop
+	while (1) {
+
+		# test each handle to see if it's still alive.
+		foreach my $read_handle (@handles) {
+			waitpid( ${*$read_handle}{exp_Pid}, WNOHANG )
+				if ( exists( ${*$read_handle}{exp_Pid} )
+				and ${*$read_handle}{exp_Pid} );
+			if (    exists( ${*$read_handle}{exp_Pid} )
+				and ( ${*$read_handle}{exp_Pid} )
+				and ( !kill( 0, ${*$read_handle}{exp_Pid} ) ) )
+			{
+				print STDERR
+					"Got EOF (${*$read_handle}{exp_Pty_Handle} died) reading ${*$read_handle}{exp_Pty_Handle}\r\n"
+					if ${*$read_handle}{"exp_Debug"};
+				last CONNECT_LOOP
+					unless defined( ${ ${*$read_handle}{exp_Function} }{"EOF"} );
+				last CONNECT_LOOP
+					unless &{ ${ ${*$read_handle}{exp_Function} }{"EOF"} }
+					( @{ ${ ${*$read_handle}{exp_Parameters} }{"EOF"} } );
+			}
+		}
+
+		# Every second? No, go until we get something from someone.
+		my $nfound = select( $rout = $read_mask, undef, $eout = $emask, undef );
+
+		# Is there anything to share?  May be -1 if interrupted by a signal...
+		next CONNECT_LOOP if not defined $nfound or $nfound < 1;
+
+		# Which handles have stuff?
+		my @bits = split( //, unpack( 'b*', $rout ) );
+		$eout = 0 unless defined($eout);
+		my @ebits = split( //, unpack( 'b*', $eout ) );
+
+		#    print "Ebits: $eout\r\n";
+		foreach my $read_handle (@handles) {
+			if ( $bits[ $read_handle->fileno() ] ) {
+				$nread = sysread(
+					$read_handle, ${*$read_handle}{exp_Pty_Buffer},
+					1024
+				);
+
+                ${*$read_handle}{exp_Pty_Buffer} = Cisco::Color::colorize(${*$read_handle}{exp_Pty_Buffer});
+				# Appease perl -w
+				$nread = 0 unless defined($nread);
+				print STDERR "interconnect: read $nread byte(s) from ${*$read_handle}{exp_Pty_Handle}.\r\n"
+					if ${*$read_handle}{"exp_Debug"} > 1;
+
+				# Test for escape seq. before printing.
+				# Appease perl -w
+				$escape_character_buffer = ''
+					unless defined($escape_character_buffer);
+				$escape_character_buffer .= ${*$read_handle}{exp_Pty_Buffer};
+				foreach my $escape_sequence ( keys( %{ ${*$read_handle}{exp_Function} } ) ) {
+					print STDERR "Tested escape sequence $escape_sequence from ${*$read_handle}{exp_Pty_Handle}"
+						if ${*$read_handle}{"exp_Debug"} > 1;
+
+					# Make sure it doesn't grow out of bounds.
+					$escape_character_buffer = $read_handle->_trim_length(
+						$escape_character_buffer,
+						${*$read_handle}{"exp_Max_Accum"}
+					) if ( ${*$read_handle}{"exp_Max_Accum"} );
+					if ( $escape_character_buffer =~ /($escape_sequence)/ ) {
+						my $match = $1;
+						if ( ${*$read_handle}{"exp_Debug"} ) {
+							print STDERR
+								"\r\ninterconnect got escape sequence from ${*$read_handle}{exp_Pty_Handle}.\r\n";
+
+							# I'm going to make the esc. seq. pretty because it will
+							# probably contain unprintable characters.
+							print STDERR "\tEscape Sequence: '"
+								. _trim_length(
+								undef,
+								_make_readable($escape_sequence)
+								) . "'\r\n";
+							print STDERR "\tMatched by string: '" . _trim_length( undef, _make_readable($match) ) . "'\r\n";
+						}
+
+						# Print out stuff before the escape.
+						# Keep in mind that the sequence may have been split up
+						# over several reads.
+						# Let's get rid of it from this read. If part of it was
+						# in the last read there's not a lot we can do about it now.
+						if ( ${*$read_handle}{exp_Pty_Buffer} =~ /([\w\W]*)($escape_sequence)/ ) {
+							$read_handle->_print_handles($1);
+						} else {
+							$read_handle->_print_handles( ${*$read_handle}{exp_Pty_Buffer} );
+						}
+
+						# Clear the buffer so no more matches can be made and it will
+						# only be printed one time.
+						${*$read_handle}{exp_Pty_Buffer} = '';
+						$escape_character_buffer = '';
+
+						# Do the function here. Must return non-zero to continue.
+						# More cool syntax. Maybe I should turn these in to objects.
+						last CONNECT_LOOP
+							unless &{ ${ ${*$read_handle}{exp_Function} }{$escape_sequence} }
+							( @{ ${ ${*$read_handle}{exp_Parameters} }{$escape_sequence} } );
+					}
+				}
+				$nread = 0 unless defined($nread); # Appease perl -w?
+				waitpid( ${*$read_handle}{exp_Pid}, WNOHANG )
+					if ( defined( ${*$read_handle}{exp_Pid} )
+					&& ${*$read_handle}{exp_Pid} );
+				if ( $nread == 0 ) {
+					print STDERR "Got EOF reading ${*$read_handle}{exp_Pty_Handle}\r\n"
+						if ${*$read_handle}{"exp_Debug"};
+					last CONNECT_LOOP
+						unless defined( ${ ${*$read_handle}{exp_Function} }{"EOF"} );
+					last CONNECT_LOOP
+						unless &{ ${ ${*$read_handle}{exp_Function} }{"EOF"} }
+						( @{ ${ ${*$read_handle}{exp_Parameters} }{"EOF"} } );
+				}
+				last CONNECT_LOOP if ( $nread < 0 ); # This would be an error
+				$read_handle->_print_handles( ${*$read_handle}{exp_Pty_Buffer} );
+			}
+
+			# I'm removing this because I haven't determined what causes exceptions
+			# consistently.
+			if (0) #$ebits[$read_handle->fileno()])
+			{
+				print STDERR "Got Exception reading ${*$read_handle}{exp_Pty_Handle}\r\n"
+					if ${*$read_handle}{"exp_Debug"};
+				last CONNECT_LOOP
+					unless defined( ${ ${*$read_handle}{exp_Function} }{"EOF"} );
+				last CONNECT_LOOP
+					unless &{ ${ ${*$read_handle}{exp_Function} }{"EOF"} }
+					( @{ ${ ${*$read_handle}{exp_Parameters} }{"EOF"} } );
+			}
+		}
+	}
+	foreach my $handle (@handles) {
+		unless ( ${*$handle}{"exp_Manual_Stty"} ) {
+			$handle->exp_stty( ${*$handle}{exp_Stored_Stty} );
+		}
+		foreach my $write_handle ( @{ ${*$handle}{exp_Listen_Group} } ) {
+			unless ( ${*$write_handle}{"exp_Manual_Stty"} ) {
+				$write_handle->exp_stty( ${*$write_handle}{exp_Stored_Stty} );
+			}
+		}
+	}
+
+	return;
+}
+
+
+sub interconnect_old {
+
+  #  my ($handle)=(shift); call as Expect::interconnect($spawn1,$spawn2,...)
+  my ($rmask,$nfound,$nread);
+  my ($rout, @bits, $emask, $eout, @ebits ) = ();
+  my ($escape_sequence,$escape_character_buffer);
+  my (@handles) = @_;
+  my ($handle,$read_handle,$write_handle);
+  my ($read_mask,$temp_mask) = ('','');
+
+
+  # Get read/write handles
+  foreach $handle (@handles) {
+    $temp_mask = '';
+    vec($temp_mask,$handle->fileno(),1) = 1;
+    # Under Linux w/ 5.001 the next line comes up w/ 'Uninit var.'.
+    # It appears to be impossible to make the warning go away.
+    # doing something like $temp_mask='' unless defined ($temp_mask)
+    # has no effect whatsoever. This may be a bug in 5.001.
+    $read_mask = $read_mask | $temp_mask;
+  }
+  if ($Expect::Debug) {
+    print STDERR "Read handles:\r\n";
+    foreach $handle (@handles) {
+      print STDERR "\tRead handle: ";
+      print STDERR "'${*$handle}{exp_Pty_Handle}'\r\n";
+      print STDERR "\t\tListen Handles:";
+      foreach $write_handle (@{${*$handle}{exp_Listen_Group}}) {
+	print STDERR " '${*$write_handle}{exp_Pty_Handle}'";
+      }
+      print STDERR ".\r\n";
+    }
+  }
+
+  #  I think if we don't set raw/-echo here we may have trouble. We don't
+  # want a bunch of echoing crap making all the handles jabber at each other.
+  foreach $handle (@handles) {
+    unless (${*$handle}{"exp_Manual_Stty"}) {
+      # This is probably O/S specific.
+      ${*$handle}{exp_Stored_Stty} = $handle->exp_stty('-g');
+      print STDERR "Setting tty for ${*$handle}{exp_Pty_Handle} to 'raw -echo'.\r\n"if ${*$handle}{"exp_Debug"};
+      $handle->exp_stty("raw -echo");
+    }
+    foreach $write_handle (@{${*$handle}{exp_Listen_Group}}) {
+      unless (${*$write_handle}{"exp_Manual_Stty"}) {
+	${*$write_handle}{exp_Stored_Stty} = $write_handle->exp_stty('-g');
+	print STDERR "Setting ${*$write_handle}{exp_Pty_Handle} to 'raw -echo'.\r\n"if ${*$handle}{"exp_Debug"};
+	$write_handle->exp_stty("raw -echo");
+      }
+    }
+  }
+
+  print STDERR "Attempting interconnection\r\n" if $Expect::Debug;
+
+  # Wait until the process dies or we get EOF
+  # In the case of !${*$handle}{exp_Pid} it means
+  # the handle was exp_inited instead of spawned.
+ CONNECT_LOOP:
+  # Go until we have a reason to stop
+  while (1) {
+    # test each handle to see if it's still alive.
+    foreach $read_handle (@handles) {
+      waitpid(${*$read_handle}{exp_Pid}, WNOHANG)
+	if (exists (${*$read_handle}{exp_Pid}) and ${*$read_handle}{exp_Pid});
+      if (exists(${*$read_handle}{exp_Pid})
+	  and (${*$read_handle}{exp_Pid})
+	  and (! kill(0,${*$read_handle}{exp_Pid}))) {
+	print STDERR "Got EOF (${*$read_handle}{exp_Pty_Handle} died) reading ${*$read_handle}{exp_Pty_Handle}\r\n"
+	  if ${*$read_handle}{"exp_Debug"};
+	last CONNECT_LOOP unless defined(${${*$read_handle}{exp_Function}}{"EOF"});
+	last CONNECT_LOOP unless &{${${*$read_handle}{exp_Function}}{"EOF"}}(@{${${*$read_handle}{exp_Parameters}}{"EOF"}});
+      }
     }
 
-    # restore stty
-    $in_object->exp_stty($stty);
+    # Every second? No, go until we get something from someone.
+    ($nfound) = select($rout = $read_mask, undef, $eout = $emask, undef);
+    # Is there anything to share?  May be -1 if interrupted by a signal...
+    next CONNECT_LOOP if not defined $nfound or $nfound < 1;
+    # Which handles have stuff?
+    @bits = split(//,unpack('b*',$rout));
+    $eout = 0 unless defined ($eout);
+    @ebits = split(//,unpack('b*',$eout));
+    #    print "Ebits: $eout\r\n";
+    foreach $read_handle (@handles) {
+      if ($bits[$read_handle->fileno()]) {
+	$nread = sysread( $read_handle, ${*$read_handle}{exp_Pty_Buffer}, 1024 );
+	# Appease perl -w
+	$nread = 0 unless defined ($nread);
+	print STDERR "interconnect: read $nread byte(s) from ${*$read_handle}{exp_Pty_Handle}.\r\n" if ${*$read_handle}{"exp_Debug"} > 1;
+	# Test for escape seq. before printing.
+	# Appease perl -w
+	$escape_character_buffer = '' unless defined ($escape_character_buffer);
+	$escape_character_buffer .= ${*$read_handle}{exp_Pty_Buffer};
+	foreach $escape_sequence (keys(%{${*$read_handle}{exp_Function}})) {
+	  print STDERR "Tested escape sequence $escape_sequence from ${*$read_handle}{exp_Pty_Handle}"if ${*$read_handle}{"exp_Debug"} > 1;
+	  # Make sure it doesn't grow out of bounds.
+	  $escape_character_buffer = $read_handle->_trim_length($escape_character_buffer,${*$read_handle}{"exp_Max_Accum"}) if (${*$read_handle}{"exp_Max_Accum"});
+	  if ($escape_character_buffer =~ /($escape_sequence)/) {
+	    if (${*$read_handle}{"exp_Debug"}) {
+	      print STDERR "\r\ninterconnect got escape sequence from ${*$read_handle}{exp_Pty_Handle}.\r\n";
+	      # I'm going to make the esc. seq. pretty because it will 
+	      # probably contain unprintable characters.
+	      print STDERR "\tEscape Sequence: '"._trim_length(undef,_make_readable($escape_sequence))."'\r\n";
+	      print STDERR "\tMatched by string: '"._trim_length(undef,_make_readable($&))."'\r\n";
+	    }
+	    # Print out stuff before the escape.
+	    # Keep in mind that the sequence may have been split up
+	    # over several reads.
+	    # Let's get rid of it from this read. If part of it was 
+	    # in the last read there's not a lot we can do about it now.
+	    if (${*$read_handle}{exp_Pty_Buffer} =~ /($escape_sequence)/) {
+	      $read_handle->_print_handles($`);
+	    } else {
+	      $read_handle->_print_handles(${*$read_handle}{exp_Pty_Buffer})
+	    }
+	    # Clear the buffer so no more matches can be made and it will
+	    # only be printed one time.
+	    ${*$read_handle}{exp_Pty_Buffer} = '';
+	    $escape_character_buffer = '';
+	    # Do the function here. Must return non-zero to continue.
+	    # More cool syntax. Maybe I should turn these in to objects.
+	    last CONNECT_LOOP unless &{${${*$read_handle}{exp_Function}}{$escape_sequence}}(@{${${*$read_handle}{exp_Parameters}}{$escape_sequence}});
+	  }
+	}
+	$nread = 0 unless defined($nread); # Appease perl -w?
+	waitpid(${*$read_handle}{exp_Pid}, WNOHANG) if (defined (${*$read_handle}{exp_Pid}) &&${*$read_handle}{exp_Pid});
+	if ($nread == 0) {
+	  print STDERR "Got EOF reading ${*$read_handle}{exp_Pty_Handle}\r\n"if ${*$read_handle}{"exp_Debug"}; 
+	  last CONNECT_LOOP unless defined(${${*$read_handle}{exp_Function}}{"EOF"});
+	  last CONNECT_LOOP unless &{${${*$read_handle}{exp_Function}}{"EOF"}}(@{${${*$read_handle}{exp_Parameters}}{"EOF"}});
+	}
+	last CONNECT_LOOP if ($nread < 0); # This would be an error
+	$read_handle->_print_handles(${*$read_handle}{exp_Pty_Buffer});
+      }
+      # I'm removing this because I haven't determined what causes exceptions
+      # consistently.
+      if (0)			#$ebits[$read_handle->fileno()])
+	{
+	  print STDERR "Got Exception reading ${*$read_handle}{exp_Pty_Handle}\r\n"if ${*$read_handle}{"exp_Debug"};
+	  last CONNECT_LOOP unless defined(${${*$read_handle}{exp_Function}}{"EOF"});
+	  last CONNECT_LOOP unless &{${${*$read_handle}{exp_Function}}{"EOF"}}(@{${${*$read_handle}{exp_Parameters}}{"EOF"}});
+	}
+    }
+  }
+  foreach $handle (@handles) {
+    unless (${*$handle}{"exp_Manual_Stty"}) {
+      $handle->exp_stty(${*$handle}{exp_Stored_Stty});
+    }
+    foreach $write_handle (@{${*$handle}{exp_Listen_Group}}) {
+      unless (${*$write_handle}{"exp_Manual_Stty"}) {
+	$write_handle->exp_stty(${*$write_handle}{exp_Stored_Stty});
+      }
+    }
+  }
 }
 
 sub conn {
@@ -507,8 +892,8 @@ sub conn {
             $self->send("$arg\r");
             $self->expect(10,'-re',$prompt);
         }
-        $self->session->interact($self->{stdin}, '\cD');
-#        $self->interact($self->{stdin}, '\cD');
+#        $self->session->interact($self->{stdin}, '\cD');
+        $self->interact($self->{stdin}, '\cD');
         # q\b is to end anything that's at a More prompt or other dialog and
         # get you back to the command prompt
         $self->send("q\b" . $profile->{logoutcmd}. "\r");
