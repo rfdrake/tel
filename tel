@@ -11,6 +11,7 @@ use v5.10;
 our $VERSION = eval '0.15';
 
 use lib '.';
+my $colorizer = 1;
 use CiscoColors;
 
 __PACKAGE__->main() unless caller;
@@ -595,7 +596,10 @@ sub interconnect {
 					1024*10
 				);
 
-                ${*$read_handle}{exp_Pty_Buffer} = colorizer(${*$read_handle}{exp_Pty_Buffer});
+                # only run the colorizer if it's loaded from a module
+                if ($colorizer) {
+                    ${*$read_handle}{exp_Pty_Buffer} = colorizer(${*$read_handle}{exp_Pty_Buffer});
+                }
 				# Appease perl -w
 				$nread = 0 unless defined($nread);
 				print STDERR "interconnect: read $nread byte(s) from ${*$read_handle}{exp_Pty_Handle}.\r\n"

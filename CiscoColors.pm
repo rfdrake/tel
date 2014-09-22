@@ -38,8 +38,6 @@ my $warn_color = "red";
 my $good_color = "green";
 my $cmd_color = "yellow";
 
-# add "sh cable modem phy"
-
 $Term::ANSIColor::AUTORESET++;         # reset color after each print
 $SIG{INT} = sub { print "\n"; exit; }; # reset color after Ctrl-C
 
