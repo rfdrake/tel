@@ -82,9 +82,32 @@ sub uspwr {
     return colored($pwr, $color);
 }
 
-sub ussnr { shift }
-sub dspwr { shift }
-sub dssnr { shift }
+sub ussnr {
+    my $pwr = shift;
+    my $color = 'red';
+    if ( $pwr < 20 ) { $color = 'red'; }
+    if ( $pwr >= 20 && $pwr <= 25 ) { $color = 'yellow'; };
+    if ( $pwr > 25 ) { $color = 'green'; }
+    return colored($pwr, $color);
+}
+sub dspwr {
+    my $pwr = shift;
+    my $color = 'red';
+    if ( $pwr < -15 ) { $color = 'red'; }
+    if ( $pwr >= -15 && $pwr <= -9 ) { $color = 'yellow'; }
+    if ( $pwr >= -9 && $pwr <= 9 ) { $color = 'green'; }
+    if ( $pwr >= 9 && $pwr <= 15 ) { $color = 'yellow'; }
+    if ( $pwr > 15 ) { $color = 'red'; }
+     return colored($pwr, $color);
+}
+sub dssnr {
+    my $pwr = shift;
+    my $color = 'red';
+    if ( $pwr < 35 ) { $color = 'red'; }
+    if ( $pwr >= 35 && $pwr <= 35 ) { $color = 'yellow'; }
+    if ( $pwr > 35 ) { $color = 'green'; }
+    return colored($pwr, $color);
+}
 
 my $regexp = crazy('(\d+) runts, (\d+) giants, (\d+) throttles',
 		'(\d+) input errors, (\d+) CRC, (\d+) frame, (\d+) overrun, (\d+) ignored',
@@ -118,32 +141,3 @@ sub colorizer {
 }
 
 1;
-
-__END__
-
-        // Upstream SNR Color
-        $color = RED;
-        $upbar = $us_snr;
-        if ( $upbar < 20 ) $color = RED;
-        if ( $upbar >= 20 && $upbar <= 25 ) $color = YELLOW;
-        if ( $upbar > 25 ) $color = GREEN;
-        $us_snr_color = $color;
-
-        // Downstream Power
-        $color = RED;
-        $upbar = $down_pwr;
-        if ( $upbar < -15 ) $color = RED;
-        if ( $upbar >= -15 && $upbar <= -9 ) $color = YELLOW;
-        if ( $upbar >= -9 && $upbar <= 9 ) $color = GREEN;
-        if ( $upbar >= 9 && $upbar <= 15 ) $color = YELLOW;
-        if ( $upbar > 15 ) $color = RED;
-        $down_pwr_color = $color;
-
-        // Downstream SNR
-        $color = RED;
-        $upbar = $down_snr;
-        if ( $upbar < 35 ) $color = RED;
-        if ( $upbar >= 35 && $upbar <= 35 ) $color = YELLOW;
-        if ( $upbar > 35 ) $color = GREEN;
-        $down_snr_color = $color;
-
