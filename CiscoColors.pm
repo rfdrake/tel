@@ -36,7 +36,6 @@ our @EXPORT = qw(colorizer);
 my $host_color = "magenta";
 my $warn_color = "red";
 my $good_color = "green";
-my $cmd_color = "yellow";
 
 $Term::ANSIColor::AUTORESET++;         # reset color after each print
 $SIG{INT} = sub { print "\n"; exit; }; # reset color after Ctrl-C
@@ -72,7 +71,17 @@ sub crazy {
    return $evils;
 }
 
-sub uspwr { shift }
+sub uspwr {
+    my $pwr = shift;
+    my $color = 'red';
+    if ( $pwr < 30 ) { $color = 'red'; }
+    if ( $pwr >= 30 && $pwr <= 33 ) { $color = 'yellow'; }
+    if ( $pwr >= 33 && $pwr <= 45 ) { $color = 'green'; }
+    if ( $pwr >= 45 && $pwr <= 50 ) { $color = 'yellow'; }
+    if ( $pwr > 50 ) { $color = 'red'; }
+    return colored($pwr, $color);
+}
+
 sub ussnr { shift }
 sub dspwr { shift }
 sub dssnr { shift }
@@ -109,3 +118,32 @@ sub colorizer {
 }
 
 1;
+
+__END__
+
+        // Upstream SNR Color
+        $color = RED;
+        $upbar = $us_snr;
+        if ( $upbar < 20 ) $color = RED;
+        if ( $upbar >= 20 && $upbar <= 25 ) $color = YELLOW;
+        if ( $upbar > 25 ) $color = GREEN;
+        $us_snr_color = $color;
+
+        // Downstream Power
+        $color = RED;
+        $upbar = $down_pwr;
+        if ( $upbar < -15 ) $color = RED;
+        if ( $upbar >= -15 && $upbar <= -9 ) $color = YELLOW;
+        if ( $upbar >= -9 && $upbar <= 9 ) $color = GREEN;
+        if ( $upbar >= 9 && $upbar <= 15 ) $color = YELLOW;
+        if ( $upbar > 15 ) $color = RED;
+        $down_pwr_color = $color;
+
+        // Downstream SNR
+        $color = RED;
+        $upbar = $down_snr;
+        if ( $upbar < 35 ) $color = RED;
+        if ( $upbar >= 35 && $upbar <= 35 ) $color = YELLOW;
+        if ( $upbar > 35 ) $color = GREEN;
+        $down_snr_color = $color;
+
