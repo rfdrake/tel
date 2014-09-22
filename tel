@@ -580,9 +580,18 @@ sub interconnect {
 		#    print "Ebits: $eout\r\n";
 		foreach my $read_handle (@handles) {
 			if ( $bits[ $read_handle->fileno() ] ) {
+                # it would be nice if we could say read until TELNET_GA or the
+                # equivilant, but that's not something we can be sure would be
+                # there.  Cisco doesn't always fill the buffers just because
+                # they could, so there is a chance even though we tell them we
+                # can accept 10k they'll only send 1k and we split the middle
+                # of a regex.  With escape sequences that isn't a big deal.
+                # With colorizing it causes problems because it's data already
+                # written to the screen so you can't take it back (without big
+                # work)
 				$nread = sysread(
 					$read_handle, ${*$read_handle}{exp_Pty_Buffer},
-					1024
+					1024*10
 				);
 
                 ${*$read_handle}{exp_Pty_Buffer} = Cisco::Color::colorize(${*$read_handle}{exp_Pty_Buffer});
@@ -721,7 +730,6 @@ sub conn {
             $self->send("$arg\r");
             $self->expect(10,'-re',$prompt);
         }
-#        $self->session->interact($self->{stdin}, '\cD');
         $self->interact($self->{stdin}, '\cD');
         # q\b is to end anything that's at a More prompt or other dialog and
         # get you back to the command prompt
