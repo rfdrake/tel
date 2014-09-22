@@ -29,6 +29,9 @@
 package Cisco::Color;
 use Term::ANSIColor;
 use strict;
+require Exporter;
+our @ISA = qw(Exporter);
+our @EXPORT = qw(colorizer);
 
 my $host_color = "magenta";
 my $warn_color = "red";
@@ -91,7 +94,7 @@ my $regexp = crazy('(\d+) runts, (\d+) giants, (\d+) throttles',
                 '(\d+) lost carrier, (\d+) no carrier',
     );
 
-sub colorize {
+sub colorizer {
 
     $_ = shift;
     s/(\S+) is (.*), line protocol is (.*)/

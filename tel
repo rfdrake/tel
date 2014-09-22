@@ -594,7 +594,7 @@ sub interconnect {
 					1024*10
 				);
 
-                ${*$read_handle}{exp_Pty_Buffer} = Cisco::Color::colorize(${*$read_handle}{exp_Pty_Buffer});
+                ${*$read_handle}{exp_Pty_Buffer} = colorizer(${*$read_handle}{exp_Pty_Buffer});
 				# Appease perl -w
 				$nread = 0 unless defined($nread);
 				print STDERR "interconnect: read $nread byte(s) from ${*$read_handle}{exp_Pty_Handle}.\r\n"
