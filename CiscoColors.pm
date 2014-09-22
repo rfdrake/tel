@@ -26,7 +26,7 @@
 # This may be older than 2007.  I'm going by what git blame tells me. :)
 
 
-package Cisco::Color;
+package CiscoColors;
 use Term::ANSIColor;
 use strict;
 require Exporter;

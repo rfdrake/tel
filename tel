@@ -10,7 +10,8 @@ use Module::Load;
 use v5.10;
 our $VERSION = eval '0.15';
 
-require './rtrcolor.pl';
+use lib '.';
+use CiscoColors;
 
 __PACKAGE__->main() unless caller;
 
