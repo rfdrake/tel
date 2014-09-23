@@ -123,6 +123,10 @@ Example:
 Please let me know about bugs or feature requests via github.  Submit patches
 when possible to fix or enhance something, or to improve the testing.
 
+## Screenshots
+
+![Cisco Show Cable Modem Phy](https://raw.githubusercontent.com/rfdrake/tel/screenshots/tel-scm.png)
+![Cisco Show Interface](https://raw.githubusercontent.com/rfdrake/tel/screenshots/tel-shint.png)
 
 ## Why it's not on CPAN
 
