@@ -114,6 +114,10 @@ Example:
     your prompt is set for.  clear_accum doesn't fix this.. need to put more
     thought into it.
 
+2.  The color syntax highlight breaks when the line buffer falls in the wrong
+    place.  There is nothing we can currently do about this, but I'm hoping
+    someone will come up with an inventive fix.
+
 # Information
 
 Please let me know about bugs or feature requests via github.  Submit patches
@@ -127,4 +131,4 @@ final name would be.  I'm attached to the name 'tel' because I've been using
 it for 14 years, but it's generic and commonly used so I don't know if I can
 stay with it.
 
-# Copyright 2013, Robert Drake
+##### Copyright 2013, Robert Drake
