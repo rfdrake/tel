@@ -8,6 +8,29 @@ of devices, or different things you need to do to a device.
 This script aims to replace all of those and provide an easy to use
 interactive client for most of the CLI I've encountered.
 
+I've been working on this off-and-on for 14 years.  It started out in expect
+and now is written in perl/Expect.pm.  It has a couple of features that make
+it very useful:
+
+* Aliases for hard to type router names or commands
+* Fix for terminal issues (backspace correction) when needed
+* ubiquitous logout command
+* clogin style CLI arguments with -c and -x
+* color highlighting for some things
+
+Additionally, it has an optional global config file which lets site
+administrators control login settings for multiple users.  This is useful if
+you have a NOC where 10 people may need to login all the time and your telrc
+config file has complicated business logic in it, but you don't want to update
+each persons home directory each time a change is made to it.  Instead they
+can keep their own changes local to $HOME/.telrc2 while global policy is in
+/etc/telrc.
+
+Some things it still needs:
+
+* Keepass and Keyring support
+* More testing with non-enable and with more diverse hardware
+
 # Setup
 
 Take the dottelrc.sample and copy it to /etc/telrc, then edit it to suit your
@@ -31,8 +54,6 @@ firewalled box that is only used to allow users to access routers.
 Obviously, if the router supports real ssh keys or any other secure
 authentication you should let the login be handled by that.  This script can
 still provide value without the need to login for you.
-
-# What do I get besides login?
 
 ## ubiquitous logout command
 
@@ -63,7 +84,8 @@ but doesn't support Ctrl-Z.  This will add Ctrl-Z.
 
 common tasks can be automated and even advanced commands can be scripted
 through Perl's Expect.pm.  Most of that is available directly in the telrc
-files without modifying the code in tel.
+files without modifying the code in tel.  See the COMMANDS.md file for
+examples.
 
 # clogin style arguments
 
@@ -94,7 +116,15 @@ Example:
 
 # Information
 
-Use it, or modify it for your own use if you think it's useful.  Please let me
-know if you find bugs or want new features.
+Please let me know about bugs or feature requests via github.  Submit patches
+when possible to fix or enhance something, or to improve the testing.
+
+
+## Why it's not on CPAN
+
+I'm still working on figuring out what the namespace should be, and what the
+final name would be.  I'm attached to the name 'tel' because I've been using
+it for 14 years, but it's generic and commonly used so I don't know if I can
+stay with it.
 
 # Copyright 2013, Robert Drake
