@@ -11,11 +11,8 @@ use v5.10;
 our $VERSION = eval '0.15';
 
 use lib '.';
-my $colors = 1;
-
-eval {
-    Module::Load::load CiscoColors, 'colorizer';
-} or $colors = 0;
+my $colors = 0;
+load_syntax('Cisco');
 
 __PACKAGE__->main() unless caller;
 
@@ -233,6 +230,14 @@ sub profile {
     }
     $self->{'profile'}=$profile;
     return $profile;
+}
+
+sub load_syntax {
+    my $syntax = shift;
+    eval {
+        Module::Load::load $syntax.'Colors', 'colorizer';
+        $colors = 1;
+    } or $colors = 0;
 }
 
 # This pulls the password from the config.  If the password is blank it checks
