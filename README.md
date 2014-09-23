@@ -13,7 +13,7 @@ interactive client for most of the CLI I've encountered.
 Take the dottelrc.sample and copy it to /etc/telrc, then edit it to suit your
 sites needs.  This is a baseline configuration that everyone on a bounce host
 can use.  It's actually a perl file so advanced scripting is possible.  See
-the STORIES.mkd file for descriptions of some of the options and examples of
+the COMMANDS.md file for descriptions of some of the options and examples of
 their use.
 
 Once you've copied and modified telrc, you should put tel and mktelrc
@@ -55,9 +55,9 @@ device you connect to.
 
 ## fix backspace, handle ctrl-z
 
-Dlink has a broken backspace command.  This script detects dlink and aliases
-backspace to the right sequence.  Casa has a Cisco-like CLI, but doesn't
-support Ctrl-Z.  This will add Ctrl-Z.
+Dlink, and many other platforms have a broken backspace.  This script detects
+dlink and aliases backspace to the right sequence.  Casa has a Cisco-like CLI,
+but doesn't support Ctrl-Z.  This will add Ctrl-Z.
 
 ## add aliases for other commands
 
@@ -69,7 +69,7 @@ files without modifying the code in tel.
 
 ## use '-c' command line to send commands
 
-Example: 
+Example:
     tel -c 'show ver; show ip int br' sw1-cisco-device
 
 ## or use -x to send a script to run
@@ -84,16 +84,13 @@ Example:
     EOF
 
     tel -x commands.txt sw1-cisco-device
-    
+
 
 # Bugs
 
 1.  Sending a "#" to the router via -c will match that as a prompt if that is what
     your prompt is set for.  clear_accum doesn't fix this.. need to put more
     thought into it.
-
-2.  I never added enablepass because my enable password was the same as access
-    password.  Need to think about how to do this.
 
 # Information
 
