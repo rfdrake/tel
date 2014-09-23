@@ -10,7 +10,6 @@ use Module::Load;
 use v5.10;
 our $VERSION = eval '0.15';
 
-use lib '.';
 my $colors = 0;
 load_syntax('Cisco');
 

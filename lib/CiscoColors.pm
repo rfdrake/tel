@@ -119,10 +119,10 @@ my $regexp = crazy('(\d+) runts, (\d+) giants, (\d+) throttles',
 		'(\d+) carrier transitions',
 		'Output queue (\S+), (\d+) drops; input queue (\S+), (\d+) drops',
 		'(\d+)\/(\d+) \(size\/max\/drops\/flushes\)\;',
-                '(\d+) (pause input|watchdog|underruns|no buffer|pause output|abort)',
-                '(\d+) output errors, (\d+) collisions, (\d+) interface resets',
-                '(\d+) babbles, (\d+) late collision, (\d+) deferred',
-                '(\d+) lost carrier, (\d+) no carrier',
+        '(\d+) (pause input|watchdog|underruns|no buffer|pause output|abort)',
+        '(\d+) output errors, (\d+) collisions, (\d+) interface resets',
+        '(\d+) babbles, (\d+) late collision, (\d+) deferred',
+        '(\d+) lost carrier, (\d+) no carrier',
     );
 
 sub colorizer {
