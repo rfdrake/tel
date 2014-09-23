@@ -150,6 +150,9 @@ here.  For example, DlinkColor.pm would be loaded by
 
     syntax => 'Dlink',
 
+I would like to be able to chain these so that you can load more than one.
+That way you can have a default set of highlight rules for your company and a
+specific set of rules for Cisco routers or switches or whatever.
 
 # wishlist
 
