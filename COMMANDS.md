@@ -143,6 +143,13 @@ specify it here
 Alternatively, I'm not sure how it'll work yet but maybe we could get the
 keepass password from a keyring lookup, or cache it in some other way.
 
+## syntax (not yet implemented)
+
+If you want to load a syntax highlight module then you can specify the prefix
+here.  For example, DlinkColor.pm would be loaded by
+
+    syntax => 'Dlink',
+
 
 # wishlist
 

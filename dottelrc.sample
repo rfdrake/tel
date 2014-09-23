@@ -4,7 +4,7 @@ $telrc = {
                                       'sshoptions' => [ 'UserKnownHostsFile=/dev/null', 'StrictHostKeyChecking=no' ] },
                        'casa' => { 'handlers' =>  { '\cZ' => \&handle_ctrl_z } },
                        'zhone' => { 'user' => 'admin', 'method' => 'telnet', 'prompt' => '>', 'enablecmd' => 'priv' },
-                       'dlink' => { 'method' => 'telnet', 'handlers' => { '\177' => \&handle_backspace } },
+                       'dlink' => { 'method' => 'telnet', 'handlers' => { '\177' => \&handle_backspace }, 'syntax' => 'Dlink' },
                        'mikrotik' => { 'logoutcmd' => '/quit' },
                        'at' => { 'ciphertype' => 'des', 'user' => 'engr' },
                        'hatteras' => { 'ciphertype' => 'des' }
