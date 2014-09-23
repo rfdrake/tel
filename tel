@@ -11,8 +11,11 @@ use v5.10;
 our $VERSION = eval '0.15';
 
 use lib '.';
-my $colorizer = 1;
-use CiscoColors;
+my $colors = 1;
+
+eval {
+    Module::Load::load CiscoColors, 'colorizer';
+} or $colors = 0;
 
 __PACKAGE__->main() unless caller;
 
@@ -597,7 +600,7 @@ sub interconnect {
 				);
 
                 # only run the colorizer if it's loaded from a module
-                if ($colorizer) {
+                if ($colors) {
                     ${*$read_handle}{exp_Pty_Buffer} = colorizer(${*$read_handle}{exp_Pty_Buffer});
                 }
 				# Appease perl -w
