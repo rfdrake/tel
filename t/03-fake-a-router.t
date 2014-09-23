@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use Test::More;
 
-require 'tel';
+require 'bin/tel';
 our $telrc;
 require 't/dottelrc.testing';
 

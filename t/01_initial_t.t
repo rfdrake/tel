@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use Test::More;
 
-require 'tel';
+require 'bin/tel';
 
 # 1. try new
 my $test = Expect::Tel->new();
