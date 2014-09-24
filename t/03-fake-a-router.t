@@ -14,10 +14,12 @@ require 't/dottelrc.testing';
 
 
 my $tel = Expect::Tel->new();
-ok(ref($tel) eq 'Expect::Tel', 'Expect::Tel->new() should return a Expect::Tel object.');
 $tel->{config} = $telrc;
 
-$tel->login("loopback");
+#using this to load the profile so we turn on the exec method
+$tel->rtr_find("t/fake_routers/loopback");
+
+$tel->login("t/fake_routers/loopback");
 is($tel->connected, 1, 'Did we make it through login?');
 $tel->enable();
 

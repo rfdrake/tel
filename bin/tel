@@ -203,6 +203,18 @@ sub rtr_find {
     return $profile;
 }
 
+=head2 profile
+
+   $profile = $self->profile;
+   $profile = $self->profile('profilename', $replace);
+
+Called without arguments this will return the current profile.  If called with
+a profilename it will load that new profile on top of whatever profile
+currently exists.  You can set the second argument to true if you want to
+replace the current profile with the new one.
+
+=cut
+
 sub profile {
     my $self = shift;
     my $profile_arg = shift;
@@ -337,10 +349,16 @@ sub enable {
     if ($profile->{enablecmd}) {
         $self->send($profile->{enablecmd} . "\r");
 
+        $profile->{ena_username_prompt} ||= qr/[Uu]ser[Nn]ame:|Login:/;
+        $profile->{ena_password_prompt} ||= qr/[Pp]ass[Ww]ord/;
+
         # we need to be able to handle routers that prompt for username and password
         # need to check the results to see if enable succeeded
-        $self->expect($self->{timeout}, [ qr/[Pp]assword:/ => sub { $self->send($self->password('enable') . "\r"); } ]);
-    }
+        $self->expect($self->{timeout},
+                [ $profile->{ena_username_prompt} => sub { $self->send("$profile->{user}\r"); exp_continue; } ],
+                [ $profile->{ena_password_prompt} => sub { $self->send($self->password('enable') . "\r"); } ]
+        );
+ }
 
     $self->{enabled}=1;
     return $self->{enabled};
@@ -387,6 +405,10 @@ sub login {
         elsif ($_ eq 'exec')    { $self->connect($hostname); }
         else { die "No program defined for method $_\n"; }
 
+        # handle prompts in foreign languages or other things we didn't think of
+        $rtr->{username_prompt} ||= qr/[Uu]ser[Nn]ame:|Login:/;
+        $rtr->{password_prompt} ||= qr/[Pp]ass[Ww]ord/;
+
         $self->expect($self->{timeout},
                 @{$self->banners()},
                 @dynamic,
@@ -395,9 +417,9 @@ sub login {
                     $self->send("$rtr->{user}\r".$self->password()."\r"); exp_continue } ],
                 [ qr/User Access Verification - Local/ => sub {
                     $self->send("$rtr->{user}\r".$self->password()."\r"); $self->connected(1); last METHOD; } ],
-                [ qr/[Uu]ser[Nn]ame:|Login:/ => sub {
+                [ $rtr->{username_prompt} => sub {
                     $self->send("$rtr->{user}\r") unless($allied_shit); exp_continue; } ],
-                [ qr/[Pp]ass[Ww]ord/ => sub {
+                [ $rtr->{password_prompt} => sub {
                     if ($allied_shit) {
                         exp_continue;
                     } else {
