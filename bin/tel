@@ -166,8 +166,16 @@ sub hostname {
     return $self->{hostname};
 }
 
+=head2 _banners
 
-sub banners {
+   $banners = $self->_banners;
+
+
+
+=cut
+
+
+sub _banners {
     my $self = shift;
     return $self->{banners} if ($self->{banners});
     my $config = $self->{'config'};
@@ -175,7 +183,7 @@ sub banners {
     while (my ($regex, $profile) = each %{$config->{banners}}) {
         push @{$self->{banners}}, [ $regex, sub { $self->profile($profile); exp_continue; } ];
     }
-    return $self->{banners};
+    return defined($self->{banners}) ? $self->{banners} : [];
 }
 
 # find the router by hostname/regex and load the config associated with it.
@@ -410,7 +418,7 @@ sub login {
         $rtr->{password_prompt} ||= qr/[Pp]ass[Ww]ord/;
 
         $self->expect($self->{timeout},
-                @{$self->banners()},
+                @{$self->_banners},
                 @dynamic,
                 # fucking shitty allied telesyn
                 [ qr/User Access Verification - RADIUS/ => sub { $allied_shit=1;
