@@ -18,8 +18,10 @@ plan tests => 2;
 my $tel = Expect::Tel->new();
 $tel->{config} = $telrc;
 
+# loading the default profile to pickup the vty password
+$tel->profile('default', 1);
 
-#using this to load the profile so we turn on the exec method
+# using this to load the rtr config so we turn on the exec method
 $tel->rtr_find("t/fake_routers/loopback");
 $tel->login("t/fake_routers/loopback");
 # suppress as much output as we can because it interferes with testing
