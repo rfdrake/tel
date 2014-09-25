@@ -154,9 +154,26 @@ I would like to be able to chain these so that you can load more than one.
 That way you can have a default set of highlight rules for your company and a
 specific set of rules for Cisco routers or switches or whatever.
 
+## username_prompt and password_prompt
+
+    username_prompt => "nom d'utilisateur:",
+    password_prompt => 'mot de passe:',
+
+You might have a system that has a prompt that isn't like one of the standard
+ones used by most vendors.  You might even find systems that have been
+regionalized and prompt you in your native language.  If this is the case you
+can override the default username and password prompts.
+
+## ena_username_prompt and ena_password_prompt
+
+    ena_username_prompt => "nom d'utilisateur:",
+    ena_password_prompt => 'mot de passe:',
+
+Very similar to the normal username prompt.  If your enable prompt has been
+changed to something you can override it using these commands.
+
 # wishlist
 
 1.  scrollback buffer across multiple sessions
 2.  URI methods on the command line, so you could say telnet://routername or ssh://routername if you wanted to override the method
-3.  If it doesn't currently work, handle noenable/no aaa properly
 

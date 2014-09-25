@@ -29,7 +29,7 @@ can keep their own changes local to $HOME/.telrc2 while global policy is in
 Some things it still needs:
 
 * Keepass and Keyring support
-* More testing with non-enable and with more diverse hardware
+* More testing with more diverse hardware
 
 # Setup
 
