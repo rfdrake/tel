@@ -53,9 +53,12 @@ sub main {
         if ($self->connected) {
             $self->enable();
             $self->conn($self->{'profile'}->{autocmds});
+            $self->disconnect();
         }
     }
 }
+
+
 
 sub load_config {
     my $override = shift;
@@ -86,6 +89,7 @@ sub new {
     my $self = {
         'stdin' => Expect->exp_init(\*STDIN),
         'connected' => 0,
+        'enabled' => 0,
         'has_keyring' => $has_keyring,
         'keyring' => $keyring,
     };
@@ -108,6 +112,25 @@ sub handle_ctrl_z {
 =head1 METHODS
 
 =cut
+
+=head2 disconnect
+
+    $self->disconnect
+
+Tears down the session gracefully and resets internal variables to their
+default values.  Useful if you want to connect to another host after the first
+one.
+
+=cut
+
+sub disconnect {
+    my $self = shift;
+    $self->{profile} = {};
+    $self->{banners} = undef;
+    $self->connected(0);
+    $self->{enabled}=0;
+    $self->session->soft_close();
+}
 
 sub send {
     return shift->{'session'}->send(@_);
@@ -180,10 +203,12 @@ sub _banners {
     return $self->{banners} if ($self->{banners});
     my $config = $self->{'config'};
 
+    # if there are no banners then we want to return an empty list
+    $self->{banners} = ();
     while (my ($regex, $profile) = each %{$config->{banners}}) {
         push @{$self->{banners}}, [ $regex, sub { $self->profile($profile); exp_continue; } ];
     }
-    return defined($self->{banners}) ? $self->{banners} : [];
+    return $self->{banners};
 }
 
 # find the router by hostname/regex and load the config associated with it.
@@ -366,7 +391,7 @@ sub enable {
                 [ $profile->{ena_username_prompt} => sub { $self->send("$profile->{user}\r"); exp_continue; } ],
                 [ $profile->{ena_password_prompt} => sub { $self->send($self->password('enable') . "\r"); } ]
         );
- }
+    }
 
     $self->{enabled}=1;
     return $self->{enabled};
@@ -777,7 +802,6 @@ sub conn {
         # get you back to the command prompt
         $self->send("q\b" . $profile->{logoutcmd}. "\r");
     }
-    $self->session->soft_close();
 }
 
 1;
