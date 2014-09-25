@@ -59,6 +59,7 @@ sub main {
         if ($self->connected) {
             $self->enable();
             $self->conn($self->{'profile'}->{autocmds});
+            $self->logging($hostname) if ($self->{opts}->{l});
             $self->disconnect();
         }
     }
@@ -510,13 +511,11 @@ sub login {
         );
     }
 
-    if (!$self->connected) {
-        warn "Connection to $hostname failed.\n";
-        return;
-    }
-
     $rtr->{logoutcmd} ||= "logout";
-    $self->logging($hostname) if ($self->{opts}->{l});
+    $rtr->{prompt} ||= '#';
+
+    warn "Connection to $hostname failed.\n" if !$self->connected;
+    return $self->connected;
 }
 
 sub logging {
@@ -794,7 +793,6 @@ sub conn {
     my $profile = $self->profile;
     my $opts = $self->{opts};
     my $prompt = $profile->{prompt};
-    $prompt ||= '#';
 
     winch();
 
