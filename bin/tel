@@ -193,8 +193,6 @@ sub hostname {
 
    $banners = $self->_banners;
 
-
-
 =cut
 
 
@@ -204,7 +202,7 @@ sub _banners {
     my $config = $self->{'config'};
 
     # if there are no banners then we want to return an empty list
-    $self->{banners} = ();
+    $self->{banners} = [];
     while (my ($regex, $profile) = each %{$config->{banners}}) {
         push @{$self->{banners}}, [ $regex, sub { $self->profile($profile); exp_continue; } ];
     }
