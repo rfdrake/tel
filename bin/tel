@@ -59,7 +59,7 @@ sub main {
         if ($self->connected) {
             $self->enable();
             $self->conn($self->{'profile'}->{autocmds});
-            $self->logging($hostname) if ($self->{opts}->{l});
+            $self->logging($self->hostname) if ($self->{opts}->{l});
             $self->disconnect();
         }
     }
