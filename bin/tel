@@ -82,27 +82,6 @@ sub load_config {
     return $config;
 }
 
-sub new {
-    my $has_keyring = 1;
-    my $keyring;
-    eval {
-        load Passwd::Keyring::Auto;
-        $keyring = get_keyring(app=>"tel script", group=>"Device Passwords");
-        1;
-    } or $has_keyring = 0;
-
-    my $self = {
-        'stdin' => Expect->exp_init(\*STDIN),
-        'connected' => 0,
-        'enabled' => 0,
-        'has_keyring' => $has_keyring,
-        'keyring' => $keyring,
-    };
-
-    bless($self, 'Expect::Tel');
-    return $self;
-}
-
 sub handle_backspace {
     ${$_[0]}->send("\b");
     return 1;
@@ -139,6 +118,38 @@ sub load_syntax {
 =head1 METHODS
 
 =cut
+
+=head2 new
+
+    my $tel = Expect::Tel->new();
+
+Creates a new Expect::Tel object.
+
+=cut
+
+sub new {
+    # should move these out of new and $self.  They can be loaded as the
+    # module loads (maybe)
+    my $has_keyring = 1;
+    my $keyring;
+    eval {
+        load Passwd::Keyring::Auto;
+        $keyring = get_keyring(app=>"tel script", group=>"Device Passwords");
+        1;
+    } or $has_keyring = 0;
+
+    my $self = {
+        'stdin' => Expect->exp_init(\*STDIN),
+        'connected' => 0,
+        'enabled' => 0,
+        'has_keyring' => $has_keyring,
+        'has_keypass' => 0,
+        'keyring' => $keyring,
+    };
+
+    bless($self, 'Expect::Tel');
+    return $self;
+}
 
 =head2 disconnect
 
@@ -222,13 +233,6 @@ sub hostname {
     $self->{hostname} = $hostname;
     return $self->{hostname};
 }
-
-=head2 _banners
-
-   $banners = $self->_banners;
-
-=cut
-
 
 sub _banners {
     my $self = shift;
@@ -340,6 +344,14 @@ sub password {
             $self->{keyring}->set_password($profile->{profile}, $password, $router);
         }
     }
+
+    if ($self->{has_keepass}) {
+    }
+
+    # if they make it here and still don't have a password then none was
+    # defined anywhere and we probably should prompt for one.  Consider
+    # turning off echo then normal read.
+    return 'undef';
 }
 
 # Expect won't let you reuse a connection that has spawned a process, so you
