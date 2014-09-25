@@ -39,10 +39,14 @@ can use.  It's actually a perl file so advanced scripting is possible.  See
 the COMMANDS.md file for descriptions of some of the options and examples of
 their use.
 
-Once you've copied and modified telrc, you should put tel and mktelrc
-somewhere in the system $PATH for the users.
+Once you've done that I would suggest running the usual build commands to
+handle the script installation:
 
-Once you're ready to go, you can instruct your users to run "mktelrc".  This
+1. perl Makefile.PL
+2. make
+3. make install
+
+When you're ready to go, you can instruct your users to run "mktelrc".  This
 will prompt them for the username and password they use for routers, then
 write them to a .telrc2 file in their home directory.
 
