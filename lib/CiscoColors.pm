@@ -109,6 +109,14 @@ sub dssnr {
     return colored($pwr, $color);
 }
 
+sub cpu {
+    my $cpu = shift;
+    my $color = 'green';
+    if ($cpu > 0) { $color = 'yellow'; }
+    if ($cpu > 1) { $color = 'red'; }
+    return colored($cpu, $color);
+}
+
 my $regexp = crazy('(\d+) runts, (\d+) giants, (\d+) throttles',
 		'(\d+) input errors, (\d+) CRC, (\d+) frame, (\d+) overrun, (\d+) ignored',
 		'(\d+) input packets with dribble condition detected',
@@ -135,6 +143,8 @@ sub colorizer {
 
     s#([a-f0-9\.]+ C\d+/\d+/U\d+\s+\d+\s+)([\d\.]+)(\s+)([\d\.]+)(\s+\d+[\s-]+)([\d\.]+)(\s+)([\d\.]+)#
         sprintf("%s%s%s%s%s%s%s%s", $1, uspwr($2), $3, ussnr($4), $5, dspwr($6), $7, dssnr($8))#eg;
+
+    s#(\s+\d+\s+\d+\s+\d+\s+\d+\s+)([\d\.]+)(%\s+)([\d\.]+)(%\s+)([\d\.]+)#sprintf("%s%s%s%s%s%s", $1, cpu($2), $3, cpu($4), $5, cpu($6))#eg;
 
     eval $regexp;
     return $_;
