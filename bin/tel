@@ -313,7 +313,7 @@ sub _keyring {
 sub _keepass {
 
     eval {
-        use File::KeePass;
+        load File::KeePass;
 
         my $k = File::KeePass->new;
         $k->load_db($ENV{HOME}."/keepass.kdbx", $ENV{KEYPASSPWD});
