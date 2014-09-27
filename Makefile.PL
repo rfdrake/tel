@@ -6,6 +6,10 @@ all_from       'bin/tel';
 requires       'Hash::Merge::Simple'  => '0.0';
 requires       'Expect'  => '0.0';
 
+recommends     'Term::ANSIColor';
+recommends     'File::KeePass';
+recommends     'Passwd::Keyring::Auto';
+
 install_script  'bin/tel';
 install_script  'bin/mktelrc';
 
