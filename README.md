@@ -1,7 +1,7 @@
 # Tel: A login script for routers and other devices
 
-If you've worked at a NOC at any point in time you've probably got one of
-these.  It's probably written in Expect and probably sends your username and
+If you've worked at a NOC at any point in time you’ve probably made a script
+like this one.  It's probably written in Expect and probably sends your username and
 password to log you in.  You might have different variants for different types
 of devices, or different things you need to do to a device.
 
@@ -22,9 +22,9 @@ Additionally, it has an optional global config file which lets site
 administrators control login settings for multiple users.  This is useful if
 you have a NOC where 10 people may need to login all the time and your telrc
 config file has complicated business logic in it, but you don't want to update
-each persons home directory each time a change is made to it.  Instead they
-can keep their own changes local to $HOME/.telrc2 while global policy is in
-/etc/telrc.
+each person’s home directory each time a change is made to it.  Instead they
+can keep their own changes local to $HOME/.telrc2, while maintaining a global 
+policy in /etc/telrc.
 
 Some things it still needs:
 
@@ -34,7 +34,7 @@ Some things it still needs:
 # Setup
 
 Take the dottelrc.sample and copy it to /etc/telrc, then edit it to suit your
-sites needs.  This is a baseline configuration that everyone on a bounce host
+site’s needs.  This is a baseline configuration that everyone on a jump host
 can use.  It's actually a perl file so advanced scripting is possible.  See
 the COMMANDS.md file for descriptions of some of the options and examples of
 their use.
@@ -46,7 +46,7 @@ handle the script installation:
 2. make
 3. make install
 
-When you're ready to go, you can instruct your users to run "mktelrc".  This
+When you're ready to install, you can instruct your users to run "mktelrc".  This
 will prompt them for the username and password they use for routers, then
 write them to a .telrc2 file in their home directory.
 
