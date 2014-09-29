@@ -299,15 +299,34 @@ sub profile {
     return $profile;
 }
 
+
+# may want to make these methods so I can use IO::Stty to turn off echo on
+# STDIN handle.  Slumming in the meantime with system. :)
+sub _input_password {
+    my $prompt = shift;
+    print "Enter password for $prompt: ";
+    system('stty','-echo');
+    chomp(my $password=<STDIN>);
+    system('stty','echo');
+    return $password;
+}
+
 # just examples for keyring and keepass
 sub _keyring {
-    my $has_keyring = 1;
-    my $keyring;
+    my $user = shift;
+    my $domain = shift;
+    my $group = shift;
+
     eval {
-        load Passwd::Keyring::Auto;
-        $keyring = get_keyring(app=>"tel script", group=>"Device Passwords");
-        1;
-    } or $has_keyring = 0;
+        load Passwd::Keyring::Auto, 'get_keyring';
+        my $keyring = get_keyring(app=>"tel script", group=>$group);
+        my $pass = $keyring->get_password($user, $domain);
+        if (!$pass) {
+            $pass = _input_password($domain);
+            $keyring->set_password($user, $pass, $domain);
+        }
+        return $pass;
+    } or die;
 }
 
 # this works but needs error checking and documentation.  You also can't store
@@ -317,6 +336,10 @@ sub _keepass {
     my $keepass_file = shift;
     my $keepass_passwd = shift;
     my $keepass_entry = shift;
+
+    if ($keepass_passwd eq 'KEYRING') {
+        $keepass_passwd = _keyring('KEEPASS', 'KEEPASS','KEEPASS');
+    }
 
     eval {
         load File::KeePass;
