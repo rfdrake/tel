@@ -1,35 +1,16 @@
 # Tel: A login script for routers and other devices
 
-If you've worked at a NOC at any point in time you’ve probably made a script
-like this one.  It's probably written in Expect and probably sends your username and
-password to log you in.  You might have different variants for different types
-of devices, or different things you need to do to a device.
+# What it does
 
-This script aims to replace all of those and provide an easy to use
-interactive client for most of the CLI I've encountered.
-
-I've been working on this off-and-on for 14 years.  It started out in expect
-and now is written in perl/Expect.pm.  It has a couple of features that make
-it very useful:
-
-* Aliases for hard to type router names or commands
-* Fix for terminal issues (backspace correction) when needed
-* ubiquitous logout command
-* clogin style CLI arguments with -c and -x
-* color highlighting for some things
-
-Additionally, it has an optional global config file which lets site
-administrators control login settings for multiple users.  This is useful if
-you have a NOC where 10 people may need to login all the time and your telrc
-config file has complicated business logic in it, but you don't want to update
-each person’s home directory each time a change is made to it.  Instead they
-can keep their own changes local to $HOME/.telrc2, while maintaining a global 
-policy in /etc/telrc.
-
-Some things it still needs:
-
+tel provides the following:
+* Use a simple, single command to connect to multiple network device types.
+* Create aliases for hard to type router names or commands.
+* Handles terminal-related issues, such as proper backspace.
+* clogin-style CLI arguments (via -c and -x).
+* Color highlighting.
+* Optional global config that supports multiple users.
 * Keepass and Keyring support
-* More testing with more diverse hardware
+* Highly customizable via the Commands file
 
 # Setup
 
@@ -58,6 +39,8 @@ firewalled box that is only used to allow users to access routers.
 Obviously, if the router supports real ssh keys or any other secure
 authentication you should let the login be handled by that.  This script can
 still provide value without the need to login for you.
+
+# Features
 
 ## ubiquitous logout command
 
@@ -110,6 +93,30 @@ Example:
     EOF
 
     tel -x commands.txt sw1-cisco-device
+
+# Multi-user support
+
+Administrators may control login settings for multiple users via the global config
+file.  This is useful if you have a NOC where 10 people may need to login all the 
+time and your telrc config file has complicated business logic in it, but you 
+don't want to update each person’s home directory each time a change is made to it.
+
+* The global config file is stored in /etc/telrc
+* Per-user configs are stored in $HOME/.telrc2 
+
+# History
+
+If you've worked at a NOC at any point in time you’ve probably made a script
+like this one.  It's probably written in Expect and probably sends your username and
+password to log you in.  You might have different variants for different types
+of devices, or different things you need to do to a device.
+
+This script aims to replace all of those and provide an easy to use
+interactive client for most of the CLI I've encountered.
+
+I've been working on this off-and-on for 14 years.  It started out in expect
+and now is written in perl/Expect.pm. 
+
 
 
 # Bugs
