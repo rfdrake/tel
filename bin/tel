@@ -326,7 +326,7 @@ sub _keyring {
             $keyring->set_password($user, $pass, $domain);
         }
         return $pass;
-    } or die;
+    };
 }
 
 # this works but needs error checking and documentation.  You also can't store
