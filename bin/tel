@@ -310,18 +310,24 @@ sub _keyring {
     } or $has_keyring = 0;
 }
 
+# this works but needs error checking and documentation.  You also can't store
+# your keepass password in a keyring yet, but you can store it in an
+# environment variable and set $keepass_passwd to be $ENV{KEEPASSPWD}
 sub _keepass {
+    my $keepass_file = shift;
+    my $keepass_passwd = shift;
+    my $keepass_entry = shift;
 
     eval {
         load File::KeePass;
 
         my $k = File::KeePass->new;
-        $k->load_db($ENV{HOME}."/keepass.kdbx", $ENV{KEYPASSPWD});
+        $k->load_db($keepass_file, $keepass_passwd);
 
         $k->unlock;
 
-        my $e = $k->find_entry({title => 'telscript'});
-        print $e->{'password'} . "\n";
+        my $e = $k->find_entry({title => $keepass_entry});
+        return $e->{'password'};
     };
 }
 
@@ -341,7 +347,7 @@ sub password {
     # could use: not $type ~~ [ 'password', 'enable' ] but smartmatch is thinged
     warn "Unknown password type $type" if ($type ne 'password' && $type ne 'enable');
 
-    if ($profile->{$type} ne '') {
+    if (defined($profile->{$type}) && $profile->{$type} ne '') {
         return $profile->{$type};
     }
 
@@ -357,6 +363,20 @@ sub password {
     # environment variables to control where we load from and what order, but
     # I'm not sure
 
+    if (my $pass = _keepass($profile->{keepass_file},
+                            $profile->{keepass_passwd},
+                            $profile->{keepass_entry}))
+    {
+        if ($pass ne '') {
+            return $pass;
+        }
+    }
+
+    # I was wondering how to decide what to prompt for, but I think it should
+    # be whichever profile loaded.  So maybe we check for hostname and check
+    # for profile name and then save as profile name. If they want to be
+    # explicit they should specify the password format as KEYRING or
+    # something.. I dunno.
     $self->_keyring;
 
     # if they make it here and still don't have a password then none was
