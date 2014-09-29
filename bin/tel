@@ -338,6 +338,7 @@ sub password {
 
     $type ||= 'password';
 
+    # could use: not $type ~~ [ 'password', 'enable' ] but smartmatch is thinged
     warn "Unknown password type $type" if ($type ne 'password' && $type ne 'enable');
 
     if ($profile->{$type} ne '') {
