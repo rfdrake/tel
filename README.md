@@ -10,35 +10,9 @@ tel provides the following:
 * Color highlighting.
 * Optional global config that supports multiple users.
 * Keepass and Keyring support
-* Highly customizable via the Commands file
-
-# Setup
-
-Take the dottelrc.sample and copy it to /etc/telrc, then edit it to suit your
-site’s needs.  This is a baseline configuration that everyone on a jump host
-can use.  It's actually a perl file so advanced scripting is possible.  See
-the COMMANDS.md file for descriptions of some of the options and examples of
-their use.
-
-Once you've done that I would suggest running the usual build commands to
-handle the script installation:
-
-1. perl Makefile.PL
-2. make
-3. make install
-
-When you're ready to install, you can instruct your users to run "mktelrc".  This
-will prompt them for the username and password they use for routers, then
-write them to a .telrc2 file in their home directory.
-
-This file should be only readable by the user for security reasons, although
-the very act of storing passwords for your routers in a file means you are
-already defeating some security.  I advise you to only run this on a heavily
-firewalled box that is only used to allow users to access routers.
-
-Obviously, if the router supports real ssh keys or any other secure
-authentication you should let the login be handled by that.  This script can
-still provide value without the need to login for you.
+* Handles automatic logins for text-based user interfaces common on older
+networking devices.
+* Highly customizable
 
 # Features
 
@@ -103,6 +77,38 @@ don't want to update each person’s home directory each time a change is made t
 
 * The global config file is stored in /etc/telrc
 * Per-user configs are stored in $HOME/.telrc2 
+
+# More Features
+Please read the Commands.md file for an in-depth command list, with examples.
+
+# Setup
+
+Take the dottelrc.sample and copy it to /etc/telrc, then edit it to suit your
+site’s needs.  This is a baseline configuration that everyone on a jump host
+can use.  It's actually a perl file so advanced scripting is possible.  See
+the COMMANDS.md file for descriptions of some of the options and examples of
+their use.
+
+Once you've done that I would suggest running the usual build commands to
+handle the script installation:
+
+1. perl Makefile.PL
+2. make
+3. make install
+
+When you're ready to install, you can instruct your users to run "mktelrc".  This
+will prompt them for the username and password they use for routers, then
+write them to a .telrc2 file in their home directory.
+
+This file should be only readable by the user for security reasons, although
+the very act of storing passwords for your routers in a file means you are
+already defeating some security.  I advise you to only run this on a heavily
+firewalled box that is only used to allow users to access routers.
+
+Obviously, if the router supports real ssh keys or any other secure
+authentication you should let the login be handled by that.  This script can
+still provide value without the need to login for you.
+
 
 # History
 
