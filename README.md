@@ -50,7 +50,7 @@ examples.
 
 # clogin style arguments
 
-## use '-c' command line to send commands
+## use -c on the command line to send commands
 
 Example:
     tel -c 'show ver; show ip int br' sw1-cisco-device
@@ -71,12 +71,12 @@ Example:
 # Multi-user support
 
 Administrators may control login settings for multiple users via the global config
-file.  This is useful if you have a NOC where 10 people may need to login all the 
-time and your telrc config file has complicated business logic in it, but you 
+file.  This is useful if you have a NOC where 10 people may need to login all the
+time and your telrc config file has complicated business logic in it, but you
 don't want to update each person’s home directory each time a change is made to it.
 
 * The global config file is stored in /etc/telrc
-* Per-user configs are stored in $HOME/.telrc2 
+* Per-user configs are stored in $HOME/.telrc2
 
 # More Features
 Please read the Commands.md file for an in-depth command list, with examples.
@@ -121,7 +121,7 @@ This script aims to replace all of those and provide an easy to use
 interactive client for most of the CLI I've encountered.
 
 I've been working on this off-and-on for 14 years.  It started out in expect
-and now is written in perl/Expect.pm. 
+and now is written in perl/Expect.pm.
 
 
 
