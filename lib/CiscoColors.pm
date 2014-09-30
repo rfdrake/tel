@@ -144,6 +144,9 @@ sub colorizer {
     s#([a-f0-9\.]+ C\d+/\d+/U\d+\s+\d+\s+)([\d\.]+)(\s+)([\d\.]+)(\s+\d+[\s-]+)([\d\.]+)(\s+)([\d\.]+)#
         sprintf("%s%s%s%s%s%s%s%s", $1, uspwr($2), $3, ussnr($4), $5, dspwr($6), $7, dssnr($8))#eg;
 
+    s/Full-duplex/sprintf("%s", colored('Full-duplex', 'green'))/eg;
+    s/Half-duplex/sprintf("%s", colored('Half-duplex', 'yellow'))/eg;
+
     s#(\s+\d+\s+\d+\s+\d+\s+\d+\s+)([\d\.]+)(%\s+)([\d\.]+)(%\s+)([\d\.]+)#sprintf("%s%s%s%s%s%s", $1, cpu($2), $3, cpu($4), $5, cpu($6))#eg;
 
     eval $regexp;
