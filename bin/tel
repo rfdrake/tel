@@ -513,6 +513,10 @@ sub login {
         push @dynamic, [ qr/$rtr->{prompt}/, sub { $self->connected(1); last METHOD; } ];
     }
 
+    # handle prompts in foreign languages or other things we didn't think of
+    $rtr->{username_prompt} ||= qr/[Uu]ser[Nn]ame:|Login:/;
+    $rtr->{password_prompt} ||= qr/[Pp]ass[Ww]ord/;
+
     METHOD: for (@{$self->{methods}}) {
         my $allied_shit=0;
 
@@ -528,9 +532,9 @@ sub login {
         elsif ($_ eq 'exec')    { $self->connect($hostname); }
         else { die "No program defined for method $_\n"; }
 
-        # handle prompts in foreign languages or other things we didn't think of
-        $rtr->{username_prompt} ||= qr/[Uu]ser[Nn]ame:|Login:/;
-        $rtr->{password_prompt} ||= qr/[Pp]ass[Ww]ord/;
+        # need to make this optional and restore the old title on exit
+        # also need to make it display whatever the user cares about.
+        #print "\033]0;$_ $hostname $p\007";
 
         $self->expect($self->{timeout},
                 @{$self->_banners},
