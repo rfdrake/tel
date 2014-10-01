@@ -1,21 +1,24 @@
 #!/bin/bash
 
 read -p "Enter username (default = $USER): " user
-read -s -p "Password: " pass
-echo 
+read -s -p "Enter Password (default = \$ENV{ROUTER_PASSWORD}): " pass
+echo
 if [ "x$user" = "x" ]; then
    user=$USER
 fi
-   
-TMPFILE=`mktemp mktelrc.XXXXXX`
+if [ "x$pass" = "x" ]; then
+   pass="\$ENV{ROUTER_PASSWORD}"
+fi
+
+TMPFILE=$(mktemp --tmpdir mktelrc.XXXXXX)
 
 cat <<EOF>$TMPFILE
 \$telrc = {
-          'profile' => { 
-                'default' => { 
-                        'user' => '$user',
-                        'password' => '$pass' 
-                } 
+          'profile' => {
+                'default' => {
+                        'user' => "$user",
+                        'password' => "$pass",
+                }
           }
 };
 EOF
