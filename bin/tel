@@ -132,7 +132,7 @@ sub new {
         'stdin' => Expect->exp_init(\*STDIN),
         'connected' => 0,
         'enabled' => 0,
-        'title_count' => 0,
+        'title_stack' => 0,
     };
 
     bless($self, 'Expect::Tel');
@@ -158,13 +158,15 @@ sub disconnect {
     $self->{banners} = undef;
     $self->connected(0);
     $self->{enabled}=0;
+    if ($self->{title_stack} > 0) {
+        $self->{title_stack}--;
+        print "\e[23t";
+    }
     if ($hard) {
         $self->session->hard_close();
     } else {
         $self->session->soft_close();
     }
-    $self->{title_count}--;
-    print "\e[23t";
 }
 
 sub send {
@@ -538,7 +540,9 @@ sub login {
         # need to make this optional
         # also need to make it display whatever the user cares about.
         print "\e[22t\033]0;$_ $hostname\007";
-        $self->{title_count}++;
+        $self->{title_stack}++;
+        $SIG{INT} = sub { for (1..$self->{title_stack}) { print "\e[23t"; } $self->{title_stack}=0; };
+
 
         $self->expect($self->{timeout},
                 @{$self->_banners},
