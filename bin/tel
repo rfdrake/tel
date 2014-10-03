@@ -755,7 +755,7 @@ sub interconnect {
                 # work)
 				$nread = sysread(
 					$read_handle, ${*$read_handle}{exp_Pty_Buffer},
-					1024*10
+					10240
 				);
 
                 # only run the colorizer if it's loaded from a module
