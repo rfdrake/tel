@@ -132,6 +132,7 @@ sub new {
         'stdin' => Expect->exp_init(\*STDIN),
         'connected' => 0,
         'enabled' => 0,
+        'title_count' => 0,
     };
 
     bless($self, 'Expect::Tel');
@@ -162,6 +163,8 @@ sub disconnect {
     } else {
         $self->session->soft_close();
     }
+    $self->{title_count}--;
+    print "\e[23t";
 }
 
 sub send {
@@ -532,9 +535,10 @@ sub login {
         elsif ($_ eq 'exec')    { $self->connect($hostname); }
         else { die "No program defined for method $_\n"; }
 
-        # need to make this optional and restore the old title on exit
+        # need to make this optional
         # also need to make it display whatever the user cares about.
-        #print "\033]0;$_ $hostname $p\007";
+        print "\e[22t\033]0;$_ $hostname\007";
+        $self->{title_count}++;
 
         $self->expect($self->{timeout},
                 @{$self->_banners},
