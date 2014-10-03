@@ -26,7 +26,7 @@ Hostname is a router directive.  It has two uses which are outlined below.
 ### hostname (aliases)
 
 Sometimes you want to connect to a device with a hostname that isn't in DNS.
-Maybe the DNS name is long and you want to abbriviate it, or maybe you want to
+Maybe the DNS name is long and you want to abbreviate it, or maybe you want to
 set options, like username or login method when you connect on one name, then
 use different options on another name.  You can do this with the hostname
 directive.
