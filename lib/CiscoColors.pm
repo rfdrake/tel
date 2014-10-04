@@ -27,6 +27,7 @@
 
 
 package CiscoColors;
+#use parent 'ColorObject';
 use Term::ANSIColor;
 use strict;
 require Exporter;
@@ -132,6 +133,15 @@ my $regexp = crazy('(\d+) runts, (\d+) giants, (\d+) throttles',
         '(\d+) babbles, (\d+) late collision, (\d+) deferred',
         '(\d+) lost carrier, (\d+) no carrier',
     );
+
+
+
+sub new {
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
+
+    return bless( {}, $class);
+}
 
 sub colorizer {
 
