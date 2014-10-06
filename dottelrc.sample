@@ -15,7 +15,7 @@ $telrc = {
                    { 'regex' => '^cerf$', 'method' => 'telnet', 'hostname' => 'route-server.cerf.net', 'prompt' => 'route-server>' },
                    { 'regex' => '^att$', 'user' => 'rviews', 'method' => 'telnet', 'hostname' => 'route-server.ip.att.net', 'prompt' => 'route-server>' },
                    { 'regex' => '^ix$', 'user' => 'rviews', 'method' => 'telnet',
-                                  'hostname' => 'route-views.oregon-ix.net', 'prompt' => 'route-views>', 'noenable' => 1 },
+                                  'hostname' => 'route-views.oregon-ix.net', 'prompt' => 'route-views>' },
                    { 'regex' => '^quagga$', 'method' => 'telnet', 'hostname' => '127.0.0.1', port => 2605 },
                    { 'regex' => '^ubi', 'user' => 'ubnt', 'method' => 'ssh' },
                    # to clarify what we're doing here, if the name matches
