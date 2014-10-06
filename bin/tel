@@ -8,7 +8,7 @@ use Getopt::Std;
 use Hash::Merge::Simple qw (merge);
 use Module::Load;
 use v5.10;
-our $VERSION = eval '0.20';
+our $VERSION = eval '0.2001';
 
 my @colors;
 
@@ -16,7 +16,7 @@ __PACKAGE__->main() unless caller;
 
 =head1 VERSION
 
-0.20
+0.2001
 
 =head1 AUTHOR
 
@@ -117,7 +117,7 @@ sub load_syntax {
         eval {
             Module::Load::load $module;
             push(@colors, $module->new);
-        } or warn if (0);
+        };
     }
 }
 
