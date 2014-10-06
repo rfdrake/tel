@@ -1,5 +1,3 @@
-#!/usr/bin/perl -w
-
 # this is only intended as an example.  Most people have their own ideas of
 # what's important and what isn't in a log, so you'll want to highlight lines
 # differently.
