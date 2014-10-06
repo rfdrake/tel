@@ -89,14 +89,16 @@ sub ussnr {
     return colored($pwr, $color);
 }
 sub dspwr {
-    my $pwr = shift;
+    my $input = shift;
+    my $pwr = $input;
+    $pwr =~ s/ //g;   # remove all spaces, leaving possible negative sign and value
     my $color = 'red';
     if ( $pwr < -15 ) { $color = 'red'; }
     if ( $pwr >= -15 && $pwr <= -9 ) { $color = 'yellow'; }
     if ( $pwr >= -9 && $pwr <= 9 ) { $color = 'green'; }
     if ( $pwr >= 9 && $pwr <= 15 ) { $color = 'yellow'; }
     if ( $pwr > 15 ) { $color = 'red'; }
-     return colored($pwr, $color);
+    return colored($input, $color);
 }
 sub dssnr {
     my $pwr = shift;
@@ -152,7 +154,7 @@ sub colorizer {
              colored($2, $2 ne "up" ? $warn_color : $good_color),
              colored($3, $2 ne "up" ? $warn_color : $good_color))/e;
 
-    s#([a-f0-9\.]+ C\d+/\d+/U\d+\s+\d+\s+)([\d\.]+)(\s+)([\d\.]+)(\s+\d+[\s-]+)([\d\.]+)(\s+)([\d\.]+)#
+    s#([a-f0-9\.]+ C\d+/\d+/U\d+\s+\d+\s+)([\d\.]+)(\s+)([\d\.]+)(\s+\!?\d+)([\s-]+[\d\.]+)(\s+)([\d\.]+)#
         sprintf("%s%s%s%s%s%s%s%s", $1, uspwr($2), $3, ussnr($4), $5, dspwr($6), $7, dssnr($8))#eg;
 
     s/Full-duplex/sprintf("%s", colored('Full-duplex', 'green'))/eg;
