@@ -1,7 +1,9 @@
 $telrc = {
           'profile' => {
                        'default' => { 'password' => 'DINGLEHOPPER!', 'user' => $ENV{USER},
-                                      'sshoptions' => [ 'UserKnownHostsFile=/dev/null', 'StrictHostKeyChecking=no' ] },
+                                      'sshoptions' => [ 'UserKnownHostsFile=/dev/null', 'StrictHostKeyChecking=no' ],
+                                      'syntax' => 'Cisco',
+                       },
                        'casa' => { 'handlers' =>  { '\cZ' => \&handle_ctrl_z } },
                        'zhone' => { 'user' => 'admin', 'method' => 'telnet', 'prompt' => '>', 'enablecmd' => 'priv' },
                        'dlink' => { 'method' => 'telnet', 'handlers' => { '\177' => \&handle_backspace }, 'syntax' => 'Dlink' },
@@ -16,12 +18,17 @@ $telrc = {
                                   'hostname' => 'route-views.oregon-ix.net', 'prompt' => 'route-views>', 'noenable' => 1 },
                    { 'regex' => '^quagga$', 'method' => 'telnet', 'hostname' => '127.0.0.1', port => 2605 },
                    { 'regex' => '^ubi', 'user' => 'ubnt', 'method' => 'ssh' },
+                   # to clarify what we're doing here, if the name matches
+                   # these regex we load the listed profile.
                    { 'profile' => 'casa', 'regex' => '^casa1-' },
                    { 'profile' => 'zhone', 'regex' => '^dsl' },
                    { 'profile' => 'hatteras', 'regex' => '^hat' },
                    { 'profile' => 'mikrotik', 'regex' => '^gw1-mkt-site' },
                    { 'profile' => 'at', 'regex' => '^(ds|sw).*(site-name).*' },
                  ],
+
+        # if we see these strings in the banner while we're connecting to the
+        # device then we load the corresponding profile
         'banners' => {
                 'Bay Networks BayStack' => 'baystack',
                 'DES-3(5|3)(50|26) (Ethernet|Fast Ethernet)' => 'dlink',
