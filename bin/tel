@@ -10,8 +10,9 @@ use Module::Load;
 use v5.10;
 our $VERSION = eval '0.15';
 
-my $colors = 0;
+my @colors;
 load_syntax('Cisco');
+load_syntax('Test');
 
 __PACKAGE__->main() unless caller;
 
@@ -44,7 +45,7 @@ sub main {
     $self->{config} = load_config();
 
     my %opts;
-    getopts('lx:c:t:p:', \%opts);
+    getopts('ldx:c:t:p:', \%opts);
     $self->{timeout} = $opts{t} ? $opts{t} : 90;
     $self->{opts} = \%opts;
 
@@ -100,19 +101,15 @@ This attempts to load syntax highlighting modules.  In the above example,
 Cisco would append Colors to the end and get CiscoColors.pm.  If it can't find
 the module it just won't load it.
 
-We need to rewrite this to support loading multiple modules so that people can
-load rules for their company, then rules for a specific device manufacturer
-(Cisco) then specific types (Switches) if they want to breakup their syntax
-into different files.
-
 =cut
 
 sub load_syntax {
-    my $syntax = shift;
+    my $module = 'Expect::Tel::'.shift.'Colors';
+
     eval {
-        Module::Load::load $syntax.'Colors', 'colorizer';
-        $colors = 1;
-    } or $colors = 0;
+        Module::Load::load $module;
+        push(@colors, $module->new);
+    } or warn if (1);
 }
 
 =head1 METHODS
@@ -758,9 +755,8 @@ sub interconnect {
 					10240
 				);
 
-                # only run the colorizer if it's loaded from a module
-                if ($colors) {
-                    ${*$read_handle}{exp_Pty_Buffer} = colorizer(${*$read_handle}{exp_Pty_Buffer});
+                foreach my $color (@colors) {
+                    ${*$read_handle}{exp_Pty_Buffer} = $color->colorize(${*$read_handle}{exp_Pty_Buffer});
                 }
 				# Appease perl -w
 				$nread = 0 unless defined($nread);

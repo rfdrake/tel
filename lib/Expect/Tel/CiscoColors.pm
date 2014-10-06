@@ -26,13 +26,10 @@
 # This may be older than 2007.  I'm going by what git blame tells me. :)
 
 
-package CiscoColors;
+package Expect::Tel::CiscoColors;
 #use parent 'ColorObject';
 use Term::ANSIColor;
 use strict;
-require Exporter;
-our @ISA = qw(Exporter);
-our @EXPORT = qw(colorizer);
 
 my $host_color = "magenta";
 my $warn_color = "red";
@@ -141,6 +138,10 @@ sub new {
     my $class = ref($proto) || $proto;
 
     return bless( {}, $class);
+}
+
+sub colorize {
+    return colorizer($_[1]);
 }
 
 sub colorizer {
