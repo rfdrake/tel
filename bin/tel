@@ -12,7 +12,6 @@ our $VERSION = eval '0.15';
 
 my @colors;
 load_syntax('Cisco');
-load_syntax('Test');
 
 __PACKAGE__->main() unless caller;
 
@@ -109,7 +108,7 @@ sub load_syntax {
     eval {
         Module::Load::load $module;
         push(@colors, $module->new);
-    } or warn if (1);
+    } or warn if (0);
 }
 
 =head1 METHODS
