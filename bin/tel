@@ -11,7 +11,6 @@ use v5.10;
 our $VERSION = eval '0.15';
 
 my @colors;
-load_syntax('Cisco');
 
 __PACKAGE__->main() unless caller;
 
@@ -79,6 +78,11 @@ sub load_config {
             $config = merge($config, $telrc);
         }
     }
+
+    # load global syntax things
+    for(@{$config->{syntax}}) {
+        load_syntax($_);
+    }
     return $config;
 }
 
@@ -100,15 +104,21 @@ This attempts to load syntax highlighting modules.  In the above example,
 Cisco would append Colors to the end and get CiscoColors.pm.  If it can't find
 the module it just won't load it.
 
+Multiple files can be chain loaded by using plus:
+
+    load_syntax('Default+Cisco');
+
 =cut
 
 sub load_syntax {
-    my $module = 'Expect::Tel::'.shift.'Colors';
+    for(split(/\+/, shift)) {
+        my $module = 'Expect::Tel::'.$_.'Colors';
 
-    eval {
-        Module::Load::load $module;
-        push(@colors, $module->new);
-    } or warn if (0);
+        eval {
+            Module::Load::load $module;
+            push(@colors, $module->new);
+        } or warn if (0);
+    }
 }
 
 =head1 METHODS
@@ -290,10 +300,16 @@ sub profile {
 
     foreach(split(/\+/, $profile_arg)) {
         $profile = merge($profile, $config->{profile}{$_});
+
+        # load handlers for profile
         if ($profile->{handlers}) {
             foreach my $v (keys %{$profile->{handlers}}) {
                 $stdin->set_seq($v, $profile->{handlers}{$v}, [ \$self ]);
             }
+        }
+        # load syntax highlight
+        if ($profile->{syntax}) {
+            load_syntax($profile->{syntax});
         }
     }
     $self->{'profile'}=$profile;

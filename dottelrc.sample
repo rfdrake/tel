@@ -34,5 +34,10 @@ $telrc = {
                 'DES-3(5|3)(50|26) (Ethernet|Fast Ethernet)' => 'dlink',
                 'Casa Systems' => 'casa',
         },
+
+        # if these exist they will be loaded when the config file is parsed
+        'syntax' => [
+            'MyCompanyName',
+        ],
 };
 
