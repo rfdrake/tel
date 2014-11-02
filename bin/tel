@@ -770,8 +770,11 @@ sub interconnect {
 					10240
 				);
 
-                foreach my $color (@colors) {
-                    ${*$read_handle}{exp_Pty_Buffer} = $color->colorize(${*$read_handle}{exp_Pty_Buffer});
+                # don't bother trying to colorize input from the user
+                if (${*$read_handle}{exp_Pty_Handle} ne 'STDIN') {
+                    foreach my $color (@colors) {
+                        ${*$read_handle}{exp_Pty_Buffer} = $color->colorize(${*$read_handle}{exp_Pty_Buffer});
+                    }
                 }
 				# Appease perl -w
 				$nread = 0 unless defined($nread);
