@@ -12,3 +12,7 @@
 /Expect-Tel*tar.gz
 *swp
 *local*
+/debian/expect-tel.debhelper.log
+/debian/expect-tel.substvars
+/debian/expect-tel/
+/debian/files
