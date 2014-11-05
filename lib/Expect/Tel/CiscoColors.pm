@@ -137,16 +137,13 @@ sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
 
-    return bless( {}, $class);
+    return bless( { 'in_router' => 0 }, $class);
 }
 
 sub colorize {
-    return colorizer($_[1]);
-}
-
-sub colorizer {
-
+    my $self = shift;
     $_ = shift;
+
     s/(\S+) is (.*), line protocol is (.*)/
        sprintf("%s is %s, line protocol is %s", colored($1, $host_color),
              colored($2, $2 ne "up" ? $warn_color : $good_color),
@@ -159,6 +156,18 @@ sub colorizer {
     s/Half-duplex/sprintf("%s", colored('Half-duplex', 'yellow'))/eg;
 
     s#(\s+\d+\s+\d+\s+\d+\s+\d+\s+)([\d\.]+)(%\s+)([\d\.]+)(%\s+)([\d\.]+)#sprintf("%s%s%s%s%s%s", $1, cpu($2), $3, cpu($4), $5, cpu($6))#eg;
+
+    # for multiline operations like this we might need to have it loop over
+    # the lines rather than treating it as a buffer
+#     if ($self->{in_router}) {
+#         if (/^!/) {
+#             $self->{in_router}=0;
+#         }
+#         return colored($_, 'cyan');
+#     } elsif (/^(ipv6 )?router (bgp|isis|ospf|rip)/) {
+#         $self->{in_router}=1;
+#         return colored($_, 'cyan');
+#     }
 
     eval $regexp;
     return $_;
