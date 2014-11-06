@@ -152,10 +152,20 @@ sub colorize {
     s#([a-f0-9\.]+ C\d+/\d+/U\d+\s+\d+\s+)([\d\.]+)(\s+)([\d\.]+)(\s+\!?\d+)([\s-]+[\d\.]+)(\s+)([\d\.]+)#
         sprintf("%s%s%s%s%s%s%s%s", $1, uspwr($2), $3, ussnr($4), $5, dspwr($6), $7, dssnr($8))#eg;
 
-    s/Full-duplex/sprintf("%s", colored('Full-duplex', 'green'))/eg;
-    s/Half-duplex/sprintf("%s", colored('Half-duplex', 'yellow'))/eg;
+    s/Full-duplex/colored('Full-duplex', 'green')/eg;
+    s/Half-duplex/colored('Half-duplex', 'yellow')/eg;
 
     s#(\s+\d+\s+\d+\s+\d+\s+\d+\s+)([\d\.]+)(%\s+)([\d\.]+)(%\s+)([\d\.]+)#sprintf("%s%s%s%s%s%s", $1, cpu($2), $3, cpu($4), $5, cpu($6))#eg;
+
+    s/\n(ip route [^\n]+)/sprintf("\n%s", colored($1,'yellow'))/eg;
+    s/\n(ipv6 route [^\n]+)/sprintf("\n%s", colored($1,'yellow'))/eg;
+    s/\n(aaa [^\n]+)/sprintf("\n%s", colored($1,'green'))/eg;
+    s/\n(access-list [^\n]+)/sprintf("\n%s", colored($1,'cyan'))/eg;
+    s/\n(snmp-server [^\n]+)/sprintf("\n%s", colored($1,'bright_white'))/eg;
+    s/\n(tacacs-server [^\n]+)/sprintf("\n%s", colored($1,'magenta'))/eg;
+    s/\n(no tacacs-server [^\n]+)/sprintf("\n%s", colored($1,'magenta'))/eg;
+    s/\n(radius-server [^\n]+)/sprintf("\n%s", colored($1,'magenta'))/eg;
+    s/\n(ntp [^\n]+)/sprintf("\n%s", colored($1,'magenta'))/eg;
 
     # for multiline operations like this we might need to have it loop over
     # the lines rather than treating it as a buffer
