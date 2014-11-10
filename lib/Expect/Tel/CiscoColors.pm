@@ -144,19 +144,24 @@ sub colorize {
     my $self = shift;
     $_ = shift;
 
+    # beginning of 'show interface'
     s/(\S+) is (.*), line protocol is (.*)/
        sprintf("%s is %s, line protocol is %s", colored($1, $host_color),
              colored($2, $2 ne "up" ? $warn_color : $good_color),
              colored($3, $2 ne "up" ? $warn_color : $good_color))/e;
 
+    # sh cable modem phy
     s#([a-f0-9\.]+ C\d+/\d+/U\d+\s+\d+\s+)([\d\.]+)(\s+)([\d\.]+)(\s+\!?\d+)([\s-]+[\d\.]+)(\s+)([\d\.]+)#
         sprintf("%s%s%s%s%s%s%s%s", $1, uspwr($2), $3, ussnr($4), $5, dspwr($6), $7, dssnr($8))#eg;
 
+    # more show interface
     s/Full-duplex/colored('Full-duplex', 'green')/eg;
     s/Half-duplex/colored('Half-duplex', 'yellow')/eg;
 
+    # sh proc cpu
     s#(\s+\d+\s+\d+\s+\d+\s+\d+\s+)([\d\.]+)(%\s+)([\d\.]+)(%\s+)([\d\.]+)#sprintf("%s%s%s%s%s%s", $1, cpu($2), $3, cpu($4), $5, cpu($6))#eg;
 
+    # parts of sh run
     s/\n(ip route [^\n]+)/sprintf("\n%s", colored($1,'yellow'))/eg;
     s/\n(ipv6 route [^\n]+)/sprintf("\n%s", colored($1,'yellow'))/eg;
     s/\n(aaa [^\n]+)/sprintf("\n%s", colored($1,'green'))/eg;
@@ -167,18 +172,7 @@ sub colorize {
     s/\n(radius-server [^\n]+)/sprintf("\n%s", colored($1,'magenta'))/eg;
     s/\n(ntp [^\n]+)/sprintf("\n%s", colored($1,'magenta'))/eg;
 
-    # for multiline operations like this we might need to have it loop over
-    # the lines rather than treating it as a buffer
-#     if ($self->{in_router}) {
-#         if (/^!/) {
-#             $self->{in_router}=0;
-#         }
-#         return colored($_, 'cyan');
-#     } elsif (/^(ipv6 )?router (bgp|isis|ospf|rip)/) {
-#         $self->{in_router}=1;
-#         return colored($_, 'cyan');
-#     }
-
+    # the rest of show interface
     eval $regexp;
     return $_;
 }
