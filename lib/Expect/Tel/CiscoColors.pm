@@ -183,9 +183,9 @@ sub colorize {
         $self->{block_color}='bright_yellow';
     }
 
-    if (defined($self->{block_end})) {
-        $self->process_block($_);
-    }
+#     if (defined($self->{block_end})) {
+#         $self->process_block($_);
+#     }
 
     # beginning of 'show interface'
     s/(\S+) is (.*), line protocol is (.*)/
