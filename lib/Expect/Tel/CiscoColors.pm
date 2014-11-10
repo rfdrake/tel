@@ -137,12 +137,55 @@ sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
 
-    return bless( { 'in_router' => 0 }, $class);
+    return bless( { }, $class);
+}
+
+# this should start at the beginning statement (router bgp whatever..) and end
+# at the closing statement (\n!).. BUT.. it needs to be able to continue
+# through a second buffer if block_end isn't found..
+sub process_block {
+    my $self = shift;
+    my $end = $self->{block_end};
+    my $text = shift;
+    if ($self->{block_begin}) {
+        my $begin = $self->{block_begin};
+        $text =~ s/($begin.*($end|$))/colored($1, $self->{block_color})/e;
+        undef $self->{block_begin};
+    } else {
+        $text =~ s/(.*($end|$))/colored($1, $self->{block_color})/e;
+    }
+
+    if ($2 eq $self->{block_end}) {
+        print "Block ended here..\n";
+        undef $self->{block_end};
+        undef $self->{block_color};
+    }
 }
 
 sub colorize {
     my $self = shift;
     $_ = shift;
+
+    # this doesn't work.  One reason is that two of these lines could be in
+    # the same buffer and this would only catch it once (we would need to
+    # split the buffer by \n to fix that)
+    if (/\n(?:ipv6 )?router \S+/) {
+        $self->{block_begin}=qr/\n(?:ipv6 )?router \S+/;
+        $self->{block_end}=qr/\n!/;
+        $self->{block_color}='cyan';
+    } elsif (/\nip dhcp pool/) {
+        $self->{block_begin}=qr/\nip dhcp pool/;
+        $self->{block_end}=qr/\n!/;
+        $self->{block_color}='cyan';
+    } elsif (/\ninterface \S+/) {
+        $self->{block_begin}=qr/\ninterface \S+/;
+        $self->{block_end}=qr/\n!/;
+        $self->{block_color}='bright_yellow';
+    }
+
+    if (defined($self->{block_end})) {
+        $self->process_block($_);
+    }
 
     # beginning of 'show interface'
     s/(\S+) is (.*), line protocol is (.*)/
