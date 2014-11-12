@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 
 use strict;
 package Expect::Tel;
@@ -66,7 +66,8 @@ sub main {
 
 sub load_config {
     my $override = shift;
-    my @configs = ( "/etc/telrc", "/usr/local/etc/telrc", "$ENV{HOME}/.telrc2", "$ENV{TELRC}" );
+    my @configs = ( "/etc/telrc", "/usr/local/etc/telrc", "$ENV{HOME}/.telrc2" );
+    push(@configs, $ENV{TELRC}) if (defined($ENV{TELRC}));
     @configs = qw ( $override ) if ($override);
     our $telrc;
     my $config;
@@ -522,7 +523,7 @@ sub login {
         $ssho = '-o '. join(' -o ', @sshoptions);
     }
 
-    my $cipher = '-c ' . $rtr->{ciphertype} if ($rtr->{ciphertype});
+    my $cipher = $rtr->{ciphertype} ? ('-c ' . $rtr->{ciphertype}) : '';
 
     # handle MOTD profile loading, and other things parsed from the config
     my @dynamic;
@@ -534,6 +535,9 @@ sub login {
     $rtr->{username_prompt} ||= qr/[Uu]ser[Nn]ame:|Login:/;
     $rtr->{password_prompt} ||= qr/[Pp]ass[Ww]ord/;
 
+    # because we use last METHOD; in anonymous subs this suppresses the
+    # warning of "exiting subroutine via last;"
+    no warnings 'exiting';
     METHOD: for (@{$self->{methods}}) {
         my $allied_shit=0;
 
@@ -850,19 +854,6 @@ sub interconnect {
 				last CONNECT_LOOP if ( $nread < 0 ); # This would be an error
 				$read_handle->_print_handles( ${*$read_handle}{exp_Pty_Buffer} );
 			}
-
-			# I'm removing this because I haven't determined what causes exceptions
-			# consistently.
-			if (0) #$ebits[$read_handle->fileno()])
-			{
-				print STDERR "Got Exception reading ${*$read_handle}{exp_Pty_Handle}\r\n"
-					if ${*$read_handle}{"exp_Debug"};
-				last CONNECT_LOOP
-					unless defined( ${ ${*$read_handle}{exp_Function} }{"EOF"} );
-				last CONNECT_LOOP
-					unless &{ ${ ${*$read_handle}{exp_Function} }{"EOF"} }
-					( @{ ${ ${*$read_handle}{exp_Parameters} }{"EOF"} } );
-			}
 		}
 	}
 	foreach my $handle (@handles) {
@@ -888,7 +879,7 @@ sub conn {
 
     winch();
 
-    my @args = split(/;/, $opts->{c});
+    my @args = split(/;/, $opts->{c}) if ($opts->{c});
     if ($opts->{x}) {
         open(X, '<', $opts->{x});
         @args = <X>;
