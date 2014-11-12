@@ -2,21 +2,22 @@
 
 use strict;
 package Expect::Tel;
-use Expect;
+use Expect qw( exp_continue );
 use POSIX qw(:sys_wait_h :unistd_h); # For WNOHANG and isatty
 use Getopt::Std;
 use Hash::Merge::Simple qw (merge);
 use Module::Load;
 use v5.10;
-our $VERSION = eval '0.2001';
+our $VERSION = eval '0.2002';
 
 my @colors;
+my $winch_it=0;
 
 __PACKAGE__->main() unless caller;
 
 =head1 VERSION
 
-0.2001
+0.2002
 
 =head1 AUTHOR
 
@@ -441,12 +442,10 @@ sub session {
     $session = new Expect;
 
     # install sig handler for window size change
-    $SIG{WINCH} = \&winch;
+    $SIG{WINCH} = \&winch_handler;
 
-    sub winch {
-        eval { $session->slave->clone_winsize_from(\*STDIN); };
-        kill WINCH => $session->pid if $session->pid;
-        $SIG{WINCH} = \&winch;
+    sub winch_handler {
+        $winch_it=1;
     }
 
     $session->log_stdout(1);
@@ -454,6 +453,14 @@ sub session {
     return $session;
 }
 
+sub winch {
+    my $self = shift;
+    my $session = $self->{'session'};
+    $session->slave->clone_winsize_from(\*STDIN);
+    kill WINCH => $session->pid if $session->pid;
+    $winch_it=0;
+    $SIG{WINCH} = \&winch_handler;
+}
 
 # this sets up the session.  If there already is a session open it closes and
 # opens a new one.
@@ -646,7 +653,7 @@ sub interact {
     # Allow for the setting of an optional EOF escape function.
     #  $in_object->set_seq('EOF',undef);
     #  $self->set_seq('EOF',undef);
-    interconnect($self,$in_object);
+    $self->interconnect($in_object);
     $self->log_stdout($old_log_stdout_val);
     $self->set_group(@old_group);
     # If old_group was undef, make sure that occurs. This is a slight hack since
@@ -662,7 +669,8 @@ sub interact {
 }
 
 sub interconnect {
-	my (@handles) = @_;
+    my $self = shift;
+	my @handles = ($self, $_[1]);
 
 	#  my ($handle)=(shift); call as Expect::interconnect($spawn1,$spawn2,...)
 	my ( $nread );
@@ -674,11 +682,6 @@ sub interconnect {
 	foreach my $handle (@handles) {
 		$temp_mask = '';
 		vec( $temp_mask, $handle->fileno(), 1 ) = 1;
-
-		# Under Linux w/ 5.001 the next line comes up w/ 'Uninit var.'.
-		# It appears to be impossible to make the warning go away.
-		# doing something like $temp_mask='' unless defined ($temp_mask)
-		# has no effect whatsoever. This may be a bug in 5.001.
 		$read_mask = $read_mask | $temp_mask;
 	}
 	if ($Expect::Debug) {
@@ -749,7 +752,8 @@ sub interconnect {
 		# Every second? No, go until we get something from someone.
 		my $nfound = select( $rout = $read_mask, undef, $eout = $emask, undef );
 
-		# Is there anything to share?  May be -1 if interrupted by a signal...
+        # Is there anything to share?  May be -1 if interrupted by a signal...
+        $self->winch() if $winch_it;
 		next CONNECT_LOOP if not defined $nfound or $nfound < 1;
 
 		# Which handles have stuff?
@@ -877,7 +881,7 @@ sub conn {
     my $opts = $self->{opts};
     my $prompt = $profile->{prompt};
 
-    winch();
+    $self->winch();
 
     my @args = split(/;/, $opts->{c}) if ($opts->{c});
     if ($opts->{x}) {
