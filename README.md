@@ -123,7 +123,7 @@ interactive client for most of the CLI I've encountered.
 I've been working on this off-and-on for 14 years.  It started out in expect
 and now is written in perl/Expect.pm.
 
-# Similar Programs
+# Similar Programs (at least with regards to colorized Cisco CLI)
 
 After posting this to reddit I found some people had similar ideas and had
 made progress on some things, but some have taken different directions.  Here
@@ -139,7 +139,7 @@ are the projects I know about:
 
 4.  Cisco embedded event manager can be used to colorize output in recent IOS
     versions.  You need to write scripts on each of the devices you connect
-    with. 
+    with.
 
 5.  SecureCRT or MacOS iTerm2 can highlight sections by regex, if you prefer
     doing it at the terminal emulator level
