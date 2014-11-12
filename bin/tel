@@ -1,6 +1,7 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
 
 use strict;
+use warnings;
 package Expect::Tel;
 use Expect qw( exp_continue );
 use POSIX qw(:sys_wait_h :unistd_h); # For WNOHANG and isatty
@@ -136,8 +137,12 @@ Creates a new Expect::Tel object.
 =cut
 
 sub new {
+
+    my $infile = IO::File->new;
+    $infile->IO::File::fdopen( \*STDIN, 'r' );
+
     my $self = {
-        'stdin' => Expect->exp_init(\*STDIN),
+        'stdin' => Expect->exp_init($infile),
         'connected' => 0,
         'enabled' => 0,
         'title_stack' => 0,
@@ -454,8 +459,7 @@ sub session {
 }
 
 sub winch {
-    my $self = shift;
-    my $session = $self->{'session'};
+    my $session = shift->{'session'};
     $session->slave->clone_winsize_from(\*STDIN);
     kill WINCH => $session->pid if $session->pid;
     $winch_it=0;
@@ -627,50 +631,49 @@ sub logging {
 }
 
 sub interact {
-    my $self = shift->{'session'};  # go ahead and use session as self
+    my $self = shift;
+    my $session = $self->{'session'};
     my $in_object = shift;
     my $escape_sequence = shift;
 
-    my ($return_value);
-    my @old_group = $self->set_group();
+    my @old_group = $session->set_group();
     # we know the input is STDIN and that it's an object.
     my $out_object = Expect->exp_init(\*STDOUT);
     $out_object->manual_stty(1);
-    $self->set_group($out_object);
+    $session->set_group($out_object);
 
-    $in_object->set_group($self);
+    $in_object->set_group($session);
     $in_object->set_seq($escape_sequence,undef) if defined($escape_sequence);
     # interconnect normally sets stty -echo raw. Interact really sort
     # of implies we don't do that by default. If anyone wanted to they could
     # set it before calling interact, of use interconnect directly.
-    my $old_manual_stty_val = $self->manual_stty();
-    $self->manual_stty(1);
+    my $old_manual_stty_val = $session->manual_stty();
+    $session->manual_stty(1);
     # I think this is right. Don't send stuff from in_obj to stdout by default.
-    # in theory whatever 'self' is should echo what's going on.
-    my $old_log_stdout_val = $self->log_stdout();
-    $self->log_stdout(0);
+    # in theory whatever 'session' is should echo what's going on.
+    my $old_log_stdout_val = $session->log_stdout();
+    $session->log_stdout(0);
     $in_object->log_stdout(0);
     # Allow for the setting of an optional EOF escape function.
     #  $in_object->set_seq('EOF',undef);
-    #  $self->set_seq('EOF',undef);
+    #  $session->set_seq('EOF',undef);
     $self->interconnect($in_object);
-    $self->log_stdout($old_log_stdout_val);
-    $self->set_group(@old_group);
+    $session->log_stdout($old_log_stdout_val);
+    $session->set_group(@old_group);
     # If old_group was undef, make sure that occurs. This is a slight hack since
     # it modifies the value directly.
     # Normally an undef passed to set_group will return the current groups.
     # It is possible that it may be of worth to make it possible to undef
     # The current group without doing this.
     unless (@old_group) {
-        @{${*$self}{exp_Listen_Group}} = ();
+        @{${*$session}{exp_Listen_Group}} = ();
     }
-    $self->manual_stty($old_manual_stty_val);
-    return $return_value;
+    $session->manual_stty($old_manual_stty_val);
 }
 
 sub interconnect {
     my $self = shift;
-	my @handles = ($self, $_[1]);
+	my @handles = ($self->{'session'}, $_[0]);
 
 	#  my ($handle)=(shift); call as Expect::interconnect($spawn1,$spawn2,...)
 	my ( $nread );
