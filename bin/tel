@@ -908,6 +908,10 @@ sub conn {
         $self->interact($self->{stdin}, '\cD');
         # q\b is to end anything that's at a More prompt or other dialog and
         # get you back to the command prompt
+        # would be nice to detect if the session is closing down and not send
+        # this.  I've tried checking for session and session->pid but they
+        # both still exist at this point so unless we wait for soft_close
+        # we're kinda stuck doing this.
         $self->send("q\b" . $profile->{logoutcmd}. "\r");
     }
 }
