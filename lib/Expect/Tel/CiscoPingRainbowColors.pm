@@ -34,9 +34,11 @@ sub colorize {
     # We need to define a start point in the buffer that the dot regex isn't
     # allowed to search before so that this line and ones before it with
     # dots don't get red dots.
-    if (/Sending \d+, \d+-byte ICMP Echos to \d+\.\d+\.\d+\.\d+, timeout is \d+ seconds:/) {
+    if (/Sending \d+, \d+-byte ICMP Echos to/) {
         $self->{ping}=1;
-    } elsif ($self->{ping}) {
+    }
+
+    if ($self->{ping}) {
             s/(\!)/$self->next_color($1)/eg;
             s/(\.)/colored('.', 'red')/eg;
         if (/Success rate is/) {
