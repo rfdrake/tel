@@ -123,7 +123,29 @@ interactive client for most of the CLI I've encountered.
 I've been working on this off-and-on for 14 years.  It started out in expect
 and now is written in perl/Expect.pm.
 
+# Similar Programs
 
+After posting this to reddit I found some people had similar ideas and had
+made progress on some things, but some have taken different directions.  Here
+are the projects I know about:
+
+1.  A comment in http://www.reddit.com/r/networking/comments/2bxehw/coloring_cli/ references a
+    python expect implementation.  Here is a screenshot with some example code
+    http://i.imgur.com/1slyPkK.png
+
+2.  This thread gives a few ideas that I'll list below http://www.reddit.com/r/networking/comments/2hy2dj/cisco_cli_colorization/
+
+3.  Cisco nx-os supports CLI coloring directly with "terminal color"
+
+4.  Cisco embedded event manager can be used to colorize output in recent IOS
+    versions.  You need to write scripts on each of the devices you connect
+    with. 
+
+5.  SecureCRT or MacOS iTerm2 can highlight sections by regex, if you prefer
+    doing it at the terminal emulator level
+
+6.  If you want to do it at the ssh protocol level, there is
+https://github.com/mxtommy/Cisco-SSH-Client
 
 # Bugs
 
