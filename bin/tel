@@ -536,6 +536,9 @@ sub login {
 
     my $cipher = $rtr->{ciphertype} ? ('-c ' . $rtr->{ciphertype}) : '';
 
+    # because we use last METHOD; in anonymous subs this suppresses the
+    # warning of "exiting subroutine via last;"
+    no warnings 'exiting';
     # handle MOTD profile loading, and other things parsed from the config
     my @dynamic;
     if (defined($rtr->{prompt})) {
@@ -546,9 +549,6 @@ sub login {
     $rtr->{username_prompt} ||= qr/[Uu]ser[Nn]ame:|Login:/;
     $rtr->{password_prompt} ||= qr/[Pp]ass[Ww]ord/;
 
-    # because we use last METHOD; in anonymous subs this suppresses the
-    # warning of "exiting subroutine via last;"
-    no warnings 'exiting';
     METHOD: for (@{$self->{methods}}) {
         my $allied_shit=0;
 
