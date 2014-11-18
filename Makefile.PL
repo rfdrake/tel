@@ -13,7 +13,7 @@ recommends     'Passwd::Keyring::Auto';
 install_script  'bin/tel';
 install_script  'bin/mktelrc';
 
-test_requires q(Test::More) => 0.90;
+test_requires q(Test::Most) => 0.33;
 repository q(git://github.com/rfdrake/tel.git);
 license 'perl';
 
