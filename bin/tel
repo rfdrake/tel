@@ -82,6 +82,10 @@ sub load_config {
         }
     }
 
+    if (!defined($config->{'telrc_file'})) {
+        warn "No configuration files loaded.  You may need to run mktelrc?\n";
+    }
+
     # load global syntax things
     for(@{$config->{syntax}}) {
         load_syntax($_);
