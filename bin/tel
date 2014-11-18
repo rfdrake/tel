@@ -546,7 +546,7 @@ sub login {
     }
 
     # handle prompts in foreign languages or other things we didn't think of
-    $rtr->{username_prompt} ||= qr/[Uu]ser[Nn]ame:|Login:/;
+    $rtr->{username_prompt} ||= qr/[Uu]ser[Nn]ame:|[Ll]ogin:/;
     $rtr->{password_prompt} ||= qr/[Pp]ass[Ww]ord/;
 
     METHOD: for (@{$self->{methods}}) {
