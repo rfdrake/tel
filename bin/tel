@@ -350,6 +350,7 @@ sub _keyring {
     my $domain = shift;
     my $group = shift;
 
+    # TODO: needs to warn on some kind of failure?
     eval {
         load Passwd::Keyring::Auto, 'get_keyring';
         my $keyring = get_keyring(app=>"tel script", group=>$group);
@@ -374,6 +375,7 @@ sub _keepass {
         $keepass_passwd = _keyring('KEEPASS','KEEPASS','KEEPASS');
     }
 
+    # TODO: needs to warn on unlock failure
     eval {
         load File::KeePass;
 
