@@ -6,6 +6,7 @@ $telrc = {
                        },
                        'casa' => { 'handlers' =>  { '\cZ' => \&handle_ctrl_z } },
                        'zhone' => { 'user' => 'admin', 'method' => 'telnet', 'prompt' => '>', 'enablecmd' => 'priv' },
+                       'juniper' => { 'logoutcmd' => 'exit', 'syntax' => 'Juniper' },
                        'dlink' => { 'method' => 'telnet', 'handlers' => { '\177' => \&handle_backspace }, 'syntax' => 'Dlink' },
                        'mikrotik' => { 'logoutcmd' => '/quit' },
                        'at' => { 'ciphertype' => 'des', 'user' => 'engr' },
@@ -33,6 +34,7 @@ $telrc = {
                 'Bay Networks BayStack' => 'baystack',
                 'DES-3(5|3)(50|26) (Ethernet|Fast Ethernet)' => 'dlink',
                 'Casa Systems' => 'casa',
+                'JUNOS' => 'juniper',
         },
 
         # if these exist they will be loaded when the config file is parsed
