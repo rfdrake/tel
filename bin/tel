@@ -220,6 +220,7 @@ sub hostname {
     $hostname =~ s/-confg//;
 
 
+    # TODO: need to fix this so it accepts raw and bracketed IPv6
     if ($hostname =~ /(\S+):(\d+)/) {
         $self->{port} = $2;
         $self->{methods} = [ "telnet" ];
@@ -321,7 +322,11 @@ sub profile {
         if ($profile->{syntax}) {
             load_syntax($profile->{syntax});
         }
+        $profile->{profile_name}=$_;
     }
+
+    # add some sane defaults if the profile doesn't have them
+    $profile->{'user'} ||= $ENV{'USER'};
     $self->{'profile'}=$profile;
     return $profile;
 }
@@ -331,6 +336,7 @@ sub profile {
 # STDIN handle.  Slumming in the meantime with system. :)
 sub _input_password {
     my $prompt = shift;
+    $prompt ||= '';
     print "Enter password for $prompt: ";
     system('stty','-echo');
     chomp(my $password=<STDIN>);
@@ -365,7 +371,7 @@ sub _keepass {
     my $keepass_entry = shift;
 
     if ($keepass_passwd eq 'KEYRING') {
-        $keepass_passwd = _keyring('KEEPASS', 'KEEPASS','KEEPASS');
+        $keepass_passwd = _keyring('KEEPASS','KEEPASS','KEEPASS');
     }
 
     eval {
@@ -390,7 +396,7 @@ sub password {
     my $self = shift;
     my $type = shift;
     my $profile = $self->profile;
-    my $router = $profile->{real_hostname};
+    my $router = $self->{hostname};
 
     $type ||= 'password';
 
@@ -413,12 +419,14 @@ sub password {
     # environment variables to control where we load from and what order, but
     # I'm not sure
 
-    if (my $pass = _keepass($profile->{keepass_file},
-                            $profile->{keepass_passwd},
-                            $profile->{keepass_entry}))
-    {
-        if ($pass ne '') {
-            return $pass;
+    if (defined($profile->{keepass_file})) {
+        if (my $pass = _keepass($profile->{keepass_file},
+                                $profile->{keepass_passwd},
+                                $profile->{keepass_entry}))
+        {
+            if ($pass ne '') {
+                return $pass;
+            }
         }
     }
 
@@ -427,11 +435,12 @@ sub password {
     # for profile name and then save as profile name. If they want to be
     # explicit they should specify the password format as KEYRING or
     # something.. I dunno.
-    $self->_keyring;
+    _keyring($profile->{user}, $profile->{profile_name}, $profile->{profile_name});
 
     # if they make it here and still don't have a password then none was
     # defined anywhere and we probably should prompt for one.  Consider
     # turning off echo then normal read.
+    return _input_password($router);
     return 'undef';
 }
 
