@@ -67,10 +67,9 @@ sub main {
 }
 
 sub load_config {
-    my $override = shift;
-    my @configs = ( "/etc/telrc", "/usr/local/etc/telrc", "$ENV{HOME}/.telrc2" );
+    my @configs = @_;
+    @configs = ( "/etc/telrc", "/usr/local/etc/telrc", "$ENV{HOME}/.telrc2") if (!@configs);
     push(@configs, $ENV{TELRC}) if (defined($ENV{TELRC}));
-    @configs = qw ( $override ) if ($override);
     our $telrc;
     my $config;
 
@@ -83,7 +82,7 @@ sub load_config {
     }
 
     if (!defined($config->{'telrc_file'})) {
-        warn "No configuration files loaded.  You may need to run mktelrc?\n";
+        warn "No configuration files loaded. You may need to run mktelrc.";
     }
 
     # load global syntax things
