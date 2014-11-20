@@ -1,3 +1,18 @@
+app-tel (0.2002-1) unstable; urgency=medium
+
+  * corrections for "show cable modem phy" colors
+  * example module for "show logging" colors
+  * ping example module
+  * cleaned up some of the color regexes and colorized more cisco things
+  * fixed code to run with "use warnings"
+  * fix for JUNOS
+  * fix for warnings and errors when there are no configuration files
+  * unit tests for config files
+  * fixes for raw and bracketed IPv6 addresses, and basic uri support
+  * changing namespace to App::Tel to make CPAN happy
+
+ -- Robert Drake <rdrake@direcpath.com>  Wed, 19 Nov 2014 23:59:04 -0500
+
 app-tel (0.2001-1) unstable; urgency=low
 
   * Initial Release.
