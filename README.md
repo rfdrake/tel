@@ -167,4 +167,12 @@ when possible to fix or enhance something, or to improve the testing.
 ![Cisco Show Cable Modem Phy](https://raw.githubusercontent.com/rfdrake/tel/screenshots/tel-scm.png)
 ![Cisco Show Interface](https://raw.githubusercontent.com/rfdrake/tel/screenshots/tel-shint.png)
 
+## Namespace change from Expect::Tel to App::Tel
+
+I decided to put it on CPAN with the "tel" name despite it being pretty
+generic.  If you've been running the script a while you may have left over
+library files in <perl_location>/Expect/Tel/.  These are now unused and safe
+to remove.  You might run "make uninstall" on the old release before
+installing the new version.
+
 ##### Copyright 2013, Robert Drake
