@@ -52,8 +52,11 @@ sub main {
     for (@ARGV) {
         # default profile always loads before anything else.  replace == 1
         $self->profile('default', 1);
-        $self->{port}=$opts{p}; # default to whatever port is set with -p
-        $self->{methods} = [ "ssh", "telnet" ];
+        # this should probably be happening later, since the CLI should
+        # override a profile if they specify a port
+        $self->{port} = $opts{p}; # default to whatever port is set with -p
+        # TODO: add CLI option for setting method -m ssh or whatever
+        $self->{methods} ||= [ "ssh", "telnet" ];
 
         $self->hostname($_);
         $self->login($self->hostname);
@@ -219,11 +222,21 @@ sub hostname {
     $hostname =~ s#/tftpboot/##;
     $hostname =~ s/-confg//;
 
-
-    # TODO: need to fix this so it accepts raw and bracketed IPv6
-    if ($hostname =~ /(\S+):(\d+)/) {
+    if ($hostname =~ qr@(ssh|telnet)://\[([a-zA-Z0-9\-\.\:]+)\](?::(\d+))?@) {
+        $self->{port} = $3 if ($3);
+        $self->{methods} = [ $1 ];
+        $hostname = $2;
+    } elsif ($hostname =~ qr@(ssh|telnet)://([a-zA-Z0-9\-\.]+)(?::(\d+))?@) {
+        $self->{port} = $3 if ($3);
+        $self->{methods} = [ $1 ];
+        $hostname = $2;
+    } elsif ($hostname =~ /\[(\S+)\](?::(\d+))?/) {
+        $self->{port} = $2 if ($2);
+        $self->{methods} = [ 'telnet' ] if ($2);
+        $hostname = $1;
+    } elsif (($hostname =~ tr/://) < 2 && $hostname =~ /(\S+):(\d+)$/) {
         $self->{port} = $2;
-        $self->{methods} = [ "telnet" ];
+        $self->{methods} = [ 'telnet' ];
         $hostname = $1;
     }
 
