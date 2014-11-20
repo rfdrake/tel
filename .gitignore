@@ -9,10 +9,10 @@
 /Makefile.old
 /MANIFEST
 /MANIFEST.bak
-/Expect-Tel*tar.gz
+/App-Tel*tar.gz
 *swp
 *local*
-/debian/expect-tel.debhelper.log
-/debian/expect-tel.substvars
-/debian/expect-tel/
+/debian/app-tel.debhelper.log
+/debian/app-tel.substvars
+/debian/app-tel/
 /debian/files

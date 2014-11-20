@@ -1,4 +1,4 @@
-Source: expect-tel
+Source: app-tel
 Section: perl
 Priority: optional
 Maintainer: Robert Drake <rdrake@cpan.org>
@@ -9,7 +9,7 @@ Build-Depends-Indep: libexpect-perl,
 Standards-Version: 3.9.5
 Homepage: https://github.com/rfdrake/tel
 
-Package: expect-tel
+Package: app-tel
 Architecture: all
 Depends: ${misc:Depends}, ${perl:Depends},
  libexpect-perl,
