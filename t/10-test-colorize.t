@@ -5,11 +5,11 @@ use Test::More;
 # this test is failing when I ssh to my linux machine via cygwin.  I think it
 # might be a terminal thing but I haven't investigated.
 
-use Expect::Tel::CiscoPingRainbowColors;
+use App::Tel::CiscoPingRainbowColors;
 
 plan tests => 1;
 
-my $test = new Expect::Tel::CiscoPingRainbowColors;
+my $test = new App::Tel::CiscoPingRainbowColors;
 my $output = $test->colorize('Sending 10, 100-byte ICMP Echos to 10.0.0.1, timeout is 2 seconds:
 !!!!!!!!!!
 Success rate is 100 percent (10/10), round-trip min/avg/max = 1/1/4 ms');

@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-package Expect::Tel;
+package App::Tel;
 use Expect qw( exp_continue );
 use POSIX qw(:sys_wait_h :unistd_h); # For WNOHANG and isatty
 use Getopt::Std;
@@ -41,7 +41,7 @@ reference.
 =cut
 
 sub main {
-    my $self = Expect::Tel->new();
+    my $self = App::Tel->new();
     $self->{config} = load_config();
 
     my %opts;
@@ -121,7 +121,7 @@ Multiple files can be chain loaded by using plus:
 
 sub load_syntax {
     for(split(/\+/, shift)) {
-        my $module = 'Expect::Tel::'.$_.'Colors';
+        my $module = 'App::Tel::'.$_.'Colors';
 
         eval {
             Module::Load::load $module;
@@ -136,9 +136,9 @@ sub load_syntax {
 
 =head2 new
 
-    my $tel = Expect::Tel->new();
+    my $tel = App::Tel->new();
 
-Creates a new Expect::Tel object.
+Creates a new App::Tel object.
 
 =cut
 
@@ -154,7 +154,7 @@ sub new {
         'title_stack' => 0,
     };
 
-    bless($self, 'Expect::Tel');
+    bless($self, 'App::Tel');
     return $self;
 }
 

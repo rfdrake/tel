@@ -5,11 +5,11 @@ use Test::More;
 require 'bin/tel';
 
 # 1. try new
-my $tel = Expect::Tel->new();
-my $config = Expect::Tel->load_config("dottelrc.sample");
+my $tel = App::Tel->new();
+my $config = App::Tel->load_config("dottelrc.sample");
 
 
-ok(ref($tel) eq 'Expect::Tel', 'Expect::Tel->new() should return a Expect::Tel object.');
+ok(ref($tel) eq 'App::Tel', 'App::Tel->new() should return a App::Tel object.');
 
 done_testing();
 

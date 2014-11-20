@@ -1,6 +1,6 @@
 # test code for chainloading and things
 
-package Expect::Tel::TestColors;
+package App::Tel::TestColors;
 use Term::ANSIColor;
 use strict;
 

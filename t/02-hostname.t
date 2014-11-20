@@ -4,7 +4,7 @@ use Test::More;
 
 require 'bin/tel';
 
-my $tel = Expect::Tel->new();
+my $tel = App::Tel->new();
 $tel->profile('default', 1);
 
 my $hostname = $tel->hostname("router:8080");

@@ -15,7 +15,7 @@ plan tests => 2;
 # no banner and banners
 
 
-my $tel = Expect::Tel->new();
+my $tel = App::Tel->new();
 $tel->{config} = $telrc;
 
 # loading the default profile to pickup the vty password

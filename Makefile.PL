@@ -1,6 +1,6 @@
 use inc::Module::Install;
 
-name           'Expect-Tel';
+name           'App-Tel';
 all_from       'bin/tel';
 
 requires       'Hash::Merge::Simple'  => '0.0';

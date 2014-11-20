@@ -24,7 +24,7 @@
 # This may be older than 2007.  I'm going by what git blame tells me. :)
 
 
-package Expect::Tel::CiscoColors;
+package App::Tel::CiscoColors;
 #use parent 'ColorObject';
 use Term::ANSIColor;
 use strict;

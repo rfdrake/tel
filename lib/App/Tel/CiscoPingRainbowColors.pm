@@ -1,6 +1,6 @@
 # test code for chainloading and things
 
-package Expect::Tel::CiscoPingRainbowColors;
+package App::Tel::CiscoPingRainbowColors;
 use Term::ANSIColor;
 use strict;
 

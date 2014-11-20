@@ -2,7 +2,7 @@
 # what's important and what isn't in a log, so you'll want to highlight lines
 # differently.
 
-package Expect::Tel::CiscoLogColors;
+package App::Tel::CiscoLogColors;
 #use parent 'ColorObject';
 use Term::ANSIColor;
 use strict;

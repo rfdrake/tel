@@ -167,11 +167,4 @@ when possible to fix or enhance something, or to improve the testing.
 ![Cisco Show Cable Modem Phy](https://raw.githubusercontent.com/rfdrake/tel/screenshots/tel-scm.png)
 ![Cisco Show Interface](https://raw.githubusercontent.com/rfdrake/tel/screenshots/tel-shint.png)
 
-## Why it's not on CPAN
-
-I'm still working on figuring out what the namespace should be, and what the
-final name would be.  I'm attached to the name 'tel' because I've been using
-it for 14 years, but it's generic and commonly used so I don't know if I can
-stay with it.
-
 ##### Copyright 2013, Robert Drake
