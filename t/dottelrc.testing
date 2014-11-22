@@ -1,10 +1,10 @@
 $telrc = {
           'profile' => {
-                       'default' => { 'password' => 'testvty', 'user' => $ENV{USER},
+                       'default' => { 'password' => 'testvty', 'user' => 'tester',
                                       'sshoptions' => [ 'UserKnownHostsFile=/dev/null', 'StrictHostKeyChecking=no' ] },
                      },
           'rtr' => [   # this is an array so order matters
-                   { 'regex' => 't/fake_routers/loopback', 'method' => 'exec', enable => 'testenable', enablecmd => 'enable' },
+                   { 'regex' => 'perl t/fake_routers/loopback', 'method' => 'exec', enable => 'testenable', enablecmd => 'enable' },
                 ],
 };
 

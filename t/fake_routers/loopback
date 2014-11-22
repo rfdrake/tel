@@ -1,9 +1,12 @@
-#!/usr/bin/perl
+#!env perl
+
+eval 'exec /usr/local/bin/perl  -S $0 ${1+"$@"}'
+    if 0; # not running under some shell
 
 use IO::Stty;
 use strict;
 
-print "Password:";
+print "Password:\n";
 IO::Stty::stty(\*STDIN,'-echo');
 my $password = <STDIN>;
 IO::Stty::stty(\*STDIN,'echo');
@@ -15,7 +18,7 @@ print "router-name>";
 # get "enable" command
 my $temp = <STDIN>;
 
-print "Password:";
+print "Password:\n";
 IO::Stty::stty(\*STDIN,'-echo');
 $password = <STDIN>;
 IO::Stty::stty(\*STDIN,'echo');
