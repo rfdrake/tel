@@ -2,9 +2,6 @@ use strict;
 use warnings;
 use Test::More;
 
-# this test is failing when I ssh to my linux machine via cygwin.  I think it
-# might be a terminal thing but I haven't investigated.
-
 use App::Tel::CiscoPingRainbowColors;
 
 plan tests => 1;
