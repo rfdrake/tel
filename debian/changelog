@@ -1,3 +1,10 @@
+app-tel (0.2003-1) unstable; urgency=medium
+
+  * fix for expect passthrough
+  * fix for fake-a-router to make it more portable
+
+ -- Robert Drake <rdrake@direcpath.com>  Fri, 21 Nov 2014 23:39:43 -0500
+
 app-tel (0.2002-1) unstable; urgency=medium
 
   * corrections for "show cable modem phy" colors

@@ -9,6 +9,7 @@
 /Makefile.old
 /MANIFEST
 /MANIFEST.bak
+/App-Tel*tar
 /App-Tel*tar.gz
 *swp
 *local*

@@ -9,7 +9,7 @@ use Getopt::Std;
 use Hash::Merge::Simple qw (merge);
 use Module::Load;
 use v5.10;
-our $VERSION = eval '0.2002';
+our $VERSION = eval '0.2003';
 
 my @colors;
 my $winch_it=0;
