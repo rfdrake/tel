@@ -193,7 +193,12 @@ sub send {
 }
 
 sub expect {
-    return shift->{'session'}->expect(@_);
+    my $self = shift;
+    if ($#_ < 2) {
+        return $self->{'session'}->expect($self->{'timeout'}, @_);
+    } else {
+        return $self->{'session'}->expect(@_);
+    }
 }
 
 

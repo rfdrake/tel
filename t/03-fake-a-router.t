@@ -33,7 +33,7 @@ is($tel->connected, 1, 'Did we make it through login?');
 is($tel->enable, 1, 'Did we enable successfully?');
 
 $tel->send("sh ver\r");
-$tel->expect("#");
+$tel->expect('#');
 $tel->send("exit\r");
 $tel->disconnect;
 
