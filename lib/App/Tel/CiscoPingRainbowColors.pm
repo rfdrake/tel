@@ -7,10 +7,15 @@ use strict;
 $Term::ANSIColor::AUTORESET++;         # reset color after each print
 $SIG{INT} = sub { print "\n"; exit; }; # reset color after Ctrl-C
 
-my @colors = qw ( GREEN YELLOW BLUE MAGENTA CYAN  WHITE
+my @colors = qw ( GREEN YELLOW BLUE MAGENTA CYAN WHITE );
+
+# Bright colors were added after 3.00
+if ($Term::ANSIColor::VERSION >= 3.00) {
+    push(@colors, qw (
       BRIGHT_GREEN    BRIGHT_YELLOW
       BRIGHT_BLUE     BRIGHT_MAGENTA    BRIGHT_CYAN     BRIGHT_WHITE
-);
+    ));
+}
 
 sub new {
     my $proto = shift;
