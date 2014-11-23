@@ -4,12 +4,13 @@ use strict;
 use warnings;
 package App::Tel;
 use Expect qw( exp_continue );
+use IO::Stty;
 use POSIX qw(:sys_wait_h :unistd_h); # For WNOHANG and isatty
 use Getopt::Std;
 use Hash::Merge::Simple qw (merge);
 use Module::Load;
 use v5.10;
-our $VERSION = eval '0.2003';
+our $VERSION = eval '0.2004';
 
 my @colors;
 my $winch_it=0;
@@ -350,15 +351,14 @@ sub profile {
 }
 
 
-# may want to make these methods so I can use IO::Stty to turn off echo on
-# STDIN handle.  Slumming in the meantime with system. :)
 sub _input_password {
     my $prompt = shift;
     $prompt ||= '';
+    my $old_mode=IO::Stty::stty(\*STDIN,'-g');
     print "Enter password for $prompt: ";
-    system('stty','-echo');
+    IO::Stty::stty(\*STDIN,'-echo');
     chomp(my $password=<STDIN>);
-    system('stty','echo');
+    IO::Stty::stty(\*STDIN,$old_mode);
     return $password;
 }
 

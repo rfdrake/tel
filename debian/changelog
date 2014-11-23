@@ -1,3 +1,10 @@
+app-tel (0.2004)  unstable; urgency=medium
+
+  * IO::Stty is now marked as required
+  * more bugfixes to make tests stop failing on other systems
+
+ -- Robert Drake <rdrake@direcpath.com>  Sat, 22 Nov 2014 22:20:28 -0500
+
 app-tel (0.2003-1) unstable; urgency=medium
 
   * fix for expect passthrough
