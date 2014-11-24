@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use Test::More;
 
-require 'bin/tel';
+use App::Tel;
 
 my $tel = App::Tel->new();
 $tel->profile('default', 1);

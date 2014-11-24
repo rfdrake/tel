@@ -4,8 +4,6 @@ use Test::More;
 
 use App::Tel::CiscoLogColors;
 
-
-
 plan tests => 1;
 
 my $test = new App::Tel::CiscoLogColors;

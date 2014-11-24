@@ -1,7 +1,7 @@
 use inc::Module::Install;
 
 name           'App-Tel';
-all_from       'bin/tel';
+all_from       'lib/App/Tel.pm';
 
 requires       'Hash::Merge::Simple'  => '0.0';
 requires       'Expect'  => '0.0';

@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use Test::More;
 
-require 'bin/tel';
+use App::Tel;
 
 # 1. try new
 my $test = App::Tel->new();
