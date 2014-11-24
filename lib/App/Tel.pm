@@ -132,7 +132,7 @@ sub load_syntax {
     }
 }
 
-==head1 load_config
+=head1 load_config
 
 Loads the config from /etc/telrc, /usr/local/etc/telrc, $ENV{HOME}/.telrc2, or
 it can be appended to by using the environment variable TELRC, or overridden
