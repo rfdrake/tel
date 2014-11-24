@@ -641,8 +641,8 @@ sub logging {
     my $self = shift;
     my $file = shift;
     $file ||= $self->{hostname};
-    unlink ("/tmp/$router.log") if (-f "/tmp/$router.log");
-    $self->session->log_file("/tmp/$router.log");
+    unlink ("/tmp/$file.log") if (-f "/tmp/$file.log");
+    $self->session->log_file("/tmp/$file.log");
 }
 
 sub interact {
