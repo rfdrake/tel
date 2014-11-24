@@ -36,41 +36,7 @@ because it needs to be written to inside signals.
 
 my $winch_it=0;
 
-=head1 FUNCTIONS
-
-These are made to not be called as methods, so they don't use a $self reference.
-
-=cut
-
-=head2 load_syntax
-
-   load_syntax('Cisco');
-
-This attempts to load syntax highlighting modules.  In the above example,
-Cisco would append Colors to the end and get CiscoColors.pm.  If it can't find
-the module it just won't load it.
-
-Multiple files can be chain loaded by using plus:
-
-    load_syntax('Default+Cisco');
-
-=cut
-
-sub load_syntax {
-    my $self = shift;
-    for(split(/\+/, shift)) {
-        my $module = 'App::Tel::'.$_.'Colors';
-
-        eval {
-            Module::Load::load $module;
-            push(@{$self->{colors}}, $module->new);
-        };
-    }
-}
-
 =head1 METHODS
-
-=cut
 
 =head2 new
 
@@ -140,7 +106,33 @@ sub expect {
     }
 }
 
-=head1 load_config
+=head2 load_syntax
+
+   $self->load_syntax('Cisco');
+
+This attempts to load syntax highlighting modules.  In the above example,
+Cisco would append Colors to the end and get CiscoColors.pm.  If it can't find
+the module it just won't load it.
+
+Multiple files can be chain loaded by using plus:
+
+    $self->load_syntax('Default+Cisco');
+
+=cut
+
+sub load_syntax {
+    my $self = shift;
+    for(split(/\+/, shift)) {
+        my $module = 'App::Tel::'.$_.'Colors';
+
+        eval {
+            Module::Load::load $module;
+            push(@{$self->{colors}}, $module->new);
+        };
+    }
+}
+
+==head1 load_config
 
 Loads the config from /etc/telrc, /usr/local/etc/telrc, $ENV{HOME}/.telrc2, or
 it can be appended to by using the environment variable TELRC, or overridden
