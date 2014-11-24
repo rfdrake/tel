@@ -1,18 +1,19 @@
 package App::Tel;
-use strict;
-use warnings;
-use Expect qw( exp_continue );
-use IO::Stty;
-use POSIX qw(:sys_wait_h :unistd_h); # For WNOHANG and isatty
-use Hash::Merge::Simple qw (merge);
-use Module::Load;
-use v5.10;
 
-our $VERSION = eval '0.2005';
+=head1 NAME
+
+App::Tel - A script for logging into devices
 
 =head1 VERSION
 
 0.2005
+
+=head1 SYNOPSIS
+
+    tel gw1-my-dev
+
+See the README and COMMANDS files for examples of usage and ways to extend the
+application.
 
 =head1 AUTHOR
 
@@ -27,13 +28,19 @@ under the same terms as Perl itself.
 
 =cut
 
-=head1 GLOBALS
+use strict;
+use warnings;
+use Expect qw( exp_continue );
+use IO::Stty;
+use POSIX qw(:sys_wait_h :unistd_h); # For WNOHANG and isatty
+use Hash::Merge::Simple qw (merge);
+use Module::Load;
+use v5.10;
 
-For reasons related to state I needed to make $winch_it global
-because it needs to be written to inside signals.
+our $VERSION = eval '0.2005';
 
-=cut
-
+# For reasons related to state I needed to make $winch_it global
+# because it needs to be written to inside signals.
 my $winch_it=0;
 
 =head1 METHODS
