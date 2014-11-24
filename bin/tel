@@ -10,7 +10,7 @@ use Getopt::Std;
 use Hash::Merge::Simple qw (merge);
 use Module::Load;
 use v5.10;
-our $VERSION = eval '0.2004';
+our $VERSION = eval '0.2005';
 
 my @colors;
 my $winch_it=0;
@@ -19,7 +19,7 @@ __PACKAGE__->main() unless caller;
 
 =head1 VERSION
 
-0.2002
+0.2005
 
 =head1 AUTHOR
 
@@ -64,6 +64,7 @@ sub main {
         if ($self->connected) {
             $self->enable();
             $self->conn($self->{'profile'}->{autocmds});
+            # TODO: This probably needs to be before conn()
             $self->logging($self->hostname) if ($self->{opts}->{l});
             $self->disconnect();
         }
