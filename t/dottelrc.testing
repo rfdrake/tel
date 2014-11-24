@@ -4,7 +4,7 @@ $telrc = {
                                       'sshoptions' => [ 'UserKnownHostsFile=/dev/null', 'StrictHostKeyChecking=no' ] },
                      },
           'rtr' => [   # this is an array so order matters
-                   { 'regex' => 'perl t/fake_routers/loopback', 'method' => 'exec', enable => 'testenable', enablecmd => 'enable' },
+                   { 'regex' => 't/fake_routers/loopback', 'method' => 'exec', enable => 'testenable', enablecmd => 'enable' },
                 ],
 };
 
