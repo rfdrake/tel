@@ -910,6 +910,7 @@ sub conn {
 
     if (@args) {
         $self->expect(10,'-re',$prompt);
+        # this is cisco specific and needs to be abstracted
         $self->send("term len 0\r");
         $self->expect(10,'-re',$prompt);
         foreach my $arg (@args) {
@@ -918,7 +919,6 @@ sub conn {
         }
         $self->send($profile->{logoutcmd} ."\r");
     } else {
-        $self->send("term len 0\r") if ($opts->{l});
         foreach my $arg (@{$autocmds}) {
             $self->send("$arg\r");
             $self->expect(10,'-re',$prompt);
