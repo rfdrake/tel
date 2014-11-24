@@ -628,9 +628,19 @@ sub login {
     return $self->connected;
 }
 
+=head1 logging
+
+    $self->logging('filename');
+
+Turns on logging for this session.  If you specify a filename it will log to
+/tmp/<filename>.log, otherwise it will use /tmp/<hostname>.log.
+
+=cut
+
 sub logging {
     my $self = shift;
-    my $router = shift;
+    my $file = shift;
+    $file ||= $self->{hostname};
     unlink ("/tmp/$router.log") if (-f "/tmp/$router.log");
     $self->session->log_file("/tmp/$router.log");
 }

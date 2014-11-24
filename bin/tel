@@ -31,7 +31,7 @@ sub main {
         $self->login($self->hostname);
         if ($self->connected) {
             $self->enable();
-            $self->logging($self->hostname) if ($self->{opts}->{l});
+            $self->logging() if ($self->{opts}->{l});
             $self->conn($self->{'profile'}->{autocmds});
             $self->disconnect();
         }
