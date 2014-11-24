@@ -4,7 +4,6 @@ use strict;
 use warnings;
 use App::Tel;
 use Getopt::Std;
-use Hash::Merge::Simple qw (merge);
 use v5.10;
 
 __PACKAGE__->main() unless caller;
@@ -14,19 +13,13 @@ sub main {
     $self->{config} = $self->load_config();
 
     my %opts;
-    getopts('ldx:c:t:p:', \%opts);
+    getopts('ldx:c:t:m:p:', \%opts);
     $self->{timeout} = $opts{t} ? $opts{t} : 90;
     $self->{opts} = \%opts;
 
     for (@ARGV) {
         # default profile always loads before anything else.  replace == 1
         $self->profile('default', 1);
-        # this should probably be happening later, since the CLI should
-        # override a profile if they specify a port
-        $self->{port} = $opts{p}; # default to whatever port is set with -p
-        # TODO: add CLI option for setting method -m ssh or whatever
-        $self->{methods} ||= [ "ssh", "telnet" ];
-
         $self->hostname($_);
         $self->login($self->hostname);
         if ($self->connected) {

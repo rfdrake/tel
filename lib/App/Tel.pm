@@ -86,6 +86,7 @@ sub disconnect {
     my $hard = shift;
     $self->{profile} = {};
     $self->{banners} = undef;
+    $self->{methods} = ();
     $self->connected(0);
     $self->{colors}=();
     $self->{enabled}=0;
@@ -203,19 +204,19 @@ sub hostname {
 
     if ($hostname =~ qr@(ssh|telnet)://\[([a-zA-Z0-9\-\.\:]+)\](?::(\d+))?@) {
         $self->{port} = $3 if ($3);
-        $self->{methods} = [ $1 ];
+        $self->methods($1);
         $hostname = $2;
     } elsif ($hostname =~ qr@(ssh|telnet)://([a-zA-Z0-9\-\.]+)(?::(\d+))?@) {
         $self->{port} = $3 if ($3);
-        $self->{methods} = [ $1 ];
+        $self->methods($1);
         $hostname = $2;
     } elsif ($hostname =~ /\[(\S+)\](?::(\d+))?/) {
         $self->{port} = $2 if ($2);
-        $self->{methods} = [ 'telnet' ] if ($2);
+        $self->methods('telnet') if ($2);
         $hostname = $1;
     } elsif (($hostname =~ tr/://) < 2 && $hostname =~ /(\S+):(\d+)$/) {
         $self->{port} = $2;
-        $self->{methods} = [ 'telnet' ];
+        $self->methods('telnet');
         $hostname = $1;
     }
 
@@ -233,6 +234,43 @@ sub hostname {
     }
     $self->{hostname} = $hostname;
     return $self->{hostname};
+}
+
+=head2 methods
+
+    $self->methods();
+
+This is used to determine the method used to connect to the remote device.
+Generally, the CLI argument -m has the highest priority.  The uri should be
+second, profiles third, and the defaults would be last.  If called without
+arguments it will return whatever the currently decided method array is.  If
+called with an argument that will be set as the new method array.
+
+If you call it multiple times it won't change right now.  I may need to
+rethink this later but right now it works with the way the program flows.
+$self->disconnect removes all methods so connecting to another router will run
+this again.
+
+    $self->methods('ssh', 'telnet');
+
+=cut
+
+sub methods {
+    my $self = shift;
+
+    if (@_) {
+        @{$self->{methods}} = @_;
+    } elsif (defined($self->{methods})) {
+        return $self->{methods};
+    } elsif ($self->{opts}->{m}) {
+        $self->{methods} = [ $self->{opts}->{m} ];
+    } elsif (defined($self->{'profile'}->{method})) {
+        @{$self->{methods}} = split(/,/, $self->{'profile'}->{method});
+    } else {
+        $self->{methods} = [ 'ssh', 'telnet' ];
+    }
+
+    return $self->{methods};
 }
 
 sub _banners {
@@ -531,8 +569,6 @@ sub login {
     our $rtr;
     *rtr = \$self->{'profile'};
 
-    @{$self->{methods}} = split(/,/, $rtr->{method}) if (defined($rtr->{method}));
-
     my $ssho = '-o StrictHostKeyChecking=no';
     if (defined($rtr->{sshoptions}) && scalar $rtr->{sshoptions} > 0) {
         my @sshoptions = @{$rtr->{sshoptions}};
@@ -554,13 +590,15 @@ sub login {
     $rtr->{username_prompt} ||= qr/[Uu]ser[Nn]ame:|[Ll]ogin:/;
     $rtr->{password_prompt} ||= qr/[Pp]ass[Ww]ord/;
 
-    METHOD: for (@{$self->{methods}}) {
+    $self->{port} ||= $self->{opts}->{p}; # get port from CLI
+    $self->{port} ||= $rtr->{port};       # or the profile
+    # if it's not set in the profile or CLI above, it gets set in the
+    # method below, but needs to be reset on each loop to change from
+    # telnet to ssh defaults
+
+    METHOD: for (@{$self->methods}) {
         my $allied_shit=0;
 
-        $self->{port} ||= $rtr->{port};  # if port isn't set get it from the profile.
-        # if it's not set in the profile or code above, it gets set in the
-        # method below, but needs to be reset on each loop to change from
-        # telnet to ssh defaults
         my $p = $self->{port};
 
         if ($_ eq 'ssh')        { $p ||= 22; $self->connect("ssh -p $p -l $rtr->{user} $ssho $cipher $hostname"); }
@@ -574,7 +612,6 @@ sub login {
         print "\e[22t\033]0;$_ $hostname\007";
         $self->{title_stack}++;
         $SIG{INT} = sub { for (1..$self->{title_stack}) { print "\e[23t"; } $self->{title_stack}=0; };
-
 
         $self->expect($self->{timeout},
                 @{$self->_banners},
