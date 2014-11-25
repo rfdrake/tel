@@ -28,6 +28,9 @@ package App::Tel::CiscoColors;
 #use parent 'ColorObject';
 use Term::ANSIColor;
 use strict;
+use warnings;
+
+our $VERSION = eval '0.2';
 
 my $host_color = "magenta";
 my $warn_color = "red";

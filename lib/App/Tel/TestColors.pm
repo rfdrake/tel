@@ -3,6 +3,9 @@
 package App::Tel::TestColors;
 use Term::ANSIColor;
 use strict;
+use warnings;
+
+our $VERSION = eval '0.1';
 
 $Term::ANSIColor::AUTORESET++;         # reset color after each print
 $SIG{INT} = sub { print "\n"; exit; }; # reset color after Ctrl-C
