@@ -4,6 +4,8 @@ package App::Tel::CiscoPingRainbowColors;
 use Term::ANSIColor;
 use strict;
 
+our $VERSION = eval '0.1';
+
 $Term::ANSIColor::AUTORESET++;         # reset color after each print
 $SIG{INT} = sub { print "\n"; exit; }; # reset color after Ctrl-C
 
