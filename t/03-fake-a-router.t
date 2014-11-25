@@ -9,14 +9,6 @@ use App::Tel;
 use Config;
 my $path_to_perl = $Config{perlpath};
 
-# need to test
-# rtr->hostname as CODE and as an alias
-# method changes with split
-# hostname:port options
-# ssh options changes
-# no banner and banners
-
-
 my $tel = App::Tel->new();
 $tel->{config} = $telrc;
 
