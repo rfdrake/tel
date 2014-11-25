@@ -89,6 +89,11 @@ can use.  It's actually a perl file so advanced scripting is possible.  See
 the COMMANDS.md file for descriptions of some of the options and examples of
 their use.
 
+Once you've done that you may need to install a couple of things to get it
+running.  Here is the easy route if you're running a debian-based OS:
+
+    sudo apt-get install libmodule-install-perl libtest-most-perl libhash-merge-simple-perl libexpect-perl libio-stty-perl make
+
 Once you've done that I would suggest running the usual build commands to
 handle the script installation:
 
@@ -96,9 +101,14 @@ handle the script installation:
 2. make
 3. make install
 
-When you're ready to install, you can instruct your users to run "mktelrc".  This
-will prompt them for the username and password they use for routers, then
-write them to a .telrc2 file in their home directory.
+A far easier way to install is to use cpanminus if you're
+comfortable with it, now that the app is on CPAN:
+
+    cpanm App::Tel
+
+When you've installed and are ready to use the app, you can instruct your users
+to run "mktelrc".  This will prompt them for the username and password they use
+for routers, then write them to a .telrc2 file in their home directory.
 
 This file should be only readable by the user for security reasons, although
 the very act of storing passwords for your routers in a file means you are
