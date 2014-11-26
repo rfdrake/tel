@@ -1,23 +1,11 @@
-# test code for chainloading and things
-
 package App::Tel::CiscoPingRainbowColors;
+use parent 'App::Tel::ColorObject';
 use Term::ANSIColor;
 use strict;
+use warnings;
 
 our $VERSION = eval '0.1';
 
-$Term::ANSIColor::AUTORESET++;         # reset color after each print
-$SIG{INT} = sub { print "\n"; exit; }; # reset color after Ctrl-C
-
-my @colors = qw ( GREEN YELLOW BLUE MAGENTA CYAN WHITE );
-
-# Bright colors were added after 3.00
-if ($Term::ANSIColor::VERSION >= 3.00) {
-    push(@colors, qw (
-      BRIGHT_GREEN    BRIGHT_YELLOW
-      BRIGHT_BLUE     BRIGHT_MAGENTA    BRIGHT_CYAN     BRIGHT_WHITE
-    ));
-}
 
 sub new {
     my $proto = shift;
@@ -31,7 +19,7 @@ sub new {
 
 sub next_color {
     my $self = shift;
-    return colored(shift, $colors[$self->{current_color}++ % scalar(@colors)]);
+    return colored(shift, $App::Tel::ColorObject::colors[$self->{current_color}++ % scalar(@App::Tel::ColorObject::colors)]);
 }
 
 sub colorize {

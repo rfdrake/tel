@@ -25,7 +25,7 @@
 
 
 package App::Tel::CiscoColors;
-#use parent 'ColorObject';
+use parent 'App::Tel::ColorObject';
 use Term::ANSIColor;
 use strict;
 use warnings;
@@ -35,9 +35,6 @@ our $VERSION = eval '0.2';
 my $host_color = "magenta";
 my $warn_color = "red";
 my $good_color = "green";
-
-$Term::ANSIColor::AUTORESET++;         # reset color after each print
-$SIG{INT} = sub { print "\n"; exit; }; # reset color after Ctrl-C
 
 sub c {
    my $value = shift;
@@ -135,13 +132,6 @@ my $regexp = crazy('(\d+) runts, (\d+) giants, (\d+) throttles',
     );
 
 
-
-sub new {
-    my $proto = shift;
-    my $class = ref($proto) || $proto;
-
-    return bless( { }, $class);
-}
 
 # this should start at the beginning statement (router bgp whatever..) and end
 # at the closing statement (\n!).. BUT.. it needs to be able to continue
