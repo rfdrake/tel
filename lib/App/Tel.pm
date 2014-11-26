@@ -6,7 +6,7 @@ App::Tel - A script for logging into devices
 
 =head1 VERSION
 
-0.2006
+0.2007
 
 =head1 SYNOPSIS
 
@@ -37,7 +37,7 @@ use Hash::Merge::Simple qw (merge);
 use Module::Load;
 use v5.10;
 
-our $VERSION = eval '0.2006';
+our $VERSION = eval '0.2007';
 
 # For reasons related to state I needed to make $winch_it global
 # because it needs to be written to inside signals.

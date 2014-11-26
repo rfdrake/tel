@@ -2,6 +2,8 @@ App-Tel.*tar
 App-Tel.*tar\.gz
 \.git/
 Makefile.old
+blib/
+pm_to_blib
 ^MANIFEST\.
 debian/app-tel/
 debian/files
