@@ -42,7 +42,7 @@ BOOTLDR: s72033_rp Software (s72033_rp-ADVIPSERVICESK9_WAN-M), Version
 
 router-name uptime is 4 years, 4 weeks, 5 days, 22 hours, 8 minutes
 Time since router-name switched to active is 4 years, 4 weeks, 5 days, 6 hours,
-2 minutes
+5 minutes
 System returned to ROM by Stateful Switchover (SP by power on)
 System restarted at 00:58:15 EDT Mon Apr 19 2010
 System image file is "disk0:s72033-advipservicesk9_wan-mz.122-18.SXF15a.bin"
