@@ -137,6 +137,9 @@ sub load_syntax {
             Module::Load::load $module;
             push(@{$self->{colors}}, $module->new);
         };
+        if ($@) {
+            warn $@ if ($self->{opts}->{d});
+        }
     }
 }
 
@@ -392,10 +395,11 @@ sub _keyring {
     };
 }
 
-# this works but needs error checking and documentation.  You also can't store
-# your keepass password in a keyring yet, but you can store it in an
+# you can store your password in a KEYRING or in an
 # environment variable and set $keepass_passwd to be $ENV{KEEPASSPWD}
+# or you can store it plaintext in .telrc2
 sub _keepass {
+    my $self = shift;
     my $keepass_file = shift;
     my $keepass_passwd = shift;
     my $keepass_entry = shift;
@@ -404,18 +408,18 @@ sub _keepass {
         $keepass_passwd = _keyring('KEEPASS','KEEPASS','KEEPASS');
     }
 
-    # TODO: needs to warn on unlock failure
     eval {
         load File::KeePass;
 
-        my $k = File::KeePass->new;
-        $k->load_db($keepass_file, $keepass_passwd);
-
+        my $k = File::KeePass->load_db($keepass_file, $keepass_passwd);
         $k->unlock;
 
         my $e = $k->find_entry({title => $keepass_entry});
         return $e->{'password'};
     };
+    if ($@) {
+        warn $@ if ($self->{opts}->{d});
+    }
 }
 
 # This pulls the password from the config.  If the password is blank it checks
@@ -451,7 +455,7 @@ sub password {
     # I'm not sure
 
     if (defined($profile->{keepass_file})) {
-        if (my $pass = _keepass($profile->{keepass_file},
+        if (my $pass = $self->_keepass($profile->{keepass_file},
                                 $profile->{keepass_passwd},
                                 $profile->{keepass_entry}))
         {
