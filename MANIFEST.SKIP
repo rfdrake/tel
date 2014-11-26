@@ -1,11 +1,8 @@
 App-Tel.*tar
 App-Tel.*tar\.gz
 \.git/
-blib/
-inc/
 Makefile.old
 ^MANIFEST\.
-pm_to_blib
 debian/app-tel/
 debian/files
 cover_db/
