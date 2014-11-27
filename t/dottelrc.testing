@@ -5,6 +5,7 @@ $telrc = {
                      },
           'rtr' => [   # this is an array so order matters
                    { 'regex' => 't/fake_routers/loopback', 'method' => 'exec', enable => 'testenable', enablecmd => 'enable' },
-                ],
+                   { 'regex' => 'autocmds_test', 'method' => 'exec', enable => 'testenable', enablecmd => 'enable', 'autocmds' => [ 'sh ver', 'sh ip int br' ] },
+          ],
 };
 
