@@ -408,7 +408,7 @@ sub _keepass {
         $keepass_passwd = _keyring('KEEPASS','KEEPASS','KEEPASS');
     }
 
-    eval {
+    my $password = eval {
         load File::KeePass;
 
         my $k = File::KeePass->load_db($keepass_file, $keepass_passwd);
@@ -420,6 +420,8 @@ sub _keepass {
     if ($@) {
         warn $@ if ($self->{opts}->{d});
     }
+
+    return $password;
 }
 
 # This pulls the password from the config.  If the password is blank it checks
@@ -933,7 +935,24 @@ sub interconnect {
 	return;
 }
 
-sub conn {
+=head2 control_loop
+
+    $self->control_loop('commands', 'another command');
+
+This is where control should be passed once the session is logged in.  This
+handles CLI commands passed via the -c option, or scripts executed with the -x
+option.  It also will handle parameters passed to it by the calling method as
+autocmds that execute before dropping into an interactive session.
+
+Calling this without any commands will just run interact()
+
+TODO: We should probably move the command running into two methods that
+process_commands and run_commands to make them easier to test and reuse for
+other things.
+
+=cut
+
+sub control_loop {
     my $self = shift;
     my $autocmds = shift;
     my $profile = $self->profile;
@@ -954,13 +973,13 @@ sub conn {
         # this is cisco specific and needs to be abstracted
         $self->send("term len 0\r");
         $self->expect(10,'-re',$prompt);
-        foreach my $arg (@args) {
+        foreach my $arg (@$autocmds) {
             $self->send("$arg\r");
             $self->expect(10,'-re',$prompt);
         }
         $self->send($profile->{logoutcmd} ."\r");
     } else {
-        foreach my $arg (@{$autocmds}) {
+        foreach my $arg (@_) {
             $self->send("$arg\r");
             $self->expect(10,'-re',$prompt);
         }

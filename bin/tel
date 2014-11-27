@@ -35,7 +35,7 @@ sub main {
         if ($self->connected) {
             $self->enable();
             $self->logging() if ($self->{opts}->{l});
-            $self->conn($self->{'profile'}->{autocmds});
+            $self->control_loop($self->{'profile'}->{autocmds});
             $self->disconnect();
         }
     }
