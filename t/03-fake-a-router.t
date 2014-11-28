@@ -19,7 +19,7 @@ $tel->profile('default', 1);
 $tel->rtr_find("t/fake_routers/loopback");
 $tel->login("$path_to_perl t/fake_routers/loopback");
 # suppress as much output as we can because it interferes with testing
-#$tel->session->log_stdout(0);
+$tel->session->log_stdout(0);
 # add newlines to try to make sure "ok 1" is printed on it's own line.
 #  instead of this, we're just going to have to make the fake router \n after
 #  password lines so the errors don't happen
