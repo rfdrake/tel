@@ -6,7 +6,7 @@ App::Tel - A script for logging into devices
 
 =head1 VERSION
 
-0.2008
+0.2009
 
 =head1 SYNOPSIS
 
@@ -37,7 +37,7 @@ use Hash::Merge::Simple qw (merge);
 use Module::Load;
 use v5.10;
 
-our $VERSION = eval '0.2008';
+our $VERSION = eval '0.2009';
 
 # For reasons related to state I needed to make $winch_it global
 # because it needs to be written to inside signals.
@@ -59,10 +59,11 @@ sub new {
     $infile->IO::File::fdopen( \*STDIN, 'r' );
 
     my $self = {
-        'stdin' => Expect->exp_init($infile),
-        'connected' => 0,
-        'enabled' => 0,
-        'title_stack' => 0,
+        'stdin'         => Expect->exp_init($infile),
+        'connected'     => 0,
+        'enabled'       => 0,
+        'title_stack'   => 0,
+        'log_stdout'    => 1,
     };
 
     bless($self, 'App::Tel');
@@ -605,6 +606,9 @@ sub login {
     METHOD: for (@{$self->methods}) {
         my $allied_shit=0;
 
+        # I think there used to be something here to tear down and reestablish
+        # sessions if needed.  That probably should still be here.
+
         my $p = $self->{port};
 
         if ($_ eq 'ssh')        { $p ||= 22; $self->connect("ssh -p $p -l $rtr->{user} $ssho $cipher $hostname"); }
@@ -613,12 +617,14 @@ sub login {
         elsif ($_ eq 'exec')    { $self->connect($hostname); }
         else { die "No program defined for method $_\n"; }
 
+        # suppress stdout if needed
+        $self->{'session'}->log_stdout($self->{log_stdout});
+
         # need to make this optional
         # also need to make it display whatever the user cares about.
         print "\e[22t\033]0;$_ $hostname\007";
         $self->{title_stack}++;
         $SIG{INT} = sub { for (1..$self->{title_stack}) { print "\e[23t"; } $self->{title_stack}=0; };
-
         $self->expect($self->{timeout},
                 @{$self->_banners},
                 @dynamic,

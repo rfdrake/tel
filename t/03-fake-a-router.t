@@ -15,14 +15,15 @@ $tel->{config} = $telrc;
 # loading the default profile to pickup the vty password
 $tel->profile('default', 1);
 
+# suppress as much output as we can because it interferes with testing
+$tel->{log_stdout}=0;
 # using this to load the rtr config so we turn on the exec method
 $tel->rtr_find("t/fake_routers/loopback");
 $tel->login("$path_to_perl t/fake_routers/loopback");
-# suppress as much output as we can because it interferes with testing
-$tel->session->log_stdout(0);
 # add newlines to try to make sure "ok 1" is printed on it's own line.
 #  instead of this, we're just going to have to make the fake router \n after
 #  password lines so the errors don't happen
+print "\n";
 is($tel->connected, 1, 'Did we make it through login?');
 is($tel->enable, 1, 'Did we enable successfully?');
 
