@@ -606,9 +606,6 @@ sub login {
     METHOD: for (@{$self->methods}) {
         my $allied_shit=0;
 
-        # I think there used to be something here to tear down and reestablish
-        # sessions if needed.  That probably should still be here.
-
         my $p = $self->{port};
 
         if ($_ eq 'ssh')        { $p ||= 22; $self->connect("ssh -p $p -l $rtr->{user} $ssho $cipher $hostname"); }
