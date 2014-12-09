@@ -187,4 +187,4 @@ installing the new version.
 
 ##### Copyright 2013, Robert Drake
 
-[COMMANDS]:     (COMMANDS.md)
+[COMMANDS]:     COMMANDS.md
