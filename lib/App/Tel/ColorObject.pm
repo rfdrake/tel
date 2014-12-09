@@ -15,7 +15,7 @@ our $VERSION = eval '0.1';
 $Term::ANSIColor::AUTORESET++;         # reset color after each print
 $SIG{INT} = sub { print "\n"; exit; }; # reset color after Ctrl-C
 
-my @colors = qw ( GREEN YELLOW BLUE MAGENTA CYAN WHITE );
+our @colors = qw ( GREEN YELLOW BLUE MAGENTA CYAN WHITE );
 
 # Bright colors were added after Term::ANSIColor 3.00
 if ($Term::ANSIColor::VERSION >= 3.00) {
