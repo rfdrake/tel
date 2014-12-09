@@ -45,7 +45,7 @@ but doesn't support Ctrl-Z.  This will add Ctrl-Z.
 
 common tasks can be automated and even advanced commands can be scripted
 through Perl's Expect.pm.  Most of that is available directly in the telrc
-files without modifying the code in tel.  See the COMMANDS.md file for
+files without modifying the code in tel.  See the [COMMANDS] file for
 examples.
 
 # clogin style arguments
@@ -86,7 +86,7 @@ Please read the Commands.md file for an in-depth command list, with examples.
 Take the dottelrc.sample and copy it to /etc/telrc, then edit it to suit your
 site’s needs.  This is a baseline configuration that everyone on a jump host
 can use.  It's actually a perl file so advanced scripting is possible.  See
-the COMMANDS.md file for descriptions of some of the options and examples of
+the [COMMANDS] file for descriptions of some of the options and examples of
 their use.
 
 Once you've done that you may need to install a couple of things to get it
@@ -186,3 +186,5 @@ to remove.  You might run "make uninstall" on the old release before
 installing the new version.
 
 ##### Copyright 2013, Robert Drake
+
+[COMMANDS]:     (COMMANDS.md)
