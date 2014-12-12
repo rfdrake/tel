@@ -982,13 +982,13 @@ sub control_loop {
         # this is cisco specific and needs to be abstracted
         $self->send("term len 0\r");
         $self->expect(10,'-re',$prompt);
-        foreach my $arg (@$autocmds) {
+        foreach my $arg (@args) {
             $self->send("$arg\r");
             $self->expect(10,'-re',$prompt);
         }
         $self->send($profile->{logoutcmd} ."\r");
     } else {
-        foreach my $arg (@_) {
+        foreach my $arg (@$autocmds) {
             $self->send("$arg\r");
             $self->expect(10,'-re',$prompt);
         }
