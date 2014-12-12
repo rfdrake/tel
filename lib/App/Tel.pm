@@ -60,6 +60,7 @@ sub new {
 
     my $self = {
         'stdin'         => Expect->exp_init($infile),
+        'stdin_fileno'  => $infile->fileno,
         'connected'     => 0,
         'enabled'       => 0,
         'title_stack'   => 0,
@@ -843,7 +844,7 @@ sub interconnect {
 				);
 
                 # don't bother trying to colorize input from the user
-                if (${*$read_handle}{exp_Pty_Handle} ne 'STDIN') {
+                if ($read_handle->fileno() != $self->{stdin_fileno}) {
                     foreach my $color (@{$self->{colors}}) {
                         ${*$read_handle}{exp_Pty_Buffer} = $color->colorize(${*$read_handle}{exp_Pty_Buffer});
                     }
