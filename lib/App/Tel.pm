@@ -511,8 +511,13 @@ sub session {
 
 sub winch {
     my $session = shift->{'session'};
-    $session->slave->clone_winsize_from(\*STDIN);
-    kill WINCH => $session->pid if $session->pid;
+    # these need to be wrapped in eval or you get Given filehandle is not a
+    # tty in clone_winsize_from if you call winch() under a scripted
+    # environment like rancid (or just under par, or anywhere there is no pty)
+    eval {
+        $session->slave->clone_winsize_from(\*STDIN);
+        kill WINCH => $session->pid if $session->pid;
+    };
     $winch_it=0;
     $SIG{WINCH} = \&winch_handler;
 }
