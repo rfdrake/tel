@@ -8,6 +8,7 @@ requires       'Expect'  => '0.0';
 requires       'IO::Stty'  => '0.0';
 
 recommends     'Term::ANSIColor';
+recommends     'Term::ReadKey';
 recommends     'File::KeePass';
 recommends     'Passwd::Keyring::Auto';
 

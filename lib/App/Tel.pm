@@ -6,7 +6,7 @@ App::Tel - A script for logging into devices
 
 =head1 VERSION
 
-0.2009
+0.2010
 
 =head1 SYNOPSIS
 
@@ -37,7 +37,7 @@ use Hash::Merge::Simple qw (merge);
 use Module::Load;
 use v5.10;
 
-our $VERSION = eval '0.2009';
+our $VERSION = eval '0.2010';
 
 # For reasons related to state I needed to make $winch_it global
 # because it needs to be written to inside signals.
@@ -366,6 +366,16 @@ sub profile {
     return $profile;
 }
 
+sub _stty_rows {
+    my $new_rows = shift;
+    eval {
+        use Term::ReadKey;
+        my ($columns, $rows, $xpix, $ypix) = GetTerminalSize(\*STDOUT);
+        SetTerminalSize($columns, $new_rows, $xpix, $ypix, \*STDOUT);
+    };
+
+    warn $@ if ($@);
+}
 
 sub _input_password {
     my $prompt = shift;
@@ -946,7 +956,7 @@ sub interconnect {
 
 =head2 control_loop
 
-    $self->control_loop('commands', 'another command');
+    $self->control_loop([ 'commands', 'another command' ]);
 
 This is where control should be passed once the session is logged in.  This
 handles CLI commands passed via the -c option, or scripts executed with the -x
@@ -967,6 +977,7 @@ sub control_loop {
     my $profile = $self->profile;
     my $opts = $self->{opts};
     my $prompt = $profile->{prompt};
+    my $pagercmd = $profile->{pagercmd};
 
     $self->winch();
 
@@ -979,9 +990,14 @@ sub control_loop {
 
     if (@args) {
         $self->expect(10,'-re',$prompt);
-        # this is cisco specific and needs to be abstracted
-        $self->send("term len 0\r");
-        $self->expect(10,'-re',$prompt);
+        if (ref($pagercmd) eq 'CODE') {
+            $pagercmd->();
+            undef $pagercmd;
+        } else {
+            $pagercmd ||= 'term len 0';
+            $self->send("$pagercmd\r");
+            $self->expect(10,'-re',$prompt);
+        }
         foreach my $arg (@args) {
             $self->send("$arg\r");
             $self->expect(10,'-re',$prompt);

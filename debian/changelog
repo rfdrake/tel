@@ -1,4 +1,16 @@
-app-tel (0.2004)  unstable; urgency=medium
+app-tel (0.2010) unstable; urgency=medium
+
+  * lots of documentation updates
+  * timing problems fixed by 0.2009 suppressing expect output in tests
+  * added -d flag for turning debugging on to find problems
+  * tel -l no longer implies "term len 0" (for compatibility with non-cisco
+    devices)
+  * changed hardcoded pager to use pagercmd.  It still defaults to Cisco but
+    does the right thing if configured for juniper or dlink, etc.
+
+ -- Robert Drake <rdrake@cpan.org>  Sun, 14 Dec 2014 01:27:16 -0500
+
+app-tel (0.2004) unstable; urgency=medium
 
   * IO::Stty is now marked as required
   * more bugfixes to make tests stop failing on other systems

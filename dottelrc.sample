@@ -6,9 +6,12 @@ $telrc = {
                        },
                        'casa' => { 'handlers' =>  { '\cZ' => \&handle_ctrl_z } },
                        'zhone' => { 'user' => 'admin', 'method' => 'telnet', 'prompt' => '>', 'enablecmd' => 'priv' },
-                       'juniper' => { 'logoutcmd' => 'exit', 'syntax' => 'Juniper' },
-                       'dlink' => { 'method' => 'telnet', 'handlers' => { '\177' => \&handle_backspace }, 'syntax' => 'Dlink' },
-                       'mikrotik' => { 'logoutcmd' => '/quit' },
+                       'vyos' => { 'prompt' => '\$', 'pagercmd' => 'set term length 0' },
+                       'juniper' => { 'logoutcmd' => 'exit', 'syntax' => 'Juniper',
+                                      'pagercmd' => 'set cli screen-length 0', 'prompt' => '>' },
+                       'dlink' => { 'method' => 'telnet', 'handlers' => { '\177' => \&handle_backspace },
+                                          'syntax' => 'Dlink', 'pagercmd' => 'disable clipaging' },
+                       'mikrotik' => { 'logoutcmd' => '/quit', 'prompt' => '>' },
                        'at' => { 'ciphertype' => 'des', 'user' => 'engr' },
                        'hatteras' => { 'ciphertype' => 'des' }
                      },
@@ -35,6 +38,7 @@ $telrc = {
                 'DES-3(5|3)(50|26) (Ethernet|Fast Ethernet)' => 'dlink',
                 'Casa Systems' => 'casa',
                 'JUNOS' => 'juniper',
+                'VyOS' => 'vyos',
         },
 
         # if these exist they will be loaded when the config file is parsed

@@ -16,6 +16,7 @@ Depends: ${misc:Depends}, ${perl:Depends},
  libhash-merge-simple-perl
 Suggests:
  libfile-keepass-perl
+ libterm-readkey-perl
 Description: manage telnet or ssh for routers/switches and other devices
  This handles the login and some other management features for many different
  types of switches and routers.  It tries to handle idiosyncrasies from the

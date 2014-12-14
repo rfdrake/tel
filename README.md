@@ -157,15 +157,13 @@ are the projects I know about:
 6.  If you want to do it at the ssh protocol level, there is
 https://github.com/mxtommy/Cisco-SSH-Client
 
-# Bugs
+# Bugs or Caveats
 
 1.  Sending a "#" to the router via -c will match that as a prompt if that is what
     your prompt is set for.  clear_accum doesn't fix this.. need to put more
     thought into it.
 
-2.  The color syntax highlight breaks when the line buffer falls in the wrong
-    place.  There is nothing we can currently do about this, but I'm hoping
-    someone will come up with an inventive fix.
+2.  See [ISSUES] for a complete list of currently existing bugs
 
 # Information
 
@@ -188,3 +186,4 @@ installing the new version.
 ##### Copyright 2013, Robert Drake
 
 [COMMANDS]:     COMMANDS.md
+[ISSUES]:       https://github.com/rfdrake/tel/issues

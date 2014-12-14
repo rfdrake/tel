@@ -172,8 +172,28 @@ can override the default username and password prompts.
 Very similar to the normal username prompt.  If your enable prompt has been
 changed to something you can override it using these commands.
 
+## pagercmd
+
+    pagercmd => 'disable clipaging',
+
+Extreme networks and Dlink both use 'disable clipaging' while Cisco uses 'term
+length 0'.  Juniper uses 'set cli screen-length 0', but also might need 'set
+cli complete-on-space off' to avoid annoying you while running scripts.
+
+Some vendors don't have a command to turn off the pager.  In those cases I
+tried setting tty rows to 10000.  Not suprisingly, the vendors that I tried it
+on don't use the actual terminal size to control paging, so they still had
+more prompts every 20 or so lines.
+
+If your particular device does respect tty sizing, and you have the
+Term::ReadKey module, then you can set:
+
+    pagercmd => sub { _stty_rows(10000) },
+
+In any case, these pagercmds take effect when tel is run in a non-interactive
+mode, using either the -c or -x flags to specify scripts to run.
+
 # wishlist
 
 1.  scrollback buffer across multiple sessions
-2.  URI methods on the command line, so you could say telnet://routername or ssh://routername if you wanted to override the method
 
