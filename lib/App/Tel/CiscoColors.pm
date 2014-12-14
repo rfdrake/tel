@@ -32,17 +32,13 @@ use warnings;
 
 our $VERSION = eval '0.2';
 
-my $host_color = "magenta";
-my $warn_color = "red";
-my $good_color = "green";
-
 sub c {
    my $value = shift;
    return $value if ($value =~ /\D/);
    if ($value > 0) {
-      return colored($value, $warn_color);
+      return colored($value, 'red');
    } else {
-      return colored($value, $good_color);
+      return colored($value, 'green');
    }
 }
 
@@ -132,6 +128,16 @@ my $regexp = crazy('(\d+) runts, (\d+) giants, (\d+) throttles',
     );
 
 
+sub interface {
+    # without knowing syntax, this will automatically handle err-disable and
+    # any other weird corner cases by defaulting to red.
+    my $color = 'red';
+    if ($_[0] eq 'up') {
+        $color = 'green';
+    }
+    return colored($_[0], $color);
+}
+
 
 # this should start at the beginning statement (router bgp whatever..) and end
 # at the closing statement (\n!).. BUT.. it needs to be able to continue
@@ -180,11 +186,8 @@ sub colorize {
 #         $self->process_block($_);
 #     }
 
-    # beginning of 'show interface'
-    s/(\S+) is (.*), line protocol is (.*)/
-       sprintf("%s is %s, line protocol is %s", colored($1, $host_color),
-             colored($2, $2 ne "up" ? $warn_color : $good_color),
-             colored($3, $2 ne "up" ? $warn_color : $good_color))/e;
+    s/(\S+) is (.*), line protocol is (\S+)/sprintf("%s is %s, line protocol is %s", colored($1, 'magenta'),
+            interface($2), interface($3))/eg;
 
     # sh cable modem phy
     s#([a-f0-9\.]+ C\d+/\d+/U\d+\s+\d+\s+)([\d\.]+)(\s+)([\d\.]+)(\s+\!?\d+)([\s-]+[\d\.]+)(\s+)([\d\.]+)#
