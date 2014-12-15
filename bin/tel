@@ -4,28 +4,100 @@ use strict;
 use warnings;
 use App::Tel;
 use Getopt::Std;
+use Pod::Usage;
 use v5.10;
 
 __PACKAGE__->main() unless caller;
+
+=head1 NAME
+
+tel - script for router logins
+
+=head1 SYNOPSIS
+
+tel gw1-my-device gw2-my-device ...
+
+Options:
+    -h          help message
+    -l          logging
+    -d          debug mode
+    -v          version
+    -p          connection port
+    -m          connection method
+    -x          runs script file
+    -c          runs commands
+    -t          sets the timeout
+
+=head1 OPTIONS
+
+=over 4
+
+=item -c
+
+Runs a series of commands that are separated by semicolons.
+
+Example: tel -c "show ver; sh run" gw1-my-device
+
+=item -l
+
+Enables logging to a file /tmp/gw1-my-device.log.
+
+Example: tel -l gw1-my-device
+
+=item -d
+
+Enables debugging, which will warn you if some of the runtime modules fail to
+load.
+
+Example: tel -d gw1-my-device
+
+=item -x
+
+Runs a script file, which is a list of commands for the device.
+
+Example: tel -x changes.txt gw1-my-device
+
+=item -p
+
+Specify connection port.  This overrides any specific port in loaded profiles
+and is used for all devices during the session.
+
+Example: tel -p 22 gw1-my-devices
+
+=item -m
+
+Specify connection method.  This overrides specific methods in loaded profiles
+and is used for all devices during the session.
+
+Example: tel -m ssh gw1-my-devices
+
+=item -t
+
+Specify timeout in seconds.  The default is 90 seconds.  This overrides
+specific methods in loaded profiles and is used for all devices during the
+session.
+
+Example: tel -t 30 gw1-my-devices
+
+=cut
 
 sub main {
     my $self = App::Tel->new();
     $self->{config} = $self->load_config();
 
     my %opts;
-    # need usage if no arguments supplied
-    # -l logging
-    # -d debug
-    # -x <script file>
-    # -c <command;command;command>
-    # -t timeout
-    # -m method
-    # -p port
+    getopts('vhldx:c:t:m:p:', \%opts);
+    $opts{t} ||= 90;
 
-    getopts('ldx:c:t:m:p:', \%opts);
-
-    $self->{timeout} = $opts{t} ? $opts{t} : 90;
+    $self->{timeout} = $opts{t};
     $self->{opts} = \%opts;
+
+    if ($opts{v}) {
+        print "tel version " . $App::Tel::VERSION . "\n";
+    }
+
+    die pod2usage( -verbose => 1 ) if ($opts{h});
+    die pod2usage() if (!scalar @ARGV);
 
     for (@ARGV) {
         # default profile always loads before anything else.  replace == 1
@@ -39,6 +111,11 @@ sub main {
             $self->disconnect();
         }
     }
+}
+
+sub usage {
+
+
 }
 
 sub handle_backspace {

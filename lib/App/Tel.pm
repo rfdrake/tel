@@ -87,6 +87,7 @@ sub disconnect {
     my $self = shift;
     my $hard = shift;
     $self->{profile} = {};
+    $self->{timeout} = $self->{opts}->{t} ? $self->{opts}->{t} : 90;
     $self->{banners} = undef;
     $self->{methods} = ();
     $self->connected(0);
