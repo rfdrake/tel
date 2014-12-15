@@ -87,9 +87,8 @@ sub main {
 
     my %opts;
     getopts('vhldx:c:t:m:p:', \%opts);
-    $opts{t} ||= 90;
 
-    $self->{timeout} = $opts{t};
+    $self->{timeout} = $opts{t} ? $opts{t} : 90;
     $self->{opts} = \%opts;
 
     if ($opts{v}) {
@@ -97,7 +96,7 @@ sub main {
     }
 
     die pod2usage( -verbose => 1 ) if ($opts{h});
-    die pod2usage() if (!scalar @ARGV);
+    die pod2usage() if (!scalar @ARGV && !scalar keys %opts);
 
     for (@ARGV) {
         # default profile always loads before anything else.  replace == 1
