@@ -1000,6 +1000,7 @@ sub control_loop {
             $self->expect(10,'-re',$prompt);
         }
         foreach my $arg (@args) {
+            chomp($arg);
             $self->send("$arg\r");
             $self->expect(10,'-re',$prompt);
         }
