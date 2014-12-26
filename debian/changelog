@@ -1,3 +1,16 @@
+app-tel (0.2010_03) unstable; urgency=medium
+
+  * pod2usage for -h help and summary if no arguments given
+  * changed it so Term::ReadKey is loaded instead of used.  Term::ReadKey is
+    an optional module loaded if you set the pagercmd to a special value.  It
+    fakes an infinately long screen to try get output from a device with no
+    "more" prompts.
+  * applying chomp() to -x script input because we supply newlines when we
+    send to the device.
+  * adding -a to override autocmds via the cli when needed.
+
+ -- Robert Drake <rdrake@cpan.org>  Fri, 26 Dec 2014 11:52:48 -0500
+
 app-tel (0.2010) unstable; urgency=medium
 
   * lots of documentation updates

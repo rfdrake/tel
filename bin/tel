@@ -26,6 +26,7 @@ Options:
     -m          connection method
     -x          runs script file
     -c          runs commands
+    -a          autocommands
     -t          sets the timeout
 
 =head1 OPTIONS
@@ -57,6 +58,13 @@ Runs a script file, which is a list of commands for the device.
 
 Example: tel -x changes.txt gw1-my-device
 
+=item -a
+
+Specify autocommands to run.  This overrides any commands loaded from profiles
+and is used for all devices during the session.
+
+Example: tel -a "sh run int vlan35; conf t" gw1-my-device
+
 =item -p
 
 Specify connection port.  This overrides any specific port in loaded profiles
@@ -86,7 +94,7 @@ sub main {
     $self->{config} = $self->load_config();
 
     my %opts;
-    getopts('vhldx:c:t:m:p:', \%opts);
+    getopts('vhldx:a:c:t:m:p:', \%opts);
 
     $self->{timeout} = $opts{t} ? $opts{t} : 90;
     $self->{opts} = \%opts;
@@ -106,15 +114,10 @@ sub main {
         if ($self->connected) {
             $self->enable();
             $self->logging() if ($self->{opts}->{l});
-            $self->control_loop($self->{'profile'}->{autocmds});
+            $self->control_loop();
             $self->disconnect();
         }
     }
-}
-
-sub usage {
-
-
 }
 
 sub handle_backspace {

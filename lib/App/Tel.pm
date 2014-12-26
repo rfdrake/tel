@@ -6,7 +6,7 @@ App::Tel - A script for logging into devices
 
 =head1 VERSION
 
-0.2010_02
+0.2010_03
 
 =head1 SYNOPSIS
 
@@ -37,7 +37,7 @@ use Hash::Merge::Simple qw (merge);
 use Module::Load;
 use v5.10;
 
-our $VERSION = eval '0.2010_02';
+our $VERSION = eval '0.2010_03';
 
 # For reasons related to state I needed to make $winch_it global
 # because it needs to be written to inside signals.
@@ -957,12 +957,12 @@ sub interconnect {
 
 =head2 control_loop
 
-    $self->control_loop([ 'commands', 'another command' ]);
+    $self->control_loop();
 
 This is where control should be passed once the session is logged in.  This
 handles CLI commands passed via the -c option, or scripts executed with the -x
-option.  It also will handle parameters passed to it by the calling method as
-autocmds that execute before dropping into an interactive session.
+option.  It also handles autocommands passed via either option -a on the
+command line, or via autocmds in the profile.
 
 Calling this without any commands will just run interact()
 
@@ -974,11 +974,12 @@ other things.
 
 sub control_loop {
     my $self = shift;
-    my $autocmds = shift;
     my $profile = $self->profile;
     my $opts = $self->{opts};
     my $prompt = $profile->{prompt};
     my $pagercmd = $profile->{pagercmd};
+    my $autocmds = [ split(/;/, $opts->{a}) ] if ($opts->{a});
+    $autocmds ||= $profile->{autocmds};
 
     $self->winch();
 
