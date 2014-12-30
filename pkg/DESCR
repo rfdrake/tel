@@ -1,0 +1,15 @@
+tel script - manage telnet or ssh for routers/switches and other devices
+
+tel provides the following:
+* Use a simple, single command to connect to multiple network device types.
+* Create aliases for hard to type router names or commands.
+* Handles terminal-related issues, such as proper backspace.
+* clogin-style CLI arguments (via -c and -x).
+* Color highlighting.
+* Optional global config that supports multiple users.
+* Keepass and Keyring support
+* Handles automatic logins for text-based user interfaces common on older
+  networking devices.
+* Highly customizable
+
+WWW: http://search.cpan.org/dist/App-Tel
