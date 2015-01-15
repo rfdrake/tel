@@ -991,25 +991,25 @@ sub control_loop {
     }
 
     if (@args) {
-        $self->expect(10,'-re',$prompt);
+        $self->expect($self->{timeout},'-re',$prompt);
         if (ref($pagercmd) eq 'CODE') {
             $pagercmd->();
             undef $pagercmd;
         } else {
             $pagercmd ||= 'term len 0';
             $self->send("$pagercmd\r");
-            $self->expect(10,'-re',$prompt);
+            $self->expect($self->{timeout},'-re',$prompt);
         }
         foreach my $arg (@args) {
             chomp($arg);
             $self->send("$arg\r");
-            $self->expect(10,'-re',$prompt);
+            $self->expect($self->{timeout},'-re',$prompt);
         }
         $self->send($profile->{logoutcmd} ."\r");
     } else {
         foreach my $arg (@$autocmds) {
             $self->send("$arg\r");
-            $self->expect(10,'-re',$prompt);
+            $self->expect($self->{timeout},'-re',$prompt);
         }
         $self->interact($self->{stdin}, '\cD');
         # q\b is to end anything that's at a More prompt or other dialog and
