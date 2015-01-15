@@ -1022,4 +1022,14 @@ sub control_loop {
     }
 }
 
+sub handle_backspace {
+    ${$_[0]}->send("\b");
+    return 1;
+}
+
+sub handle_ctrl_z {
+    ${$_[0]}->send("exit\r");
+    return 1;
+}
+
 1;
