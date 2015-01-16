@@ -982,12 +982,21 @@ sub control_loop {
     my $opts = $self->{opts};
     my $prompt = $profile->{prompt};
     my $pagercmd = $profile->{pagercmd};
-    my $autocmds = [ split(/;/, $opts->{a}) ] if ($opts->{a});
-    $autocmds ||= $profile->{autocmds};
+    my $autocmds;
+    my @args;
+
+    if ($opts->{a}) {
+        $autocmds = [ split(/;/, $opts->{a}) ];
+    } else {
+        $autocmds = $profile->{autocmds};
+    }
 
     $self->winch();
 
-    my @args = split(/;/, $opts->{c}) if ($opts->{c});
+    # should -c override -x or be additive? or error if both are specified?
+
+    @args = split(/;/, $opts->{c}) if ($opts->{c});
+
     if ($opts->{x}) {
         open(my $X, '<', $opts->{x});
         @args = <$X>;
@@ -999,9 +1008,7 @@ sub control_loop {
         if (ref($pagercmd) eq 'CODE') {
             $pagercmd->();
             undef $pagercmd;
-        } else {
-            # this shouldn't be the default and needs to be fixed
-            $pagercmd ||= 'term len 0';
+        } elsif ($pagercmd) {
             $self->send("$pagercmd\r");
             $self->expect($self->{timeout},'-re',$prompt);
         }
