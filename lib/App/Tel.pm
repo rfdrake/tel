@@ -1,4 +1,6 @@
 package App::Tel;
+use strict;
+use warnings;
 
 =head1 NAME
 
@@ -7,6 +9,11 @@ App::Tel - A script for logging into devices
 =head1 VERSION
 
 0.2010_04
+
+=cut
+
+our $VERSION = eval '0.2010_04';
+
 
 =head1 SYNOPSIS
 
@@ -28,8 +35,6 @@ under the same terms as Perl itself.
 
 =cut
 
-use strict;
-use warnings;
 use Expect qw( exp_continue );
 use IO::Stty;
 use POSIX qw(:sys_wait_h :unistd_h); # For WNOHANG and isatty
@@ -37,7 +42,6 @@ use Hash::Merge::Simple qw (merge);
 use Module::Load;
 use v5.10;
 
-our $VERSION = eval '0.2010_04';
 
 # For reasons related to state I needed to make $winch_it global
 # because it needs to be written to inside signals.
@@ -985,9 +989,9 @@ sub control_loop {
 
     my @args = split(/;/, $opts->{c}) if ($opts->{c});
     if ($opts->{x}) {
-        open(X, '<', $opts->{x});
-        @args = <X>;
-        close X;
+        open(my $X, '<', $opts->{x});
+        @args = <$X>;
+        close $X;
     }
 
     if (@args) {
@@ -996,6 +1000,7 @@ sub control_loop {
             $pagercmd->();
             undef $pagercmd;
         } else {
+            # this shouldn't be the default and needs to be fixed
             $pagercmd ||= 'term len 0';
             $self->send("$pagercmd\r");
             $self->expect($self->{timeout},'-re',$prompt);
