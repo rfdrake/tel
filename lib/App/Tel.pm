@@ -12,7 +12,7 @@ App::Tel - A script for logging into devices
 
 =cut
 
-our $VERSION = eval '0.2010_04';
+our $VERSION = eval  { 0.2010_04 };
 
 
 =head1 SYNOPSIS
