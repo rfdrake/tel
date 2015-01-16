@@ -498,6 +498,10 @@ sub password {
     return 'undef';
 }
 
+sub _winch_handler {
+    $winch_it=1;
+}
+
 # Expect won't let you reuse a connection that has spawned a process, so you
 # can call this with an argument to reset the session.  If called without an
 # argument it will return the current session (If it exists) or create a new
@@ -513,11 +517,8 @@ sub session {
     $session = new Expect;
 
     # install sig handler for window size change
-    $SIG{WINCH} = \&winch_handler;
+    $SIG{WINCH} = \&_winch_handler;
 
-    sub winch_handler {
-        $winch_it=1;
-    }
 
     $session->log_stdout(1);
     $self->{'session'} = $session;
@@ -534,7 +535,7 @@ sub winch {
         kill WINCH => $session->pid if $session->pid;
     };
     $winch_it=0;
-    $SIG{WINCH} = \&winch_handler;
+    $SIG{WINCH} = \&_winch_handler;
 }
 
 # this sets up the session.  If there already is a session open it closes and
