@@ -1,3 +1,14 @@
+app-tel (0.2015_01) unstable; urgency=medium
+
+  * moved handlers to App::Tel to fix them
+  * changed timeout for -x, -c, and -a to use configured timeout rather than
+    10 seconds.  This should fix some slow scripts.
+  * removed "term len 0" from default pagercmd.  It is now specified via telrc
+    profile.  THIS MAY BREAK YOUR SCRIPTS, UPDATE TELRC IF NEEDED.
+  * perlcritic fixes
+
+ -- Robert Drake <rdrake@cpan.org>  Thu, 15 Jan 2015 20:38:28 -0500
+
 app-tel (0.2010_03) unstable; urgency=medium
 
   * pod2usage for -h help and summary if no arguments given

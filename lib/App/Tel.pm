@@ -8,11 +8,11 @@ App::Tel - A script for logging into devices
 
 =head1 VERSION
 
-0.2010_04
+0.2015_01
 
 =cut
 
-our $VERSION = eval  { 0.2010_04 };
+our $VERSION = eval  { 0.2015_01 };
 
 
 =head1 SYNOPSIS
@@ -758,7 +758,6 @@ sub interconnect {
     my $self = shift;
 	my @handles = ($self->{'session'}, $_[0]);
 
-	#  my ($handle)=(shift); call as Expect::interconnect($spawn1,$spawn2,...)
 	my ( $nread );
 	my ( $rout, $emask, $eout );
 	my ( $escape_character_buffer );
@@ -835,7 +834,6 @@ sub interconnect {
 			}
 		}
 
-		# Every second? No, go until we get something from someone.
 		my $nfound = select( $rout = $read_mask, undef, $eout = $emask, undef );
 
         # Is there anything to share?  May be -1 if interrupted by a signal...
@@ -844,9 +842,8 @@ sub interconnect {
 
 		# Which handles have stuff?
 		my @bits = split( //, unpack( 'b*', $rout ) );
-		$eout = 0 unless defined($eout);
-		my @ebits = split( //, unpack( 'b*', $eout ) );
-
+		#$eout = 0 unless defined($eout);
+		#my @ebits = split( //, unpack( 'b*', $eout ) );
 		#    print "Ebits: $eout\r\n";
 		foreach my $read_handle (@handles) {
 			if ( $bits[ $read_handle->fileno() ] ) {
