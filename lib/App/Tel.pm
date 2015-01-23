@@ -42,6 +42,24 @@ use Hash::Merge::Simple qw (merge);
 use Module::Load;
 use v5.10;
 
+my $sleeper;
+
+sub mysleep(;@) { sleep }
+
+BEGIN {
+    if (eval 'require Time::HiRes') {
+        import Time::HiRes qw(sleep);
+        $sleeper = \&Time::HiRes::sleep;
+    }
+
+}
+
+sub import {
+    my $class = shift;
+    no warnings 'redefine';
+    *mysleep = $sleeper if defined $sleeper;
+}
+
 
 # For reasons related to state I needed to make $winch_it global
 # because it needs to be written to inside signals.
@@ -58,7 +76,6 @@ Creates a new App::Tel object.
 =cut
 
 sub new {
-
     my $infile = IO::File->new;
     $infile->IO::File::fdopen( \*STDIN, 'r' );
 
@@ -957,6 +974,24 @@ sub interconnect {
 	return;
 }
 
+=head2 run_commands
+
+    $self->run_commands(@commands);
+
+=cut
+
+sub run_commands {
+    my $self = shift;
+    my $opts = $self->{opts};
+
+    foreach my $arg (@_) {
+        chomp($arg);
+        $self->send("$arg\r");
+        $self->expect($self->{timeout},'-re', $self->profile->{prompt});
+        mysleep($opts->{s}) if ($opts->{s});
+    }
+}
+
 =head2 control_loop
 
     $self->control_loop();
@@ -1001,6 +1036,7 @@ sub control_loop {
         close $X;
     }
 
+
     if (@args) {
         $self->expect($self->{timeout},'-re',$prompt);
         if (ref($pagercmd) eq 'CODE') {
@@ -1010,17 +1046,11 @@ sub control_loop {
             $self->send("$pagercmd\r");
             $self->expect($self->{timeout},'-re',$prompt);
         }
-        foreach my $arg (@args) {
-            chomp($arg);
-            $self->send("$arg\r");
-            $self->expect($self->{timeout},'-re',$prompt);
-        }
+        $self->run_commands(@args);
         $self->send($profile->{logoutcmd} ."\r");
     } else {
-        foreach my $arg (@$autocmds) {
-            $self->send("$arg\r");
-            $self->expect($self->{timeout},'-re',$prompt);
-        }
+        $self->expect($self->{timeout},'-re',$prompt);
+        $self->run_commands(@$autocmds);
         $self->interact($self->{stdin}, '\cD');
         # q\b is to end anything that's at a More prompt or other dialog and
         # get you back to the command prompt

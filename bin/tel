@@ -28,6 +28,7 @@ Options:
     -c          runs commands
     -a          autocommands
     -t          sets the timeout
+    -s          sleep between commands
 
 =head1 OPTIONS
 
@@ -87,6 +88,14 @@ session.
 
 Example: tel -t 30 gw1-my-devices
 
+=item -s
+
+Specify timeout in seconds to sleep between commands.  This only applies to
+commands specified for -x, -c or -a.  This will use Time::HiRes if it's
+installed for sub-second sleep values like 0.5.
+
+Example: tel -s 3 -x myfile.txt gw1-my-devices
+
 =cut
 
 sub main {
@@ -94,7 +103,7 @@ sub main {
     $self->{config} = $self->load_config();
 
     my %opts;
-    getopts('vhldx:a:c:t:m:p:', \%opts);
+    getopts('vhldx:a:c:t:m:p:s:', \%opts);
 
     $self->{timeout} = $opts{t} ? $opts{t} : 90;
     $self->{opts} = \%opts;
