@@ -1031,26 +1031,25 @@ sub control_loop {
     @args = split(/;/, $opts->{c}) if ($opts->{c});
 
     if ($opts->{x}) {
-        open(my $X, '<', $opts->{x});
+        open(my $X, '<', $opts->{x}) || die "Can't open file $opts->{x}\n";
         @args = <$X>;
         close $X;
     }
-
 
     if (@args) {
         $self->expect($self->{timeout},'-re',$prompt);
         if (ref($pagercmd) eq 'CODE') {
             $pagercmd->();
-            undef $pagercmd;
         } elsif ($pagercmd) {
-            $self->send("$pagercmd\r");
-            $self->expect($self->{timeout},'-re',$prompt);
+            $self->run_commands("$pagercmd\r");
         }
         $self->run_commands(@args);
         $self->send($profile->{logoutcmd} ."\r");
     } else {
-        $self->expect($self->{timeout},'-re',$prompt);
-        $self->run_commands(@$autocmds);
+        if ($autocmds) {
+            $self->expect($self->{timeout},'-re',$prompt);
+            $self->run_commands(@$autocmds);
+        }
         $self->interact($self->{stdin}, '\cD');
         # q\b is to end anything that's at a More prompt or other dialog and
         # get you back to the command prompt
