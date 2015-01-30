@@ -402,6 +402,7 @@ sub _stty_rows {
 sub _input_password {
     my $prompt = shift;
     $prompt ||= '';
+    die 'STDIN not a tty' if (!POSIX::isatty(\*STDIN));
     my $old_mode=IO::Stty::stty(\*STDIN,'-g');
     print "Enter password for $prompt: ";
     IO::Stty::stty(\*STDIN,'-echo');
