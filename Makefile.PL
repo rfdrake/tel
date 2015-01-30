@@ -11,6 +11,7 @@ recommends     'Term::ANSIColor';
 recommends     'Term::ReadKey';
 recommends     'File::KeePass';
 recommends     'Passwd::Keyring::Auto';
+recommends     'Time::HiRes';
 
 install_script  'bin/tel';
 install_script  'bin/mktelrc';
