@@ -12,6 +12,7 @@ recommends     'Term::ReadKey';
 recommends     'File::KeePass';
 recommends     'Passwd::Keyring::Auto';
 recommends     'Time::HiRes';
+recommends     'NetAddr::IP';
 
 install_script  'bin/tel';
 install_script  'bin/mktelrc';
