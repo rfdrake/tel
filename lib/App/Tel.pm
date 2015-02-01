@@ -1047,6 +1047,7 @@ sub control_loop {
         $self->run_commands(@args);
         $self->send($profile->{logoutcmd} ."\r");
     } else {
+        die 'STDIN Not a tty' if (!POSIX::isatty($self->{stdin}));
         if ($autocmds) {
             $self->expect($self->{timeout},'-re',$prompt);
             $self->run_commands(@$autocmds);
