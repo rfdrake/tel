@@ -979,6 +979,10 @@ sub interconnect {
 
     $self->run_commands(@commands);
 
+TODO: Document this
+
+Figure out why "reload\ry" doesn't work
+
 =cut
 
 sub run_commands {
@@ -1003,10 +1007,6 @@ option.  It also handles autocommands passed via either option -a on the
 command line, or via autocmds in the profile.
 
 Calling this without any commands will just run interact()
-
-TODO: We should probably move the command running into two methods that
-process_commands and run_commands to make them easier to test and reuse for
-other things.
 
 =cut
 
