@@ -1,0 +1,86 @@
+package App::Tel::HostRange;
+
+use strict;
+use warnings;
+use NetAddr::IP;
+
+require Exporter;
+our @ISA = qw(Exporter);
+our @EXPORT = qw();
+our @EXPORT_OK = qw ( check_hostrange );
+
+
+=head1 NAME
+
+App::Tel::HostRange - Support for HostRanges
+
+=head1 VERSION
+
+0.2015_00
+
+=cut
+
+our $VERSION = eval  { 0.2015_00 };
+
+
+=head1 SYNOPSIS
+
+    if (check_hostrange($_, $host));
+
+Searches an IPv4 or IPv6 range to see if it contains a particular IP address.
+Returns true if the host is contained in the range, false if it is not.
+
+=head1 AUTHOR
+
+Robert Drake, C<< <rdrake at cpan.org> >>
+
+=head1 COPYRIGHT & LICENSE
+
+Copyright 2015 Robert Drake, all rights reserved.
+
+This program is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+=cut
+
+=head2 check_hostrange
+
+    if (check_hostrange($regex, $host));
+
+Searches an IPv4 or IPv6 range to see if it contains a particular IP address.
+Returns true if the host is contained in the range, false if it is not.
+
+This does no validation, leaving it all up to NetAddr:IP and the calling
+function.
+
+This should support the following types of ranges:
+
+# 192.168.13.17-192.168.32.128
+# fe80::1-fe80::256
+# 192.168.13.0/24
+# fe80::/64
+# 192.168.13.17-192.168.32.128,172.16.0.2-172.16.0.13,172.28.0.0/24
+
+=cut
+
+sub check_hostrange {
+    my $regex = shift;
+    my $host = shift;
+    $host = NetAddr::IP->new($host) || die "NetAddr::IP->new($host) failed.";
+
+    for(split(/,/,$regex)) {
+        # if it's a cidr pass it into NetAddr::IP directly
+        if ($_ =~ qr#/#) {
+            my $range = NetAddr::IP->new($_);
+            return 1 if ($range->contains($host));
+        } else {
+            my ($host1, $host2) = split(/-/);
+            $host1 = NetAddr::IP->new($host1) || die "NetAddr::IP->new($host1) failed.";
+            $host2 = NetAddr::IP->new($host2) || die "NetAddr::IP->new($host2) failed.";
+            return 1 if ($host >= $host1 && $host <= $host2);
+        }
+    }
+    return 0;
+}
+
+1;
