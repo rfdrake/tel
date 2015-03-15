@@ -45,7 +45,7 @@ use v5.10;
 my $sleeper;
 
 sub mysleep(;@) { sleep }
-sub check_hostrange($$) { }
+sub check_hostrange($$) { 0; }
 
 BEGIN {
     if (eval 'require Time::HiRes') {

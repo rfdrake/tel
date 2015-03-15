@@ -125,23 +125,50 @@ from keepass.
 
     keepass_file => $ENV{HOME} . "/keepass.kdbx",
 
-### keepass title
+### keepass entry
 
-Setting keepass title tells it where to lookup the password in the file.  If
+Setting keepass entry tells it where to lookup the password in the file.  If
 this is needed but not set we exit with a warning.
 
-    keepass_title => 'my router password',
+    keepass_entry => 'my router password',
 
-### keepass masterpwd
+### keepass passwd
 
 I don't advise you to store your keepass password anywhere in plaintext, but
 if you want to pass it to the script in an environment variable then you can
 specify it here
 
-    keepass_masterpwd => $ENV{KEEPASSPASSWORD},
+    keepass_passwd => $ENV{KEEPASSPASSWORD},
 
-Alternatively, I'm not sure how it'll work yet but maybe we could get the
-keepass password from a keyring lookup, or cache it in some other way.
+### storing keepass password in keyring
+
+If you want you can put the keepass password inside your keyring so you won't be
+prompted after you've logged in.  If you've done this you can specify it by
+saying
+
+    keepass_passwd => 'KEYRING',
+
+### On keyring and DBUS
+
+At least on my system, Gnome Keyring doesn't work if you ssh into your
+machine.  This is normal because DBUS is intended to represent one user
+session (The X session running locally).  Even so, it's nice to be able to
+work around this and use unprompted login.  Add this to your .bashrc if you
+need to:
+
+    # Export $DBUS_SESSION_BUS_ADDRESS when connected via SSH to enable access
+    # to gnome-keyring-daemon.
+    export PASSWD_KEYRING_AUTO_PREFER=Gnome
+    if [[ -z $DBUS_SESSION_BUS_ADDRESS ]]; then
+        # workaround until I figure out why my machine gets the wrong information
+        # out of dbus session-bus
+        export DBUS_SESSION_BUS_ADDRESS=$(ps -ax | grep dbus-daemon | grep "\-\-address" | awk '{print $8}' | sed 's/--address=//')
+    #    if [[ -f ~/.dbus/session-bus/$(dbus-uuidgen --get)-0 ]]; then
+    #        source ~/.dbus/session-bus/$(dbus-uuidgen --get)-0
+    #        export DBUS_SESSION_BUS_ADDRESS
+    #    fi
+    fi
+
 
 ## syntax
 
