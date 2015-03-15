@@ -45,7 +45,7 @@ under the same terms as Perl itself.
 
 =head2 check_hostrange
 
-    if (check_hostrange($regex, $host));
+    if (check_hostrange($rangelist, $host));
 
 Searches an IPv4 or IPv6 range to see if it contains a particular IP address.
 Returns true if the host is contained in the range, false if it is not.
@@ -56,6 +56,7 @@ function.
 This should support the following types of ranges:
 
 # 192.168.13.17-192.168.32.128
+# 192.168.13.17-22
 # fe80::1-fe80::256
 # 192.168.13.0/24
 # fe80::/64
@@ -63,20 +64,26 @@ This should support the following types of ranges:
 
 =cut
 
-sub check_hostrange {
-    my $regex = shift;
-    my $host = shift;
-    $host = NetAddr::IP->new($host) || die "NetAddr::IP->new($host) failed.";
+sub check_hostrange ($$) {
+    my ($rangelist, $host) = @_;
+    $host = NetAddr::IP->new($host) || return 0;
 
-    for(split(/,/,$regex)) {
+    for(split(/,/,$rangelist)) {
         # if it's a cidr pass it into NetAddr::IP directly
         if ($_ =~ qr#/#) {
-            my $range = NetAddr::IP->new($_);
+            my $range = NetAddr::IP->new($_) || return 0;
             return 1 if ($range->contains($host));
         } else {
             my ($host1, $host2) = split(/-/);
-            $host1 = NetAddr::IP->new($host1) || die "NetAddr::IP->new($host1) failed.";
-            $host2 = NetAddr::IP->new($host2) || die "NetAddr::IP->new($host2) failed.";
+            $host1 = NetAddr::IP->new($host1) || return 0;
+            # if they only supplied the last octet
+            if ($host2 =~ /^[\da-f]+$/i) {
+                my $tmp = $host1->addr;
+                # drop the last octet
+                $tmp =~ s/([:\.])[\da-f]+$/$1/;
+                $host2 = $tmp . $host2;
+            }
+            $host2 = NetAddr::IP->new($host2) || return 0;
             return 1 if ($host >= $host1 && $host <= $host2);
         }
     }

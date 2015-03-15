@@ -143,16 +143,16 @@ specify it here
 Alternatively, I'm not sure how it'll work yet but maybe we could get the
 keepass password from a keyring lookup, or cache it in some other way.
 
-## syntax (not yet implemented)
+## syntax
 
 If you want to load a syntax highlight module then you can specify the prefix
 here.  For example, DlinkColor.pm would be loaded by
 
     syntax => 'Dlink',
 
-I would like to be able to chain these so that you can load more than one.
-That way you can have a default set of highlight rules for your company and a
-specific set of rules for Cisco routers or switches or whatever.
+You can chain load these so you can have a default set of highlight rules for
+your company and specific set of rules for Cisco routers or switches or
+whatever..
 
 ## username_prompt and password_prompt
 
@@ -192,6 +192,30 @@ Term::ReadKey module, then you can set:
 
 In any case, these pagercmds take effect when tel is run in a non-interactive
 mode, using either the -c or -x flags to specify scripts to run.
+
+# Host Ranges
+
+If you have the optional NetAddr::IP module installed you can use ranges in
+the 'rtr' array instead of regexes.  Here are some examples:
+
+
+    # you can use just the trailing octet:
+    { 'regex' => '172.28.0.2-28', 'profile' => 'zhone_olt' },
+    # or the full IPv4 address:
+    { 'regex' => '192.168.13.17-192.168.32.128', 'profile' => 'zhone_olt' },
+    # IPv6 is supported:
+    { 'regex' => 'fe80::1-fe80::256', 'profile' => 'zhone_olt' },
+    # CIDR is also supported:
+    { 'regex' => '192.168.13.0/24', 'profile' => 'zhone_olt' },
+    { 'regex' => 'fe80::/64', 'profile' => 'zhone_olt' },
+    # comma separation is supported if you have multiple values that will load the
+    # same profile:
+    { 'regex' => '192.168.13.17-192.168.32.128,172.16.0.2-172.16.0.13,172.28.0.0/24', 'profile' => 'zhone_olt' },
+
+This allows you to load profiles by lists of IPs instead of DNS based
+hostnames, which can be useful if your devices are spread out and your gear
+isn't organized by DNS.
+
 
 # wishlist
 

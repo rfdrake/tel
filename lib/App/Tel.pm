@@ -45,11 +45,16 @@ use v5.10;
 my $sleeper;
 
 sub mysleep(;@) { sleep }
+sub check_hostrange($$) { }
 
 BEGIN {
     if (eval 'require Time::HiRes') {
         import Time::HiRes qw(sleep);
         $sleeper = \&Time::HiRes::sleep;
+    }
+
+    if (eval 'require App::Tel::HostRange') {
+        import App::Tel::HostRange qw (check_hostrange);
     }
 
 }
@@ -323,7 +328,7 @@ sub rtr_find {
 
     foreach my $h (@{$config->{rtr}}) {
         my $h2 = $h->{regex};
-        if ($host =~ /$h2/i) {
+        if ($host =~ /$h2/i || check_hostrange($h2, $host)) {
             $profile=merge($profile, $h);
             last;
         }
