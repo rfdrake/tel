@@ -25,6 +25,7 @@ is(check_hostrange('fe80::1/128,fe80::2/128,192.168.13.17-192.168.13.128','192.1
 is(check_hostrange('fe80::1/128,fe80::2/128,192.168.13.17-192.168.13.128','192.168.13.1'), 0, 'mixed range/cidr fail');
 is(check_hostrange('fe80::1/128,fe80::2/128,192.168.13.17-192.168.13.128','fe80::1'), 1, 'mixed range/cidr success');
 is(check_hostrange('fe80::1/128,fe80::2/128,192.168.13.17-192.168.13.128','fe80::2'), 1, 'mixed range/cidr success');
+is(check_hostrange('fe80::1/128,fe80::2/128,192.168.13.17-192.168.13.128','192.168.13.17'), 1, 'test secondary success');
 is(check_hostrange('fe80::5-7', 'fe80::5'), 1, 'last octet ipv6 success');
 is(check_hostrange('fe80::5-7', 'fe80::1'), 0, 'last octet ipv6 failure');
 is(check_hostrange('192.168.2.13-27', '192.168.2.27'), 1, 'last octet ipv4 success');
