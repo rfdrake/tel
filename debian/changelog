@@ -1,4 +1,11 @@
-app-tel (0.2015_01) unstable; urgency=medium
+app-tel (0.2015-02) unstable; urgency=medium
+
+  * Added support for HostRanges
+  * fixed documentation for Keepass and Keyrings
+
+ -- Robert Drake <rdrake@cpan.org>  Sat, 21 Mar 2015 10:10:34 -0400
+
+app-tel (0.2015-01) unstable; urgency=medium
 
   * moved handlers to App::Tel to fix them
   * changed timeout for -x, -c, and -a to use configured timeout rather than
