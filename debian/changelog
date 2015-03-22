@@ -1,3 +1,10 @@
+app-tel (0.2015-03) unstable; urgency=medium
+
+  * Fix for NetAddr::IP check in tests
+  * lowered version requirement for Test::More so debian will be happy
+
+ -- Robert Drake <rdrake@cpan.org>  Sun, 22 Mar 2015 14:53:43 -0400
+
 app-tel (0.2015-02) unstable; urgency=medium
 
   * Added support for HostRanges
