@@ -3,7 +3,7 @@ use lib qw(lib);
 use Test::More;
 eval 'use NetAddr::IP; 1' or plan skip_all => 'Optional module NetAddr::IP required';
 
-use App::Tel::HostRange qw ( check_hostrange );
+eval 'use App::Tel::HostRange qw ( check_hostrange )';
 
 # 192.168.13.17-192.168.32.128
 # fe80::1-fe80::256

@@ -17,7 +17,7 @@ recommends     'NetAddr::IP';
 install_script  'bin/tel';
 install_script  'bin/mktelrc';
 
-test_requires q(Test::Most) => 0.31;
+test_requires q(Test::Most) => 0.25;
 bugtracker q(https://github.com/rfdrake/tel/issues);
 homepage q(http://search.cpan.org/dist/App-Tel);
 repository q(git://github.com/rfdrake/tel.git);
