@@ -1,9 +1,9 @@
 #!/usr/bin/env perl
 use lib qw(lib);
 use Test::More;
+use App::Tel::HostRange qw ( check_hostrange );
 eval 'use NetAddr::IP; 1' or plan skip_all => 'Optional module NetAddr::IP required';
 
-eval 'use App::Tel::HostRange qw ( check_hostrange )';
 
 # 192.168.13.17-192.168.32.128
 # fe80::1-fe80::256

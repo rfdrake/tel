@@ -2,13 +2,16 @@ package App::Tel::HostRange;
 
 use strict;
 use warnings;
-use NetAddr::IP;
 
 require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT = qw();
 our @EXPORT_OK = qw ( check_hostrange );
+my $_have_netaddr=1;
 
+BEGIN {
+    eval { require NetAddr::IP; NetAddr::IP->import(); 1; } or do { $_have_netaddr=0; };
+}
 
 =head1 NAME
 
@@ -16,11 +19,11 @@ App::Tel::HostRange - Support for HostRanges
 
 =head1 VERSION
 
-0.2015_00
+0.2015_01
 
 =cut
 
-our $VERSION = eval  { 0.2015_00 };
+our $VERSION = eval  { 0.2015_01 };
 
 
 =head1 SYNOPSIS
@@ -66,6 +69,7 @@ This should support the following types of ranges:
 
 sub check_hostrange ($$) {
     my ($rangelist, $host) = @_;
+    return 0 if (!$_have_netaddr);
     $host = NetAddr::IP->new($host) || return 0;
 
     for(split(/,/,$rangelist)) {

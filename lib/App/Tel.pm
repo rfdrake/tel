@@ -40,23 +40,18 @@ use IO::Stty;
 use POSIX qw(:sys_wait_h :unistd_h); # For WNOHANG and isatty
 use Hash::Merge::Simple qw (merge);
 use Module::Load;
+use App::Tel::HostRange qw (check_hostrange);
 use v5.10;
 
 my $sleeper;
 
 sub mysleep(;@) { sleep }
-sub check_hostrange($$) { 0; }
 
 BEGIN {
     if (eval 'require Time::HiRes') {
         import Time::HiRes qw(sleep);
         $sleeper = \&Time::HiRes::sleep;
     }
-
-    if (eval 'require App::Tel::HostRange') {
-        import App::Tel::HostRange qw (check_hostrange);
-    }
-
 }
 
 sub import {
