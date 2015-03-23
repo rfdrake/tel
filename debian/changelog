@@ -1,3 +1,9 @@
+app-tel (0.2015-04) unstable; urgency=medium
+
+  * moved all HostRange logic into HostRange module
+
+ -- Robert Drake <rdrake@cpan.org>  Mon, 23 Mar 2015 11:08:26 -0400
+
 app-tel (0.2015-03) unstable; urgency=medium
 
   * Fix for NetAddr::IP check in tests
