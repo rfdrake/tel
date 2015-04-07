@@ -97,9 +97,10 @@ sub dspwr {
 sub dssnr {
     my $pwr = shift;
     my $color = 'red';
-    if ( $pwr < 35 ) { $color = 'red'; }
-    if ( $pwr >= 35 && $pwr <= 35 ) { $color = 'yellow'; }
-    if ( $pwr > 35 ) { $color = 'green'; }
+    if ( $pwr eq '-----' ) { $color = 'yellow'; }
+    elsif ( $pwr < 35 ) { $color = 'red'; }
+    elsif ( $pwr >= 35 && $pwr <= 35 ) { $color = 'yellow'; }
+    elsif ( $pwr > 35 ) { $color = 'green'; }
     return colored($pwr, $color);
 }
 
@@ -190,7 +191,7 @@ sub colorize {
             interface($2), interface($3))/eg;
 
     # sh cable modem phy
-    s#([a-f0-9\.]+ C\d+/\d+/U\d+\s+\d+\s+)([\d\.]+)(\s+)([\d\.]+)(\s+\!?\d+)([\s-]+[\d\.]+)(\s+)([\d\.]+)#
+    s#([a-f0-9\.]+ C\d+/\d+/U\d+\s+\d+\s+)([\d\.]+)(\s+)([\d\.]+)(\s+\!?\d+)([\s\-]+[\d\.]+)(\s+)([\d\.\-]+)#
         sprintf("%s%s%s%s%s%s%s%s", $1, uspwr($2), $3, ussnr($4), $5, dspwr($6), $7, dssnr($8))#eg;
 
     # more show interface
