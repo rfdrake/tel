@@ -7,12 +7,14 @@ require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT = qw();
 our @EXPORT_OK = qw ( check_hostrange );
-my $_have_netaddr=0;
+our $_have_netaddr;  # can't set a default because this happens after the BEGIN block
 
 BEGIN {
     if (eval { require NetAddr::IP; }) {
         NetAddr::IP->import();
         $_have_netaddr=1;
+    } else {
+        $_have_netaddr=0;
     }
 }
 
@@ -22,11 +24,11 @@ App::Tel::HostRange - Support for HostRanges
 
 =head1 VERSION
 
-0.2015_01
+0.2015_02
 
 =cut
 
-our $VERSION = eval  { 0.2015_01 };
+our $VERSION = eval  { 0.2015_02 };
 
 
 =head1 SYNOPSIS
