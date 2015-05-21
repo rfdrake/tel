@@ -1,3 +1,9 @@
+app-tel (0.2015-05) unstable; urgency=medium
+
+  * fix for NetAddr::IP being required
+
+ -- Robert Drake <rdrake@cpan.org>  Thu, 21 May 2015 10:21:24 -0400
+
 app-tel (0.2015-04) unstable; urgency=medium
 
   * moved all HostRange logic into HostRange module
