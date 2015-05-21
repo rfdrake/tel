@@ -7,10 +7,13 @@ require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT = qw();
 our @EXPORT_OK = qw ( check_hostrange );
-my $_have_netaddr=1;
+my $_have_netaddr=0;
 
 BEGIN {
-    eval { require NetAddr::IP; NetAddr::IP->import(); 1; } or do { $_have_netaddr=0; };
+    if (eval { require NetAddr::IP; }) {
+        NetAddr::IP->import();
+        $_have_netaddr=1;
+    }
 }
 
 =head1 NAME
@@ -67,7 +70,7 @@ This should support the following types of ranges:
 
 =cut
 
-sub check_hostrange ($$) {
+sub check_hostrange {
     my ($rangelist, $host) = @_;
     return 0 if (!$_have_netaddr);
     $host = NetAddr::IP->new($host) || return 0;

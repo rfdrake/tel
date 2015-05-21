@@ -45,11 +45,12 @@ use v5.10;
 
 my $sleeper;
 
-sub mysleep(;@) { sleep }
+# prototype required to avoid prototype mismatch warning
+sub mysleep (;@) { sleep }
 
 BEGIN {
-    if (eval 'require Time::HiRes') {
-        import Time::HiRes qw(sleep);
+    if (eval { require Time::HiRes }) {
+        Time::HiRes->import( qw(sleep) );
         $sleeper = \&Time::HiRes::sleep;
     }
 }
