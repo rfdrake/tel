@@ -115,8 +115,36 @@ a Keyring for authentication.  It uses the Passwd::Keyring::Auto module for
 this if it's installed.  If the password isn't found it will prompt you for it
 and store it in the keyring.
 
-We also support retrieving the password from KeePass if the File::KeePass
-module is available.
+We also support retrieving the password from KeePass, or Password Safe if the
+appropriate module is available
+
+## Crypt::PWSafe3
+
+### Password safe file
+
+If you set this argument to a file then it will attempt to read the password
+from password safe.
+
+    pwsafe_file => $ENV{HOME} . "pwsafe3.safe",
+
+### Password safe entry
+
+Setting this tells us which entry to lookup the password in the file.  If
+this is needed but not set we exit with a warning.
+
+    pwsafe_entry => 'my router password',
+
+### Password safe passwd
+
+I don't advise you to store your pwsafe password anywhere in plaintext, but
+if you want to pass it to the script in an environment variable then you can
+specify it here.  Alternatively, you can use the system Keyring as described
+below.  As a last ditch method you can put the password here but anyone with
+access to this file will be able to read the password.
+
+    pwsafe_passwd => $ENV{PWSAFEPASSWORD},
+
+## File::KeePass
 
 ### keepass file
 
@@ -140,13 +168,17 @@ specify it here
 
     keepass_passwd => $ENV{KEEPASSPASSWORD},
 
-### storing keepass password in keyring
+### storing keepass or password safe password in the keyring
 
 If you want you can put the keepass password inside your keyring so you won't be
 prompted after you've logged in.  If you've done this you can specify it by
 saying
 
     keepass_passwd => 'KEYRING',
+
+or
+
+    pwsafe_passwd => 'KEYRING',
 
 ### On keyring and DBUS
 
@@ -162,7 +194,7 @@ need to:
     if [[ -z $DBUS_SESSION_BUS_ADDRESS ]]; then
         # workaround until I figure out why my machine gets the wrong information
         # out of dbus session-bus
-        export DBUS_SESSION_BUS_ADDRESS=$(ps -ax | grep dbus-daemon | grep "\-\-address" | awk '{print $8}' | sed 's/--address=//')
+        export DBUS_SESSION_BUS_ADDRESS=$(ps -ax | grep dbus-daemon | grep "\-\-address=unix" | awk '{print $8}' | sed 's/--address=//')
     #    if [[ -f ~/.dbus/session-bus/$(dbus-uuidgen --get)-0 ]]; then
     #        source ~/.dbus/session-bus/$(dbus-uuidgen --get)-0
     #        export DBUS_SESSION_BUS_ADDRESS
