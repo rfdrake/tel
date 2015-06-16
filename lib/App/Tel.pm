@@ -514,7 +514,6 @@ sub password {
     # defined anywhere and we probably should prompt for one.  Consider
     # turning off echo then normal read.
     return _input_password($router);
-    return 'undef';
 }
 
 sub _winch_handler {
