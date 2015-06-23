@@ -982,7 +982,6 @@ sub interconnect {
 
 TODO: Document this
 
-Figure out why "reload\ry" doesn't work
 
 =cut
 
@@ -991,6 +990,7 @@ sub run_commands {
     my $opts = $self->{opts};
 
     foreach my $arg (@_) {
+        $arg =~ s/\\r/\r/g; # fix for reload\ry.  I believe 'perldoc quotemeta' explains why this happens
         chomp($arg);
         $self->send("$arg\r");
         $self->expect($self->{timeout},'-re', $self->profile->{prompt});
