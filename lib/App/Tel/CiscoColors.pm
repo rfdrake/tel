@@ -4,38 +4,44 @@ use Term::ANSIColor;
 use strict;
 use warnings;
 
-# not kidding, this will be crazy.
-# it simulates s/blah (\d+) blah/sprintf("blah %s blah", c($1))/e;
-sub crazy {
-   my @strings = @_;
-   my $evils;
+=head1 NAME
 
-    my $c = sub {
-       return $_[0] if ($_[0] =~ /\D/);
-       if ($_[0] > 0) {
-          return colored($_[0], 'red');
-       } else {
-          return colored($_[0], 'green');
-       }
-    };
+App::Tel::CiscoColors - Colors for show interface and other commands
 
+=head2 METHODS
 
-   foreach my $s (@strings) {
+=cut
 
-      my $substring = $s;
-      # (?<!\\)(?!\\) are funny things that mean look behind and look ahead
-      # for \\ (the escape \ before a parenthesis)
-      my $count = $substring =~ s/(?<!\\)(?!\\)\(.*?\)/%s/g;
-
-      my $args;
-      map { $args .= ",$c->(\$$_)"; } 1..$count;
-      $evils .= "s/$s/sprintf(\"$substring\"$args)/e;";
-   }
-
-   return $evils;
+sub _c {
+    return $_[0] if ($_[0] =~ /\D/);
+    if ($_[0] > 0) {
+        return colored($_[0], 'red');
+    }
+    return colored($_[0], 'green');
 }
 
-sub uspwr {
+
+# not kidding, this will be crazy.
+# it simulates s/blah (\d+) blah/sprintf("blah %s blah", c($1))/e;
+sub _crazy {
+    my @strings = @_;
+    my $evils;
+
+    foreach my $s (@strings) {
+        my $substring = $s;
+        # (?<!\\)(?!\\) are funny things that mean look behind and look ahead
+        # for \\ (the escape \ before a parenthesis)
+        my $count = $substring =~ s/(?<!\\)(?!\\)\(.*?\)/%s/g;
+
+        my $args;
+        map { $args .= ",_c(\$$_)"; } 1..$count;
+        $evils .= "s/$s/sprintf(\"$substring\"$args)/e;";
+    }
+
+    return $evils;
+}
+
+sub _uspwr {
     my $pwr = shift;
     my $color = 'red';
     if ( $pwr < 30 ) { $color = 'red'; }
@@ -46,7 +52,7 @@ sub uspwr {
     return colored($pwr, $color);
 }
 
-sub ussnr {
+sub _ussnr {
     my $pwr = shift;
     my $color = 'red';
     if ( $pwr < 20 ) { $color = 'red'; }
@@ -54,7 +60,8 @@ sub ussnr {
     if ( $pwr > 25 ) { $color = 'green'; }
     return colored($pwr, $color);
 }
-sub dspwr {
+
+sub _dspwr {
     my $input = shift;
     my $pwr = $input;
     $pwr =~ s/ //g;   # remove all spaces, leaving possible negative sign and value
@@ -66,7 +73,8 @@ sub dspwr {
     if ( $pwr > 15 ) { $color = 'red'; }
     return colored($input, $color);
 }
-sub dssnr {
+
+sub _dssnr {
     my $pwr = shift;
     my $color = 'red';
     if ( $pwr eq '-----' ) { $color = 'yellow'; }
@@ -76,7 +84,7 @@ sub dssnr {
     return colored($pwr, $color);
 }
 
-sub cpu {
+sub _cpu {
     my $cpu = shift;
     my $color = 'green';
     if ($cpu > 0) { $color = 'yellow'; }
@@ -84,7 +92,55 @@ sub cpu {
     return colored($cpu, $color);
 }
 
-my $regexp = crazy('(\d+) runts, (\d+) giants, (\d+) throttles',
+sub _interface {
+    # without knowing syntax, this will automatically handle err-disable and
+    # any other weird corner cases by defaulting to red.
+    my $color = 'red';
+    if ($_[0] eq 'up') {
+        $color = 'green';
+    }
+    return colored($_[0], $color);
+}
+
+=head2 colorize
+
+    my $output = $self->colorize($input);
+
+Given a line of text from a cisco router, this will try to colorize it.
+
+=cut
+
+sub colorize {
+    my $self = shift;
+    $_ = shift;
+
+    s/(\S+) is (.*), line protocol is (\S+)/sprintf("%s is %s, line protocol is %s", colored($1, 'magenta'),
+            _interface($2), _interface($3))/eg;
+
+    # sh cable modem phy
+    s#([a-f0-9\.]+ C\d+/\d+/U\d+\s+\d+\s+)([\d\.]+)(\s+)([\d\.]+)(\s+\!?\d+)([\s\-]+[\d\.]+)(\s+)([\d\.\-]+)#
+        sprintf("%s%s%s%s%s%s%s%s", $1, _uspwr($2), $3, _ussnr($4), $5, _dspwr($6), $7, _dssnr($8))#eg;
+
+    # more show interface
+    s/Full-duplex/colored('Full-duplex', 'green')/eg;
+    s/Half-duplex/colored('Half-duplex', 'yellow')/eg;
+
+    # sh proc cpu
+    s#(\s+\d+\s+\d+\s+\d+\s+\d+\s+)([\d\.]+)(%\s+)([\d\.]+)(%\s+)([\d\.]+)#
+        sprintf("%s%s%s%s%s%s", $1, _cpu($2), $3, _cpu($4), $5, _cpu($6))#eg;
+
+    # parts of sh run
+    s/\n(ip route [^\n]+)/sprintf("\n%s", colored($1,'yellow'))/eg;
+    s/\n(ipv6 route [^\n]+)/sprintf("\n%s", colored($1,'yellow'))/eg;
+    s/\n(aaa [^\n]+)/sprintf("\n%s", colored($1,'green'))/eg;
+    s/\n(access-list [^\n]+)/sprintf("\n%s", colored($1,'cyan'))/eg;
+    s/\n(snmp-server [^\n]+)/sprintf("\n%s", colored($1,'bright_white'))/eg;
+    s/\n(tacacs-server [^\n]+)/sprintf("\n%s", colored($1,'magenta'))/eg;
+    s/\n(no tacacs-server [^\n]+)/sprintf("\n%s", colored($1,'magenta'))/eg;
+    s/\n(radius-server [^\n]+)/sprintf("\n%s", colored($1,'magenta'))/eg;
+    s/\n(ntp [^\n]+)/sprintf("\n%s", colored($1,'magenta'))/eg;
+
+    my $regexp = _crazy('(\d+) runts, (\d+) giants, (\d+) throttles',
         '(\d+) input errors, (\d+) CRC, (\d+) frame, (\d+) overrun, (\d+) ignored',
         '(\d+) input packets with dribble condition detected',
         'Total output drops: (\d+)',
@@ -99,86 +155,6 @@ my $regexp = crazy('(\d+) runts, (\d+) giants, (\d+) throttles',
         '(\d+) babbles, (\d+) late collision, (\d+) deferred',
         '(\d+) lost carrier, (\d+) no carrier',
     );
-
-
-sub interface {
-    # without knowing syntax, this will automatically handle err-disable and
-    # any other weird corner cases by defaulting to red.
-    my $color = 'red';
-    if ($_[0] eq 'up') {
-        $color = 'green';
-    }
-    return colored($_[0], $color);
-}
-
-
-# this should start at the beginning statement (router bgp whatever..) and end
-# at the closing statement (\n!).. BUT.. it needs to be able to continue
-# through a second buffer if block_end isn't found..
-sub process_block {
-    my $self = shift;
-    my $end = $self->{block_end};
-    my $text = shift;
-    if ($self->{block_begin}) {
-        my $begin = $self->{block_begin};
-        $text =~ s/($begin.*($end|$))/colored($1, $self->{block_color})/e;
-        undef $self->{block_begin};
-    } else {
-        $text =~ s/(.*($end|$))/colored($1, $self->{block_color})/e;
-    }
-
-    if ($2 eq $self->{block_end}) {
-        print "Block ended here..\n";
-        undef $self->{block_end};
-        undef $self->{block_color};
-    }
-}
-
-sub colorize {
-    my $self = shift;
-    $_ = shift;
-
-    # this doesn't work.  One reason is that two of these lines could be in
-    # the same buffer and this would only catch it once (we would need to
-    # split the buffer by \n to fix that)
-    if (/\n(?:ipv6 )?router \S+/) {
-        $self->{block_begin}=qr/\n(?:ipv6 )?router \S+/;
-        $self->{block_end}=qr/\n!/;
-        $self->{block_color}='cyan';
-    } elsif (/\nip dhcp pool/) {
-        $self->{block_begin}=qr/\nip dhcp pool/;
-        $self->{block_end}=qr/\n!/;
-        $self->{block_color}='cyan';
-    } elsif (/\ninterface \S+/) {
-        $self->{block_begin}=qr/\ninterface \S+/;
-        $self->{block_end}=qr/\n!/;
-        $self->{block_color}='bright_yellow';
-    }
-
-    s/(\S+) is (.*), line protocol is (\S+)/sprintf("%s is %s, line protocol is %s", colored($1, 'magenta'),
-            interface($2), interface($3))/eg;
-
-    # sh cable modem phy
-    s#([a-f0-9\.]+ C\d+/\d+/U\d+\s+\d+\s+)([\d\.]+)(\s+)([\d\.]+)(\s+\!?\d+)([\s\-]+[\d\.]+)(\s+)([\d\.\-]+)#
-        sprintf("%s%s%s%s%s%s%s%s", $1, uspwr($2), $3, ussnr($4), $5, dspwr($6), $7, dssnr($8))#eg;
-
-    # more show interface
-    s/Full-duplex/colored('Full-duplex', 'green')/eg;
-    s/Half-duplex/colored('Half-duplex', 'yellow')/eg;
-
-    # sh proc cpu
-    s#(\s+\d+\s+\d+\s+\d+\s+\d+\s+)([\d\.]+)(%\s+)([\d\.]+)(%\s+)([\d\.]+)#sprintf("%s%s%s%s%s%s", $1, cpu($2), $3, cpu($4), $5, cpu($6))#eg;
-
-    # parts of sh run
-    s/\n(ip route [^\n]+)/sprintf("\n%s", colored($1,'yellow'))/eg;
-    s/\n(ipv6 route [^\n]+)/sprintf("\n%s", colored($1,'yellow'))/eg;
-    s/\n(aaa [^\n]+)/sprintf("\n%s", colored($1,'green'))/eg;
-    s/\n(access-list [^\n]+)/sprintf("\n%s", colored($1,'cyan'))/eg;
-    s/\n(snmp-server [^\n]+)/sprintf("\n%s", colored($1,'bright_white'))/eg;
-    s/\n(tacacs-server [^\n]+)/sprintf("\n%s", colored($1,'magenta'))/eg;
-    s/\n(no tacacs-server [^\n]+)/sprintf("\n%s", colored($1,'magenta'))/eg;
-    s/\n(radius-server [^\n]+)/sprintf("\n%s", colored($1,'magenta'))/eg;
-    s/\n(ntp [^\n]+)/sprintf("\n%s", colored($1,'magenta'))/eg;
 
     # the rest of show interface
     eval $regexp; ## no critic

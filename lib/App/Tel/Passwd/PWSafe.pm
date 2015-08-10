@@ -8,6 +8,7 @@ App::Tel::Passwd::PWSafe - module for accessing PWSafe objects
 
 use strict;
 use warnings;
+use Carp;
 use Module::Load;
 use parent 'App::Tel::Passwd::Base';
 
@@ -36,18 +37,13 @@ sub new {
         return;
     }
 
-    if ($@) {
-        warn $@ if (0);
-        return;
-    }
-
     $self->{vault} = eval {
         load Crypt::PWSafe3;
         return Crypt::PWSafe3->new( file => $file, password => $passwd );
     };
 
     if ($@) {
-        warn $@ if (0);
+        carp $@ if (0);
         return;
     }
     return bless( $self, $class );
