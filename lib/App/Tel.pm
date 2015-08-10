@@ -828,9 +828,7 @@ sub interconnect {
 	# In the case of !${*$handle}{exp_Pid} it means
 	# the handle was exp_inited instead of spawned.
 	CONNECT_LOOP:
-
-	# Go until we have a reason to stop
-	while (1) {
+    while (1) {
 
 		# test each handle to see if it's still alive.
 		foreach my $read_handle (@handles) {
