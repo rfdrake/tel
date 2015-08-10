@@ -8,7 +8,7 @@ App::Tel - A script for logging into devices
 
 =head1 VERSION
 
-0.2015_05
+0.2015.06
 
 =cut
 
@@ -41,6 +41,7 @@ use POSIX qw(:sys_wait_h :unistd_h); # For WNOHANG and isatty
 use Hash::Merge::Simple qw (merge);
 use Module::Load;
 use App::Tel::HostRange qw (check_hostrange);
+use App::Tel::Passwd;
 use v5.10;
 
 my $sleeper;

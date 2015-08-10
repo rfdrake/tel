@@ -29,14 +29,15 @@ Loads the module for the specified password store type.
 =cut
 
 sub load_module {
-    my $module = shift || '';
-    eval {
+    my $name = shift || '';
+    my $module = eval {
         # we will accept just the argument name if need be.
-        $module =~ s/_(:?file|entry|pass)//i;
+        $name =~ s/_(:?file|entry|pass)//i;
         no warnings 'uninitialized';
-        Module::Load::load 'App::Tel::Passwd::'. $mapping->{lc($module)};
+        return Module::Load::load 'App::Tel::Passwd::'. $mapping->{lc($name)};
     };
-    croak "Something went wrong with our load of passwd module $module: $@" if ($@);
+    croak "Something went wrong with our load of passwd module $name: $@" if ($@);
+    return $module;
 }
 
 =head2 load_from_profile
