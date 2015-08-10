@@ -10,7 +10,7 @@ use Term::ANSIColor;
 use strict;
 use warnings;
 
-our $VERSION = eval '0.1';
+our $VERSION = '0.2';
 
 $Term::ANSIColor::AUTORESET++;         # reset color after each print
 $SIG{INT} = sub { print "\n"; exit; }; # reset color after Ctrl-C
@@ -27,7 +27,7 @@ if ($Term::ANSIColor::VERSION >= 3.00) {
 
 
 
-=head1 methods
+=head1 METHODS
 
 =head2 new
 

@@ -8,8 +8,6 @@ use Term::ANSIColor;
 use strict;
 use warnings;
 
-our $VERSION = eval '0.1';
-
 sub colorize {
     my $self = shift;
     $_ = shift;

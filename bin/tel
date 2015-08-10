@@ -96,6 +96,8 @@ installed for sub-second sleep values like 0.5.
 
 Example: tel -s 3 -x myfile.txt gw1-my-devices
 
+=back
+
 =cut
 
 sub main {

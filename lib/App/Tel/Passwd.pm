@@ -39,3 +39,30 @@ sub load_module {
     croak "Something went wrong with our load of passwd module $module: $@" if ($@);
 }
 
+=head2 load_from_profile
+
+    my $pass = load_from_profile($profile);
+
+Given an App::Tel profile, see if it contains entries for Passwd modules.  If
+it does attempt to load them and return the password associated.
+
+I'm not too happy with the flexibility of this, but I think it will get the
+job done for right now.
+
+=cut
+
+sub load_from_profile {
+    my $profile = shift;
+
+    foreach my $type (keys %$mapping) {
+        if (defined($profile->{$type .'_file'})) {
+            my $file = $type . '_file';
+            my $passwd = $type . '_passwd';
+            my $entry = $type . '_entry';
+            my $module = load_module $file;
+            my $p = $module->new($file, $passwd);
+            my $e = $p->passwd($entry);
+            return $e if $e;
+        }
+    }
+}

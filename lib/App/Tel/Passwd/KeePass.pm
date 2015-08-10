@@ -11,9 +11,7 @@ use warnings;
 use Module::Load;
 use parent 'App::Tel::Passwd::Base';
 
-our $VERSION = eval '0.2';
-
-=head1 methods
+=head1 METHODS
 
 =head2 new
 
@@ -38,7 +36,7 @@ sub new {
 
     if ($@) {
         warn $@ if (0);
-        return undef;
+        return;
     }
 
     my $file = shift;
@@ -48,7 +46,7 @@ sub new {
     my $k = eval { $self->{keepass}->load_db($file, $passwd); };
     if ($@) {
         warn $@ if (0);
-        return undef;
+        return;
     }
     $k->unlock;
     $self->{k} = $k;

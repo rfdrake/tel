@@ -9,8 +9,6 @@ App::Tel::Passwd::Base - parent stub and examples for Passwd modules
 use strict;
 use warnings;
 
-our $VERSION = eval '0.1';
-
 =head1 METHODS
 
 =head2 new

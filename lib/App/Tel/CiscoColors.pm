@@ -1,52 +1,24 @@
-# Copyright (C) 2007 Robert Drake
-# This module is free software; you can redistribute it and/or
-# modify it under the terms of the GNU Library General Public
-# License as published by the Free Software Foundation; either
-#  version 2 of the License, or (at your option) any later version.
-#
-# This module is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-# Library General Public License for more details.
-#
-# You should have received a copy of the GNU Library General Public
-# License along with this library; if not, write to the
-# Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-# Boston, MA 02111-1307, USA.
-
-
-# Notes:
-# this code is very hard for me to read but it takes the output from "sh interface"
-# and colors the numbers according to if they are zero or not.  Usually my
-# perl isn't write-once-read-never, but I didn't come up with a good way of
-# doing this and just made something work.
-#
-# This may be older than 2007.  I'm going by what git blame tells me. :)
-
-
 package App::Tel::CiscoColors;
 use parent 'App::Tel::ColorObject';
 use Term::ANSIColor;
 use strict;
 use warnings;
 
-our $VERSION = eval '0.2';
-
-sub c {
-   my $value = shift;
-   return $value if ($value =~ /\D/);
-   if ($value > 0) {
-      return colored($value, 'red');
-   } else {
-      return colored($value, 'green');
-   }
-}
-
 # not kidding, this will be crazy.
 # it simulates s/blah (\d+) blah/sprintf("blah %s blah", c($1))/e;
 sub crazy {
    my @strings = @_;
    my $evils;
+
+    my $c = sub {
+       return $_[0] if ($_[0] =~ /\D/);
+       if ($_[0] > 0) {
+          return colored($_[0], 'red');
+       } else {
+          return colored($_[0], 'green');
+       }
+    };
+
 
    foreach my $s (@strings) {
 
@@ -56,7 +28,7 @@ sub crazy {
       my $count = $substring =~ s/(?<!\\)(?!\\)\(.*?\)/%s/g;
 
       my $args;
-      map { $args .= ",c(\$$_)"; } 1..$count;
+      map { $args .= ",$c->(\$$_)"; } 1..$count;
       $evils .= "s/$s/sprintf(\"$substring\"$args)/e;";
    }
 
@@ -113,15 +85,15 @@ sub cpu {
 }
 
 my $regexp = crazy('(\d+) runts, (\d+) giants, (\d+) throttles',
-		'(\d+) input errors, (\d+) CRC, (\d+) frame, (\d+) overrun, (\d+) ignored',
-		'(\d+) input packets with dribble condition detected',
-		'Total output drops: (\d+)',
-		'(\d+) output errors, (\d+) interface resets',
-		'(\d+) output errors, (\d+) collisions, (\d+) interface resets',
-		'(\d+) output buffer failures, (\d+) output buffers swapped out',
-		'(\d+) carrier transitions',
-		'Output queue (\S+), (\d+) drops; input queue (\S+), (\d+) drops',
-		'(\d+)\/(\d+) \(size\/max\/drops\/flushes\)\;',
+        '(\d+) input errors, (\d+) CRC, (\d+) frame, (\d+) overrun, (\d+) ignored',
+        '(\d+) input packets with dribble condition detected',
+        'Total output drops: (\d+)',
+        '(\d+) output errors, (\d+) interface resets',
+        '(\d+) output errors, (\d+) collisions, (\d+) interface resets',
+        '(\d+) output buffer failures, (\d+) output buffers swapped out',
+        '(\d+) carrier transitions',
+        'Output queue (\S+), (\d+) drops; input queue (\S+), (\d+) drops',
+        '(\d+)\/(\d+) \(size\/max\/drops\/flushes\)\;',
         '(\d+) (pause input|watchdog|underruns|no buffer|pause output|abort)',
         '(\d+) output errors, (\d+) collisions, (\d+) interface resets',
         '(\d+) babbles, (\d+) late collision, (\d+) deferred',
@@ -183,10 +155,6 @@ sub colorize {
         $self->{block_color}='bright_yellow';
     }
 
-#     if (defined($self->{block_end})) {
-#         $self->process_block($_);
-#     }
-
     s/(\S+) is (.*), line protocol is (\S+)/sprintf("%s is %s, line protocol is %s", colored($1, 'magenta'),
             interface($2), interface($3))/eg;
 
@@ -213,7 +181,7 @@ sub colorize {
     s/\n(ntp [^\n]+)/sprintf("\n%s", colored($1,'magenta'))/eg;
 
     # the rest of show interface
-    eval $regexp;
+    eval $regexp; ## no critic
     return $_;
 }
 

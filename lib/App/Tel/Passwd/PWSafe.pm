@@ -11,8 +11,6 @@ use warnings;
 use Module::Load;
 use parent 'App::Tel::Passwd::Base';
 
-our $VERSION = eval '0.2';
-
 =head1 METHODS
 
 =head2 new
@@ -35,12 +33,12 @@ sub new {
     # unknown or non-existant file returns undef.  Crypt::PWSafe3 will
     # otherwise attempt to generate a new safe with this filename.
     if (!defined($file) || ! -r $file ) {
-        return undef;
+        return;
     }
 
     if ($@) {
         warn $@ if (0);
-        return undef;
+        return;
     }
 
     $self->{vault} = eval {
@@ -50,7 +48,7 @@ sub new {
 
     if ($@) {
         warn $@ if (0);
-        return undef;
+        return;
     }
     return bless( $self, $class );
 }

@@ -2,7 +2,6 @@ use strict;
 use warnings;
 use Test::More;
 
-eval 'use Bytes::Random::Secure; 1' or plan skip_all => 'Optional module Bytes::Random::Secure required';
 eval 'use Crypt::PWSafe3; 1' or plan skip_all => 'Optional module Crypt::PWSafe3 required';
 
 use App::Tel::Passwd::PWSafe;

@@ -4,7 +4,7 @@ use Term::ANSIColor;
 use strict;
 use warnings;
 
-our $VERSION = eval '0.1';
+our $VERSION = '0.1';
 
 
 sub new {
