@@ -13,17 +13,6 @@ use parent 'App::Tel::Passwd::Base';
 
 our $VERSION = eval '0.2';
 
-=head1 NOTES
-
-Because Crypt::Random gets it's random information directly from /dev/random,
-it can block when the system runs out of entropy.  This is bad for us because
-the user never sees why the program is hanging.
-
-PWSafe3 currently calls random(64) when opening an existing safe.  I've opened
-github issue #9 on Crypt::PWSafe3 to see if this can be modified, but it might
-be important.  The workaround for us is to require Bytes::Random::Secure
-instead of Crypt::Random, which uses less entropy from /dev/random.
-
 =head1 METHODS
 
 =head2 new
@@ -48,9 +37,6 @@ sub new {
     if (!defined($file) || ! -r $file ) {
         return undef;
     }
-
-    # see note in NOTES
-    eval 'use Bytes::Random::Secure; 1';
 
     if ($@) {
         warn $@ if (0);

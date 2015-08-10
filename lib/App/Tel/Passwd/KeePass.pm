@@ -71,7 +71,7 @@ sub passwd {
     my $entry = shift;
 
     my $e = $k->find_entry({title => $entry});
-    return $e->{'password'} == undef ? '' : $e->{'password'};
+    return !defined($e->{'password'}) ? '' : $e->{'password'};
 }
 
 1;
