@@ -1,6 +1,15 @@
 package App::Tel;
 use strict;
 use warnings;
+use Expect qw( exp_continue );
+use POSIX qw(:sys_wait_h :unistd_h); # For WNOHANG
+use Hash::Merge::Simple qw (merge);
+use Module::Load;
+use App::Tel::HostRange qw (check_hostrange);
+use App::Tel::Passwd;
+use Time::HiRes qw ( sleep );
+use v5.10;
+
 
 =head1 NAME
 
@@ -35,36 +44,27 @@ under the same terms as Perl itself.
 
 =cut
 
-use Expect qw( exp_continue );
-use POSIX qw(:sys_wait_h :unistd_h); # For WNOHANG
-use Hash::Merge::Simple qw (merge);
-use Module::Load;
-use App::Tel::HostRange qw (check_hostrange);
-use App::Tel::Passwd;
-use v5.10;
-
-my $sleeper;
-
-# prototype required to avoid prototype mismatch warning
-sub mysleep (;@) { sleep }
-
-BEGIN {
-    if (eval { require Time::HiRes }) {
-        Time::HiRes->import( qw(sleep) );
-        $sleeper = \&Time::HiRes::sleep;
-    }
-}
-
-sub import {
-    my $class = shift;
-    no warnings 'redefine';
-    *mysleep = $sleeper if defined $sleeper;
-}
-
-
-# For reasons related to state I needed to make $winch_it global
+#### GLOBALS
+# For reasons related to state I needed to make $_winch_it global
 # because it needs to be written to inside signals.
-my $winch_it=0;
+my $_winch_it=0;
+
+sub _winch_handler {
+    $_winch_it=1;
+}
+
+sub _winch {
+    my $session = shift->{'session'};
+    # these need to be wrapped in eval or you get Given filehandle is not a
+    # tty in clone_winsize_from if you call winch() under a scripted
+    # environment like rancid (or just under par, or anywhere there is no pty)
+    eval {
+        $session->slave->clone_winsize_from(\*STDIN);
+        kill WINCH => $session->pid if $session->pid;
+    };
+    $_winch_it=0;
+    $SIG{WINCH} = \&_winch_handler;
+}
 
 =head1 METHODS
 
@@ -126,9 +126,27 @@ sub disconnect {
     }
 }
 
+
+=head2 send
+
+    $self->send("text\r");
+
+Wrapper for Expect's send() method.
+
+=cut
+
 sub send {
     return shift->{'session'}->send(@_);
 }
+
+=head2 expect
+
+    $self->expect("text");
+
+Wrapper for Expect's expect() method.  If you don't specify a timeout this
+will use the default script timeout.
+
+=cut
 
 sub expect {
     my $self = shift;
@@ -314,8 +332,15 @@ sub _banners {
     return $self->{banners};
 }
 
-# find the router by hostname/regex and load the config associated with it.
-# Load a profile for it if there is one.
+=head2 rtr_find
+
+    my $profile = $self->rtr_find($regex);
+
+Find the router by hostname/regex and load the config associated with it.
+Load a profile for it if there is one.
+
+=cut
+
 sub rtr_find {
     my $self = shift;
     my $host = shift;
@@ -452,10 +477,6 @@ sub password {
     return App::Tel::Passwd::input_password($router);
 }
 
-sub _winch_handler {
-    $winch_it=1;
-}
-
 =head2 session
 
     my $session = $self->session;
@@ -486,21 +507,14 @@ sub session {
     return $session;
 }
 
-sub winch {
-    my $session = shift->{'session'};
-    # these need to be wrapped in eval or you get Given filehandle is not a
-    # tty in clone_winsize_from if you call winch() under a scripted
-    # environment like rancid (or just under par, or anywhere there is no pty)
-    eval {
-        $session->slave->clone_winsize_from(\*STDIN);
-        kill WINCH => $session->pid if $session->pid;
-    };
-    $winch_it=0;
-    $SIG{WINCH} = \&_winch_handler;
-}
+=head2 connect
 
-# this sets up the session.  If there already is a session open it closes and
-# opens a new one.
+    my $session = $self->connect('routername');
+
+This sets up the session.  If there already is a session open it closes and opens a new one.
+
+=cut
+
 sub connect {
     my $self = shift;
     my @arguments = shift;
@@ -511,9 +525,20 @@ sub connect {
     return $session;
 }
 
-# connected, returns connection status.  Sets status if given input.
-# this isn't the session state, but an indicator that our session has
-# gotten through the login stage and is now waiting for input.
+=head2 connected
+
+    if ($self->connected);
+or
+    $self->connected(1);
+
+Returns connection status, or sets the status to whatever value is supplied to
+the method.
+
+Note: This isn't the session state, but an indicator that our session has
+gotten through the login stage and is now waiting for input.  i.e., the router
+is at a prompt of some kind.
+
+=cut
 
 sub connected {
     my $self = shift;
@@ -554,6 +579,16 @@ sub enable {
     $self->{enabled}=1;
     return $self->{enabled};
 }
+
+=head2 login
+
+    my $something = $self->login("hostname");
+
+Cycles through the connection methods trying each in the order specified by
+the profile until we successfully connect to the host.  Returns connected
+status (true or false).
+
+=cut
 
 sub login {
     my $self = shift;
@@ -680,6 +715,16 @@ sub logging {
     $self->session->log_file("/tmp/$file.log");
 }
 
+=head2 interact
+
+    $self->interact($input, $escape);
+
+This is a copy of Expect's interact() command.  It's been rewritten in parts
+to customize it for our needs, but might be very similar otherwise.  It's
+mainly a setup script for the call to interconnect().
+
+=cut
+
 sub interact {
     my $self = shift;
     my $session = $self->{'session'};
@@ -720,6 +765,21 @@ sub interact {
     }
     $session->manual_stty($old_manual_stty_val);
 }
+
+=head2 interconnect
+
+    $self->interconnect(@handles);
+
+This is a copy of Expect's interconnect() method that has been modified to
+support the new things we needed.  The main differences are colorize and our
+winch handler.
+
+Future versions might support AnyEvent::IO or AnyEvent::Socket, but I might
+contribute that back to Expect's core stuff.  I might also try to figure out
+how to make the colorize stuff more hookable so we could use Expect's methods
+without rewriting them.
+
+=cut
 
 sub interconnect {
     my $self = shift;
@@ -802,7 +862,7 @@ sub interconnect {
         my $nfound = select( $rout = $read_mask, undef, $eout = $emask, undef );
 
         # Is there anything to share?  May be -1 if interrupted by a signal...
-        $self->winch() if $winch_it;
+        $self->_winch() if $_winch_it;
         next CONNECT_LOOP if not defined $nfound or $nfound < 1;
 
         # Which handles have stuff?
@@ -940,7 +1000,7 @@ sub run_commands {
         chomp($arg);
         $self->send("$arg\r");
         $self->expect($self->{timeout},'-re', $self->profile->{prompt});
-        mysleep($opts->{s}) if ($opts->{s});
+        sleep($opts->{s}) if ($opts->{s});
     }
 }
 
@@ -972,7 +1032,7 @@ sub control_loop {
         $autocmds = $profile->{autocmds};
     }
 
-    $self->winch();
+    $self->_winch();
 
     # should -c override -x or be additive? or error if both are specified?
 
@@ -1010,10 +1070,22 @@ sub control_loop {
     }
 }
 
+=head2 handle_backspace
+
+Handle backspace for routers that use ^H
+
+=cut
+
 sub handle_backspace {
     ${$_[0]}->send("\b");
     return 1;
 }
+
+=head2 handle_ctrl_z
+
+Handle ctrl_z for non-cisco boxes
+
+=cut
 
 sub handle_ctrl_z {
     ${$_[0]}->send("exit\r");
