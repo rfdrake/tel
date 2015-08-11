@@ -116,7 +116,8 @@ sub load_from_profile {
 
             # well.. this is a fine mess we've gotten ourselves into..
             if ($safe_password eq 'KEYRING') {
-                $safe_password = keyring($type,$type,$type);
+                my $n = $mapping->{$type};
+                $safe_password = keyring($n,$n,$n);
             }
 
             my $mod = load_module $file, $profile->{$file}, $safe_password;

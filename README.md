@@ -190,7 +190,7 @@ library files in <perl_location>/Expect/Tel/.  These are now unused and safe
 to remove.  You might run "make uninstall" on the old release before
 installing the new version.
 
-##### Copyright 2013, Robert Drake
+##### Copyright 2015, Robert Drake
 
 [COMMANDS]:     COMMANDS.md
 [ISSUES]:       https://github.com/rfdrake/tel/issues
