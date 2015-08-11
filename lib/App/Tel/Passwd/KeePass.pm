@@ -9,6 +9,7 @@ App::Tel::Passwd::KeePass - Passwd module for KeePass
 use strict;
 use warnings;
 use Module::Load;
+use Carp;
 use parent 'App::Tel::Passwd::Base';
 
 =head1 METHODS
@@ -35,7 +36,7 @@ sub new {
     };
 
     if ($@) {
-        warn $@ if (0);
+        carp $@ if (0);
         return;
     }
 
@@ -45,7 +46,7 @@ sub new {
     # load failure on bad password or bad filename
     my $k = eval { $self->{keepass}->load_db($file, $passwd); };
     if ($@) {
-        warn $@ if (0);
+        carp $@ if (0);
         return;
     }
     $k->unlock;

@@ -4,10 +4,12 @@ use strict;
 use warnings;
 use Carp;
 use Module::Load;
+use POSIX qw(); # For isatty
+use IO::Stty;
 require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT = qw();
-our @EXPORT_OK = qw ( );
+our @EXPORT_OK = qw ( keyring input_password );
 
 =head1 NAME
 
@@ -22,22 +24,73 @@ my $mapping = {
 
 =head2 load_module
 
-    my $ds = App::Tel::Passwd::load_module($password_module);
+    my $name = App::Tel::Passwd::load_module($password_module);
 
-Loads the module for the specified password store type.
+Loads the module for the specified password store type.  Returns the module's
+namespace.
 
 =cut
 
 sub load_module {
-    my $name = shift || '';
-    my $module = eval {
-        # we will accept just the argument name if need be.
-        $name =~ s/_(:?file|entry|pass)//i;
-        no warnings 'uninitialized';
-        return Module::Load::load 'App::Tel::Passwd::'. $mapping->{lc($name)};
+    my ($type, $file, $passwd) = @_;
+    # we will accept just the argument name if need be.
+    $type =~ s/_(:?file|entry|pass)//i;
+    no warnings 'uninitialized';
+    my $mod = 'App::Tel::Passwd::'. $mapping->{lc($type)};
+    my $load = eval {
+        Module::Load::load $mod;
+        $mod->new($file, $passwd);
     };
-    croak "Something went wrong with our load of passwd module $name: $@" if ($@);
-    return $module;
+    croak "Something went wrong with our load of passwd module $type: $@" if ($@);
+    return $load;
+}
+
+=head2 input_password
+
+    my $password = input_password($prompt);
+
+Prompts the user for a password then disables local echo on STDIN, reads a
+line and returns it.
+
+=cut
+
+
+sub input_password {
+    my $prompt = shift;
+    $prompt ||= '';
+    die 'STDIN not a tty' if (!POSIX::isatty(\*STDIN));
+    my $old_mode=IO::Stty::stty(\*STDIN,'-g');
+    print "Enter password for $prompt: ";
+    IO::Stty::stty(\*STDIN,'-echo');
+    chomp(my $password=<STDIN>);
+    IO::Stty::stty(\*STDIN,$old_mode);
+    return $password;
+}
+
+=head2 keyring
+
+    my $password = keyring($user, $domain, $group);
+
+Reads a password from a keyring using Passwd::Keyring::Auto if it's available.
+If the password isn't found the user is prompted to enter a password, then we
+try to store it in the keyring.
+
+=cut
+
+sub keyring {
+    my ($user, $domain, $group) = @_;
+
+    # TODO: needs to warn on some kind of failure?
+    eval {
+        load Passwd::Keyring::Auto, 'get_keyring';
+        my $keyring = get_keyring(app=>"tel script", group=>$group);
+        my $pass = $keyring->get_password($user, $domain);
+        if (!$pass) {
+            $pass = input_password($domain);
+            $keyring->set_password($user, $pass, $domain);
+        }
+        return $pass;
+    };
 }
 
 =head2 load_from_profile
@@ -58,12 +111,18 @@ sub load_from_profile {
     foreach my $type (keys %$mapping) {
         if (defined($profile->{$type .'_file'})) {
             my $file = $type . '_file';
-            my $passwd = $type . '_passwd';
             my $entry = $type . '_entry';
-            my $module = load_module $file;
-            my $p = $module->new($file, $passwd);
-            my $e = $p->passwd($entry);
+            my $safe_password = $profile->{$type . '_passwd'};
+
+            # well.. this is a fine mess we've gotten ourselves into..
+            if ($safe_password eq 'KEYRING') {
+                $safe_password = keyring($type,$type,$type);
+            }
+
+            my $mod = load_module $file, $profile->{$file}, $safe_password;
+            my $e = $mod->passwd($profile->{$entry});
             return $e if $e;
         }
     }
 }
+

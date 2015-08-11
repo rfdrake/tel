@@ -41,7 +41,7 @@ sub passwd {
     my $self = shift;
     my $entry = shift;
 
-    return '';
+    return;
 }
 
 1;

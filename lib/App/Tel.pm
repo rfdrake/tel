@@ -36,8 +36,7 @@ under the same terms as Perl itself.
 =cut
 
 use Expect qw( exp_continue );
-use IO::Stty;
-use POSIX qw(:sys_wait_h :unistd_h); # For WNOHANG and isatty
+use POSIX qw(:sys_wait_h :unistd_h); # For WNOHANG
 use Hash::Merge::Simple qw (merge);
 use Module::Load;
 use App::Tel::HostRange qw (check_hostrange);
@@ -401,37 +400,6 @@ sub _stty_rows {
     warn $@ if ($@);
 }
 
-sub _input_password {
-    my $prompt = shift;
-    $prompt ||= '';
-    die 'STDIN not a tty' if (!POSIX::isatty(\*STDIN));
-    my $old_mode=IO::Stty::stty(\*STDIN,'-g');
-    print "Enter password for $prompt: ";
-    IO::Stty::stty(\*STDIN,'-echo');
-    chomp(my $password=<STDIN>);
-    IO::Stty::stty(\*STDIN,$old_mode);
-    return $password;
-}
-
-# just examples for keyring and keepass
-sub _keyring {
-    my $user = shift;
-    my $domain = shift;
-    my $group = shift;
-
-    # TODO: needs to warn on some kind of failure?
-    eval {
-        load Passwd::Keyring::Auto, 'get_keyring';
-        my $keyring = get_keyring(app=>"tel script", group=>$group);
-        my $pass = $keyring->get_password($user, $domain);
-        if (!$pass) {
-            $pass = _input_password($domain);
-            $keyring->set_password($user, $pass, $domain);
-        }
-        return $pass;
-    };
-}
-
 =head2 password
 
     my $password = $self->password;
@@ -476,12 +444,12 @@ sub password {
     # for profile name and then save as profile name. If they want to be
     # explicit they should specify the password format as KEYRING or
     # something.. I dunno.
-    _keyring($profile->{user}, $profile->{profile_name}, $profile->{profile_name});
+    App::Tel::Passwd::keyring($profile->{user}, $profile->{profile_name}, $profile->{profile_name});
 
     # if they make it here and still don't have a password then none was
     # defined anywhere and we probably should prompt for one.  Consider
     # turning off echo then normal read.
-    return _input_password($router);
+    return App::Tel::Passwd::input_password($router);
 }
 
 sub _winch_handler {
