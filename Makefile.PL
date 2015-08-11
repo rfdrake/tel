@@ -6,13 +6,13 @@ all_from       'lib/App/Tel.pm';
 requires       'Hash::Merge::Simple'  => '0.0';
 requires       'Expect'  => '0.0';
 requires       'IO::Stty'  => '0.0';
+requires       'Time::HiRes';             # core
 
-recommends     'Term::ANSIColor';
+recommends     'Term::ANSIColor';         # core
 recommends     'Term::ReadKey';
 recommends     'File::KeePass';
 recommends     'Crypt::PWSafe3';
 recommends     'Passwd::Keyring::Auto';
-recommends     'Time::HiRes';
 recommends     'NetAddr::IP';
 
 install_script  'bin/tel';
