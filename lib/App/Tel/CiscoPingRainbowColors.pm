@@ -4,8 +4,13 @@ use Term::ANSIColor;
 use strict;
 use warnings;
 
-our $VERSION = '0.1';
+=head2 new
 
+    my $color = App::Tel::CiscoPingRainbowColors->new;
+
+New color object..
+
+=cut
 
 sub new {
     my $proto = shift;
@@ -17,10 +22,19 @@ sub new {
     }, $class);
 }
 
-sub next_color {
+sub _next_color {
     my $self = shift;
     return colored(shift, $App::Tel::ColorObject::colors[$self->{current_color}++ % scalar(@App::Tel::ColorObject::colors)]);
 }
+
+=head2 colorize
+
+    my $output = $self->colorize($input);
+
+Given a line of text from a cisco router, this will try to colorize it.
+
+=cut
+
 
 sub colorize {
     my $self = shift;
@@ -34,7 +48,7 @@ sub colorize {
     }
 
     if ($self->{ping}) {
-            s/(\!)/$self->next_color($1)/eg;
+            s/(\!)/$self->_next_color($1)/eg;
             s/(\.)/colored('.', 'red')/eg;
         if (/Success rate is/) {
             $self->{ping}=0;

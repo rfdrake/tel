@@ -34,8 +34,8 @@ namespace.
 sub load_module {
     my ($type, $file, $passwd) = @_;
     # we will accept just the argument name if need be.
-    $type =~ s/_(:?file|entry|pass)//i;
     no warnings 'uninitialized';
+    $type =~ s/_(:?file|entry|pass)//i;
     my $mod = 'App::Tel::Passwd::'. $mapping->{lc($type)};
     my $load = eval {
         Module::Load::load $mod;

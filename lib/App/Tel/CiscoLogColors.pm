@@ -8,6 +8,14 @@ use Term::ANSIColor;
 use strict;
 use warnings;
 
+=head2 colorize
+
+    my $output = $self->colorize($input);
+
+colors a line of input
+
+=cut
+
 sub colorize {
     my $self = shift;
     $_ = shift;
