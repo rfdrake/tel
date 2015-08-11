@@ -13,11 +13,13 @@ App::Tel::CiscoColors - Colors for show interface and other commands
 =cut
 
 sub _c {
-    return $_[0] if ($_[0] =~ /\D/);
-    if ($_[0] > 0) {
-        return colored($_[0], 'red');
+    # if not a number then return the original text
+    my $val = shift;
+    return $val if ($val =~ /\D/);
+    if ($val > 0) {
+        return colored($val, 'red');
     }
-    return colored($_[0], 'green');
+    return colored($val, 'green');
 }
 
 
@@ -156,7 +158,7 @@ sub colorize {
         '(\d+) lost carrier, (\d+) no carrier',
     );
 
-    # the rest of show interface
+    # the rest of show interface is in this eval
     eval $regexp; ## no critic
     return $_;
 }

@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 use Test::More;
-plan tests => 5;
+plan tests => 6;
 
 use App::Tel::ColorObject;
 ok(scalar(@App::Tel::ColorObject::colors) > 0, 'available colors > zero?');
@@ -26,4 +26,10 @@ is($t, $o, 'cisco scm phy color match');
 $t = App::Tel::CiscoColors->new->colorize('Vlan55 is down, line protocol is down');
 $o = "\e[35mVlan55\e[0m is \e[31mdown\e[0m, line protocol is \e[31mdown\e[0m";
 is($t, $o, 'Interface name coloring works');
+
+# this one is special because _c needs to return the "no buffer" text without
+# modification
+$t = App::Tel::CiscoColors->new->colorize('0 packets input, 0 bytes, 0 no buffer');
+$o = "0 packets input, 0 bytes, \e[32m0\e[0m no buffer";
+is($t, $o, 'Interface buffer match works');
 
