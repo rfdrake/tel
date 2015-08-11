@@ -1,6 +1,8 @@
 app-tel (0.2015-06) unstable; urgency=medium
 
   * added support for PWSafe3 password safes
+  * changed keyring support slightly.  You may be prompted once to re-enter
+    your passphrase if you're storing your keepass passphrase in the keyring.
 
  -- Robert Drake <rdrake@cpan.org>  Mon, 10 Aug 2015 17:32:41 -0400
 
