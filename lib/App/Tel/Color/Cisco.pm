@@ -1,12 +1,12 @@
-package App::Tel::CiscoColors;
-use parent 'App::Tel::ColorObject';
+package App::Tel::Color::Cisco;
+use parent 'App::Tel::Color::Base';
 use Term::ANSIColor;
 use strict;
 use warnings;
 
 =head1 NAME
 
-App::Tel::CiscoColors - Colors for show interface and other commands
+App::Tel::Cisco - Colors for show interface and other commands
 
 =head2 METHODS
 

@@ -1,5 +1,5 @@
-package App::Tel::CiscoPingRainbowColors;
-use parent 'App::Tel::ColorObject';
+package App::Tel::Color::CiscoPingRainbow;
+use parent 'App::Tel::Color::Base';
 use Term::ANSIColor;
 use strict;
 use warnings;

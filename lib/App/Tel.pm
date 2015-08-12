@@ -7,6 +7,7 @@ use Hash::Merge::Simple qw (merge);
 use Module::Load;
 use App::Tel::HostRange qw (check_hostrange);
 use App::Tel::Passwd;
+use App::Tel::Color;
 use Time::HiRes qw ( sleep );
 use v5.10;
 
@@ -157,35 +158,6 @@ sub expect {
     }
 }
 
-=head2 load_syntax
-
-   $self->load_syntax('Cisco');
-
-This attempts to load syntax highlighting modules.  In the above example,
-Cisco would append Colors to the end and get CiscoColors.pm.  If it can't find
-the module it just won't load it.
-
-Multiple files can be chain loaded by using plus:
-
-    $self->load_syntax('Default+Cisco');
-
-=cut
-
-sub load_syntax {
-    my $self = shift;
-    for(split(/\+/, shift)) {
-        my $module = 'App::Tel::'.$_.'Colors';
-
-        eval {
-            Module::Load::load $module;
-            push(@{$self->{colors}}, $module->new);
-        };
-        if ($@) {
-            warn $@ if ($self->{opts}->{d});
-        }
-    }
-}
-
 =head2 load_config
 
 Loads the config from /etc/telrc, /usr/local/etc/telrc, $ENV{HOME}/.telrc2, or
@@ -216,9 +188,9 @@ sub load_config {
         warn "No configuration files loaded. You may need to run mktelrc.";
     }
 
-    # load global syntax things
+    # load global syntax highlighting things if found
     for(@{$config->{syntax}}) {
-        $self->load_syntax($_);
+        App::Tel::Color::load_syntax($_,$self->{opts}->{d});
     }
     return $config;
 }
@@ -403,7 +375,7 @@ sub profile {
         }
         # load syntax highlight
         if ($profile->{syntax}) {
-            $self->load_syntax($profile->{syntax});
+            App::Tel::Color::load_syntax($profile->{syntax},$self->{opts}->{d});
         }
         $profile->{profile_name}=$_;
     }

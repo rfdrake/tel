@@ -114,7 +114,6 @@ sub load_from_profile {
             my $entry = $type . '_entry';
             my $safe_password = $profile->{$type . '_passwd'};
 
-            # well.. this is a fine mess we've gotten ourselves into..
             if ($safe_password eq 'KEYRING') {
                 my $n = $mapping->{$type};
                 $safe_password = keyring($n,$n,$n);

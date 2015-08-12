@@ -1,7 +1,15 @@
 use strict;
 use warnings;
-use Test::More;
-plan tests => 6;
+use Test::Most;
+plan tests => 8;
+
+use App::Tel::Color qw ( load_syntax );
+
+warning_is { load_syntax('Test_Syntax_Failure', 0) } undef,
+    'load_syntax will not warn on loading failure with debugging off';
+
+warning_like { load_syntax('Test_Syntax_Failure', 1) } qr#Can't locate App/Tel/Color/Test_Syntax_Failure.pm in \@INC#,
+    'load_syntax gives warning on syntax loading failure (with debugging on)';
 
 use App::Tel::ColorObject;
 ok(scalar(@App::Tel::ColorObject::colors) > 0, 'available colors > zero?');

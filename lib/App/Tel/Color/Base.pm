@@ -1,8 +1,8 @@
-package App::Tel::ColorObject;
+package App::Tel::Color::Base;
 
 =head1 name
 
-App::Tel::ColorObject - parent stub and examples for Color modules
+App::Tel::Color::Base - parent stub and examples for Color modules
 
 =cut
 
@@ -31,7 +31,7 @@ if ($Term::ANSIColor::VERSION >= 3.00) {
 
 =head2 new
 
-    my $colorobject = new App::Tel::ColorObject;
+    my $colorobject = new App::Tel::Base;
 
 Initializes a new colorobject.
 

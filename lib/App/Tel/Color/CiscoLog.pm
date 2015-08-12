@@ -2,8 +2,8 @@
 # what's important and what isn't in a log, so you'll want to highlight lines
 # differently.
 
-package App::Tel::CiscoLogColors;
-use parent 'App::Tel::ColorObject';
+package App::Tel::Color::CiscoLog;
+use parent 'App::Tel::Color::Base';
 use Term::ANSIColor;
 use strict;
 use warnings;
