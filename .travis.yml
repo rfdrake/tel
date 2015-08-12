@@ -1,25 +1,38 @@
 language: perl
 perl:
     - "blead"
+    - "dev"
     - "5.20"
     - "5.18"
     - "5.16"
     - "5.14"
+
+matrix:
+  include:
+    - perl: 5.18
+      env: COVERAGE=1   # enables coverage+coveralls reporting
+  allow_failures:
+    - perl: blead       # ignore failures for blead perl
+    - perl: dev         # ignore failures for dev perl
+sudo: false             # faster builds as long as you don't need sudo access
 
 before_install:
      - git clone git://github.com/haarg/perl-travis-helper
      - source perl-travis-helper/init
      - build-perl
      - perl -V
+     - build-dist
+     - cd $BUILD_DIR             # $BUILD_DIR is set by the build-dist command
 
 install:
-     - export RELEASE_TESTING=1 AUTOMATED_TESTING=1 AUTHOR_TESTING=1 HARNESS_OPTIONS=c HARNESS_TIMER=1
-     - cpanm --quiet --notest Devel::Cover::Report::Coveralls
-     - cpanm --quiet --notest --installdeps .
+    - cpan-install --deps       # installs prereqs, including recommends
+    - cpan-install --coverage   # installs converage prereqs, if enabled
+
+before_script:
+    - coverage-setup
 
 script:
-    - PERL5OPT=-MDevel::Cover=-coverage,statement,branch,condition,path,subroutine prove -lrsv t
-    - cover
+    - prove -l -j$(test-jobs) $(test-files)   # parallel testing
 
 after_success:
-    - cover -report coveralls
+    - coverage-report
