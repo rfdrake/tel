@@ -22,15 +22,6 @@ BEGIN {
 
 App::Tel::HostRange - Support for HostRanges
 
-=head1 VERSION
-
-0.2015_02
-
-=cut
-
-our $VERSION = eval  { 0.2015_02 };
-
-
 =head1 SYNOPSIS
 
     if (check_hostrange($_, $host));
