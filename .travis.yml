@@ -6,6 +6,8 @@ perl:
     - "5.18"
     - "5.16"
     - "5.14"
+    - "5.12"
+    - "5.10"
 
 matrix:
   include:
@@ -17,22 +19,4 @@ matrix:
 sudo: false             # faster builds as long as you don't need sudo access
 
 before_install:
-     - git clone git://github.com/haarg/perl-travis-helper
-     - source perl-travis-helper/init
-     - build-perl
-     - perl -V
-     - build-dist
-     - cd $BUILD_DIR             # $BUILD_DIR is set by the build-dist command
-
-install:
-    - cpan-install --deps       # installs prereqs, including recommends
-    - cpan-install --coverage   # installs converage prereqs, if enabled
-
-before_script:
-    - coverage-setup
-
-script:
-    - prove -l -j$(test-jobs) $(test-files)   # parallel testing
-
-after_success:
-    - coverage-report
+     - eval $(curl https://travis-perl.github.io/init) --auto
