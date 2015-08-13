@@ -36,7 +36,7 @@ sub new {
     };
 
     if ($@) {
-        carp $@ if (0);
+        carp $@ if ($ENV{PERL_TRAVIS});
         return;
     }
 
@@ -46,7 +46,7 @@ sub new {
     # load failure on bad password or bad filename
     my $k = eval { $self->{keepass}->load_db($file, $passwd); };
     if ($@) {
-        carp $@ if (0);
+        carp $@ if ($ENV{PERL_TRAVIS});
         return;
     }
     $k->unlock;

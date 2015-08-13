@@ -9,6 +9,9 @@ perl:
     - "5.12"
     - "5.10"
 
+env:
+    - PERL_TRAVIS=1
+    - RELEASE_TESTING=1
 matrix:
   include:
     - perl: 5.18
