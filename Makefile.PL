@@ -10,10 +10,13 @@ requires       'Time::HiRes';             # core
 
 recommends     'Term::ANSIColor';         # core
 recommends     'Term::ReadKey';
-recommends     'File::KeePass';
 recommends     'Crypt::PWSafe3';
 recommends     'Passwd::Keyring::Auto';
 recommends     'NetAddr::IP';
+recommends     'File::KeePass';
+recommends     'XML::Parser';             # required for File::KeePass, it's not listed as a dependency there
+recommends     'Compress::Raw::Zlib';     # required for File::KeePass, it's not listed as a dependency there
+
 
 install_script  'bin/tel';
 install_script  'bin/mktelrc';
