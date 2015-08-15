@@ -12,7 +12,7 @@ use Carp;
 use Module::Load;
 use parent 'App::Tel::Passwd::Base';
 
-our $debug = 0;
+our $_debug = 0;
 
 =head1 METHODS
 
@@ -45,7 +45,7 @@ sub new {
     };
 
     if ($@) {
-        carp $@ if ($debug);
+        carp $@ if ($_debug);
         return;
     }
     return bless( $self, $class );

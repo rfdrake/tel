@@ -12,7 +12,7 @@ use Module::Load;
 use Carp;
 use parent 'App::Tel::Passwd::Base';
 
-our $debug = 0;
+our $_debug = 0;
 
 =head1 METHODS
 
@@ -38,7 +38,7 @@ sub new {
     };
 
     if ($@) {
-        carp $@ if ($debug);
+        carp $@ if ($_debug);
         return;
     }
 
@@ -48,7 +48,7 @@ sub new {
     # load failure on bad password or bad filename
     my $k = eval { $self->{keepass}->load_db($file, $passwd); };
     if ($@) {
-        carp $@ if ($debug);
+        carp $@ if ($_debug);
         return;
     }
     $k->unlock;
