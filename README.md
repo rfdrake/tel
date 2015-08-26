@@ -1,4 +1,6 @@
-# Tel: A login script for routers and other devices
+# Tel: Login script for routers and other devices
+
+[![Build Status](https://travis-ci.org/rfdrake/tel.svg?branch=master)](https://travis-ci.org/rfdrake/tel)
 
 # What it does
 
@@ -79,7 +81,7 @@ don't want to update each person’s home directory each time a change is made t
 * Per-user configs are stored in $HOME/.telrc2
 
 # More Features
-Please read the Commands.md file for an in-depth command list, with examples.
+Please read the [COMMANDS] file for an in-depth command list, with examples.
 
 # Setup
 
@@ -94,8 +96,7 @@ running.  Here is the easy route if you're running a debian-based OS:
 
     sudo apt-get install libmodule-install-perl libtest-most-perl libhash-merge-simple-perl libexpect-perl libio-stty-perl make
 
-Once you've done that I would suggest running the usual build commands to
-handle the script installation:
+Now you can run the usual build commands to install:
 
 1. perl Makefile.PL
 2. make
@@ -104,7 +105,9 @@ handle the script installation:
 A far easier way to install is to use cpanminus if you're
 comfortable with it, now that the app is on CPAN:
 
-    cpanm App::Tel
+1. curl -L https://cpanmin.us | perl - App::cpanminus
+
+2. cpanm App::Tel
 
 When you've installed and are ready to use the app, you can instruct your users
 to run "mktelrc".  This will prompt them for the username and password they use
