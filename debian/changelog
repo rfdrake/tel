@@ -1,3 +1,10 @@
+app-tel (0.2015.08) unstable; urgency=medium
+
+  * You can now use the -x command line argument multiple times to run
+    multiple script files on a device
+
+ -- Robert Drake <rdrake@cpan.org>  Tue, 08 Sep 2015 00:45:50 -0400
+
 app-tel (0.2015.07) unstable; urgency=medium
 
   * bump because color tests were broken (not sure why make test was passing here)

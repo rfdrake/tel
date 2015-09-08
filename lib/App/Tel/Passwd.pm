@@ -17,10 +17,7 @@ App::Tel::Passwd - Methods for managing App::Tel::Passwd:: modules
 
 =cut
 
-my $mapping = {
-    'keepass' => 'KeePass',
-    'pwsafe' => 'PWSafe',
-};
+my $plugins = [ 'KeePass', 'PWSafe' ];
 
 =head2 load_module
 
@@ -36,7 +33,7 @@ sub load_module {
     # we will accept just the argument name if need be.
     no warnings 'uninitialized';
     $type =~ s/_(:?file|entry|pass)//i;
-    my $mod = 'App::Tel::Passwd::'. $mapping->{lc($type)};
+    my $mod = 'App::Tel::Passwd::'. $type;
     my $load = eval {
         Module::Load::load $mod;
         $mod->new($file, $passwd);
@@ -108,15 +105,15 @@ job done for right now.
 sub load_from_profile {
     my $profile = shift;
 
-    foreach my $type (keys %$mapping) {
+    foreach my $plugin (@$plugins) {
+        my $type = lc +(ref($plugin) =~ /::(\w+)$/)[0];
         if (defined($profile->{$type .'_file'})) {
             my $file = $type . '_file';
             my $entry = $type . '_entry';
             my $safe_password = $profile->{$type . '_passwd'};
 
             if ($safe_password eq 'KEYRING') {
-                my $n = $mapping->{$type};
-                $safe_password = keyring($n,$n,$n);
+                $safe_password = keyring($type,$type,$type);
             }
 
             my $mod = load_module $file, $profile->{$file}, $safe_password;
