@@ -3,6 +3,7 @@
 use strict;
 use warnings;
 use App::Tel;
+use Getopt::Long qw (:config pass_through);
 use Getopt::Std;
 use Pod::Usage;
 use v5.10;
@@ -55,7 +56,8 @@ Example: tel -d gw1-my-device
 
 =item -x
 
-Runs a script file, which is a list of commands for the device.
+Runs a script file, which is a list of commands for the device.  Can be
+specified multiple times to run multiple scripts.
 
 Example: tel -x changes.txt gw1-my-device
 
@@ -105,16 +107,17 @@ sub main {
     $self->{config} = $self->load_config();
 
     my %opts;
-    getopts('vhldx:a:c:t:m:p:s:', \%opts);
+    GetOptions("xcript=s@" => \$opts{x});   # scripts to run
+    getopts('vhlda:c:t:m:p:s:', \%opts);
 
     $self->{timeout} = $opts{t} ? $opts{t} : 90;
     $self->{opts} = \%opts;
 
     if ($opts{v}) {
-        print "tel version " . $App::Tel::VERSION . "\n";
+        VERSION_MESSAGE();
     }
 
-    die pod2usage( -verbose => 1 ) if ($opts{h});
+    die HELP_MESSAGE() if ($opts{h});
     die pod2usage() if (!scalar @ARGV && !scalar keys %opts);
 
     for (@ARGV) {
@@ -129,6 +132,26 @@ sub main {
             $self->disconnect();
         }
     }
+}
+
+=head2 HELP_MESSAGE
+
+Boilerplate routine for Getopt::Std
+
+=cut
+
+sub HELP_MESSAGE {
+    pod2usage( -verbose => 1 );
+}
+
+=head2 VERSION_MESSAGE
+
+Boilerplate routine for Getopt::Std
+
+=cut
+
+sub VERSION_MESSAGE {
+    say "tel version " . $App::Tel::VERSION;
 }
 
 1;

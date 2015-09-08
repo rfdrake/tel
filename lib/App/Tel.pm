@@ -1011,9 +1011,11 @@ sub control_loop {
     @args = split(/;/, $opts->{c}) if ($opts->{c});
 
     if ($opts->{x}) {
-        open(my $X, '<', $opts->{x}) || die "Can't open file $opts->{x}\n";
-        @args = <$X>;
-        close $X;
+        for (@$opts->{x}) {
+            open(my $X, '<', $_) || die "Can't open file $_\n";
+            push(@args,<$X>);
+            close $X;
+        }
     }
 
     if (@args) {
