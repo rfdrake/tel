@@ -88,6 +88,7 @@ sub new {
         'enabled'       => 0,
         'title_stack'   => 0,
         'log_stdout'    => 1,
+        'profile'       => {},
     };
 
     bless($self, 'App::Tel');
@@ -1011,7 +1012,7 @@ sub control_loop {
     @args = split(/;/, $opts->{c}) if ($opts->{c});
 
     if ($opts->{x}) {
-        for (@$opts->{x}) {
+        for (@{$opts->{x}}) {
             open(my $X, '<', $_) || die "Can't open file $_\n";
             push(@args,<$X>);
             close $X;
