@@ -10,7 +10,6 @@ use strict;
 use warnings;
 use Carp;
 use Module::Load;
-use parent 'App::Tel::Passwd::Base';
 
 our $_debug = 0;
 
@@ -18,7 +17,7 @@ our $_debug = 0;
 
 =head2 new
 
-    my $passwd = App::Tel::Passwd::PWSafe->new( $filename, $password );
+    my $passwd = App::Tel::Passwd::PWSafe->new( file => $filename, passwd => $password );
 
 Initializes a new passwd object.  This will return a Passwd::PWSafe Object if the module
 exists and return undef if it doesn't.
@@ -29,24 +28,25 @@ sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
 
-    my $file = shift;
-    my $passwd = shift;
-    my $self = {};
+    my %args = @_;
+    my $self = { debug => $_debug,
+                 %args
+    };
 
     # unknown or non-existant file returns undef.  Crypt::PWSafe3 will
     # otherwise attempt to generate a new safe with this filename.
-    if (!defined($file) || ! -r $file ) {
-        return;
+    if (!defined($self->{file}) || ! -r $self->{file} ) {
+        $self->{file} ||= '<undefined>';
+        croak "$class: Unknown file " . $self->{file};
     }
 
     $self->{vault} = eval {
         load Crypt::PWSafe3;
-        return Crypt::PWSafe3->new( file => $file, password => $passwd );
+        return Crypt::PWSafe3->new( file => $self->{file}, password => $self->{passwd} );
     };
 
     if ($@) {
-        carp $@ if ($_debug);
-        return;
+        croak $@;
     }
     return bless( $self, $class );
 }

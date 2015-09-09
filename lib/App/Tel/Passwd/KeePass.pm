@@ -10,7 +10,6 @@ use strict;
 use warnings;
 use Module::Load;
 use Carp;
-use parent 'App::Tel::Passwd::Base';
 
 our $_debug = 0;
 
@@ -18,7 +17,7 @@ our $_debug = 0;
 
 =head2 new
 
-    my $passwd = App::Tel::Passwd::KeePass->new( $filename, $password );
+    my $passwd = App::Tel::Passwd::KeePass->new( file => $filename, passwd => $password );
 
 Initializes a new passwdobject.  This will return a Passwd::KeePass Object if the module
 exists and return undef if it doesn't.
@@ -30,7 +29,16 @@ Requires filename and password for the file.
 sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
-    my $self = {};
+    my %args = @_;
+    my $self = { debug => $_debug,
+                 %args
+    };
+
+    if (!defined($self->{file}) || ! -r $self->{file} ) {
+        $self->{file} ||= '<undefined>';
+        croak "$class: Unknown file $self->{file}";
+    }
+
 
     $self->{keepass} = eval {
         load File::KeePass;
@@ -38,18 +46,13 @@ sub new {
     };
 
     if ($@) {
-        carp $@ if ($_debug);
-        return;
+        croak $@;
     }
 
-    my $file = shift;
-    my $passwd = shift;
-
     # load failure on bad password or bad filename
-    my $k = eval { $self->{keepass}->load_db($file, $passwd); };
+    my $k = eval { $self->{keepass}->load_db($self->{file}, $self->{passwd}); };
     if ($@) {
-        carp $@ if ($_debug);
-        return;
+        croak $@;
     }
     $k->unlock;
     $self->{k} = $k;

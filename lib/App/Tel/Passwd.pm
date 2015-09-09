@@ -21,7 +21,7 @@ my $plugins = [ 'KeePass', 'PWSafe' ];
 
 =head2 load_module
 
-    my $name = App::Tel::Passwd::load_module($password_module);
+    my $name = App::Tel::Passwd::load_module($password_module, $file, $passwd);
 
 Loads the module for the specified password store type.  Returns the module's
 namespace.
@@ -30,13 +30,11 @@ namespace.
 
 sub load_module {
     my ($type, $file, $passwd) = @_;
-    # we will accept just the argument name if need be.
     no warnings 'uninitialized';
-    $type =~ s/_(:?file|entry|pass)//i;
     my $mod = 'App::Tel::Passwd::'. $type;
     my $load = eval {
         Module::Load::load $mod;
-        $mod->new($file, $passwd);
+        $mod->new(file => $file, passwd => $passwd);
     };
     croak "Something went wrong with our load of passwd module $type: $@" if ($@);
     return $load;
@@ -106,7 +104,7 @@ sub load_from_profile {
     my $profile = shift;
 
     foreach my $plugin (@$plugins) {
-        my $type = lc +(ref($plugin) =~ /::(\w+)$/)[0];
+        my $type = lc($plugin);
         if (defined($profile->{$type .'_file'})) {
             my $file = $type . '_file';
             my $entry = $type . '_entry';
@@ -116,7 +114,7 @@ sub load_from_profile {
                 $safe_password = keyring($type,$type,$type);
             }
 
-            my $mod = load_module $file, $profile->{$file}, $safe_password;
+            my $mod = load_module $plugin, $profile->{$file}, $safe_password;
             my $e = $mod->passwd($profile->{$entry});
             return $e if $e;
         }
