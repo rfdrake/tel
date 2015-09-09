@@ -36,7 +36,7 @@ sub new {
 
     if (!defined($self->{file}) || ! -r $self->{file} ) {
         $self->{file} ||= '<undefined>';
-        croak "$class: Unknown file $self->{file}";
+        croak "$class: Can't read file $self->{file}";
     }
 
 

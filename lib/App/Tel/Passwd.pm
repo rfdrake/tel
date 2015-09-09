@@ -36,7 +36,7 @@ sub load_module {
         Module::Load::load $mod;
         $mod->new(file => $file, passwd => $passwd);
     };
-    croak "Something went wrong with our load of passwd module $type: $@" if ($@);
+    croak "Something went wrong with our load of passwd module $type:\n$@" if ($@);
     return $load;
 }
 
