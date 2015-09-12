@@ -168,7 +168,41 @@ specify it here
 
     keepass_passwd => $ENV{KEEPASSPASSWORD},
 
-### storing keepass or password safe password in the keyring
+## [Pass] Password Store
+
+This works a bit differently from KeePass and PWSafe support.  It only
+requires a safe file and a password.
+
+### pass file
+
+If you set this argument then it will attempt to get the device password out
+of the gpg file.  This doesn't need to be a true "pass" password store, it can
+be a symmetric encrypted file if you want.  It will just use the first line
+from the file as the device password.
+
+If the directory isn't absolute it assumes a password-store and uses
+$HOME/.password-store/<dir> as the location.  Alternatively, if you have the
+PASSWORD_STORE_DIR environment variable set this will override the default and
+it will look in that location for the file.
+
+If you don't include a ".gpg" extension then one is added to the end
+automatically.
+
+Examples:
+
+    pass_file => 'router/password.gpg',
+    pass_file => 'router_password',         # would change to $HOME/.password-store/router_password.gpg
+    pass_file => '/tmp/file.gpg',           # would not be modified
+
+### pass passwd
+
+Specifies the passphrase to decrypt the file
+
+    pass_passwd => 'verysafe',
+    pass_passwd => $ENV{SECRET_ENVIRONMENT_VARIABLE},
+    pass_passwd => 'KEYRING',
+
+## Storing safe passphrases in the keyring
 
 If you want you can put the keepass password inside your keyring so you won't be
 prompted after you've logged in.  If you've done this you can specify it by
@@ -179,6 +213,10 @@ saying
 or
 
     pwsafe_passwd => 'KEYRING',
+
+or
+
+    pass_passwd => 'KEYRING',
 
 ### On keyring and DBUS
 
@@ -280,3 +318,4 @@ isn't organized by DNS.
 
 1.  scrollback buffer across multiple sessions
 
+[Pass]:     http://www.passwordstore.org/
