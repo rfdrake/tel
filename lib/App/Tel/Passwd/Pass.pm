@@ -8,8 +8,9 @@ App::Tel::Passwd::Pass - Tel Passwd module for Pass
 
 use strict;
 use warnings;
-use IPC::Run;
-use File::Which qw(which);
+use IO::Handle;
+use IO::File;
+use GnuPG::Interface;
 use Carp;
 
 our $_debug = 0;
@@ -21,7 +22,7 @@ preceeding it is a private non-class sub.
 
 =head2 new
 
-    my $passwd = App::Tel::Passwd::Pass->new( $filename, $password );
+    my $passwd = App::Tel::Passwd::Pass->new( file => $filename, passwd => $password );
 
 Initializes a new passwdobject.  This will return a Passwd::Pass Object if the module
 exists and return undef if it doesn't.
@@ -34,15 +35,15 @@ sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
     my %args = @_;
-    $args{file} = __find_password_store($args{file});
 
     my $self = { debug => $_debug,
-                 gpg => which('gpg'),
+                 gpg => '/usr/bin/gpg',
                  %args
     };
+    $self->{file} = __find_password_store($self->{file});
 
-    if (!$self->{gpg}) {
-        croak "$class: gpg not found in system path. Is it installed?";
+    if (! -x $self->{gpg}) {
+        croak "$class: gpg executable not found.";
     }
 
     if (!defined($self->{file}) || ! -r $self->{file} ) {
@@ -50,35 +51,84 @@ sub new {
         croak "$class: Can't read file $self->{file}";
     }
 
-    $self->{password} = __run(program => $self->{gpg}, cmd_args => [ "--passphrase-fd", "0", $self->{file} ], stdin => $passwd);
+    bless( $self, $class );
+    $self->{pass} = $self->_run($self->{gpg}, $args{file}, $self->{passwd});
     # need to detect failed password/etc here and croak on errors
 
-    return bless( $self, $class );
 }
 
-sub __run {
-    my (%args) = @_;
+sub _run {
+    my ($self, $call, $file, $passphrase) = @_;
 
-    my ($stdin, $stdout, $stderr);
-    my @options = qw ( --quiet --no-tty --no-greeting --use-agent );
-    my @cmd = ( $args{program}, @options, @{$args{cmd_args}} );
+    my $gnupg = GnuPG::Interface->new();
+    $gnupg->call($call);
+    $gnupg->options->no_greeting(1);
+    $gnupg->options->quiet(1);
+    $gnupg->options->batch(1);
 
-    my $harness = IPC::Run::start( \@cmd, \$stdin, \$stdout, \$stderr, IPC::Run::timeout(10) );
-    if($args{stdin}) {
-        $stdin .= $args{stdin};
+    # This time we'll catch the standard error for our perusing
+    # as well as passing in the passphrase manually
+    # as well as the status information given by GnuPG
+    my ( $input, $output, $error, $passphrase_fh, $status_fh )
+      = ( IO::Handle->new(),
+          IO::Handle->new(),
+          IO::Handle->new(),
+          IO::Handle->new(),
+          IO::Handle->new(),
+        );
+
+    my $handles = GnuPG::Handles->new( stdin      => $input,
+                                       stdout     => $output,
+                                       stderr     => $error,
+                                       passphrase => $passphrase_fh,
+                                       status     => $status_fh,
+                                     );
+
+    # this time we'll also demonstrate decrypting
+    # a file written to disk
+    # Make sure you "use IO::File" if you use this module!
+    my $cipher_file = IO::File->new( $file );
+
+    # this sets up the communication
+    my $pid = $gnupg->decrypt( handles => $handles );
+
+    # This passes in the passphrase
+    print $passphrase_fh $passphrase;
+    close $passphrase_fh;
+
+    # this passes in the plaintext
+    print $input $_ while <$cipher_file>;
+
+    # this closes the communication channel,
+    # indicating we are done
+    close $input;
+    close $cipher_file;
+
+    my @plaintext    = <$output>;    # reading the output
+    my @error_output = <$error>;     # reading the error
+    my @status_info  = <$status_fh>; # read the status info
+
+    for (@status_info) {
+        croak @error_output if (/BAD_PASSPHRASE|DECRYPTION_FAILED/);
     }
 
-    $harness->pump();
-    $harness->finish();
+    # clean up...
+    close $output;
+    close $error;
+    close $status_fh;
 
-    say STDERR $stderr if $self->{debug};
-    return $stdout;
+    waitpid $pid, 0;  # clean up the finished GnuPG process
+
+    return $plaintext[0];
 }
 
 sub __find_password_store {
     my $file = shift;
 
     return if (!defined($file));
+    if ($file !~ /.gpg$/) {
+        $file .= '.gpg';
+    }
     # if it's an absolute path then treat it as-is.
     return $file if ($file =~ m#^/#);
 
@@ -99,7 +149,7 @@ found.
 =cut
 
 sub passwd {
-    $_[0]->{password};
+    $_[0]->{pass};
 }
 
 1;
