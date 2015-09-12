@@ -14,8 +14,9 @@ recommends     'Term::ANSIColor';         # core
 recommends     'Term::ReadKey';
 recommends     'Crypt::PWSafe3';
 recommends     'File::KeePass';
-recommends     'GnuPG';                   # needed for App::Tel::Passwd::Pass
-recommends     'File::Which';             # needed for App::Tel::Passwd::Pass
+recommends     'GnuPG::Interface';        # needed for App::Tel::Passwd::Pass
+recommends     'IO::Handle'  => '0.0';    # core
+recommends     'IO::File'  => 0.0;        # core
 recommends     'Passwd::Keyring::Auto';
 recommends     'NetAddr::IP';
 recommends     'XML::Parser';             # required for File::KeePass, it's not listed as a dependency there
