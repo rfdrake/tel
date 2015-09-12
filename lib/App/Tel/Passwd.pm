@@ -17,7 +17,7 @@ App::Tel::Passwd - Methods for managing App::Tel::Passwd:: modules
 
 =cut
 
-my $plugins = [ 'KeePass', 'PWSafe' ];
+my $plugins = [ 'KeePass', 'PWSafe', 'Pass' ];
 
 =head2 load_module
 

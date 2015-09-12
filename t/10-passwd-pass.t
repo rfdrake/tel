@@ -4,7 +4,7 @@ use Test::More;
 use Test::Exception;
 use Cwd qw ( abs_path );
 eval 'use GnuPG::Interface; 1' or plan skip_all => 'Optional module GnuPG::Interface required';
-plan tests => 7;
+plan tests => 8;
 
 my $mod = 'Pass';
 my $good_file = 't/pass/Pass.gpg';
@@ -15,6 +15,14 @@ my $good_file = 't/pass/Pass.gpg';
 
 use App::Tel::Passwd;
 lives_ok { App::Tel::Passwd::load_module($mod, abs_path($good_file), 'verysafe' ) } "load_module on $mod works";
+
+my $profile = {
+    'pass_file' => abs_path($good_file),
+    'pass_passwd' => 'verysafe'
+};
+
+my $e = App::Tel::Passwd::load_from_profile($profile);
+is($e,'hello', 'password correct if load_from_profile used without _entry?');
 
 use App::Tel::Passwd::Pass;
 
