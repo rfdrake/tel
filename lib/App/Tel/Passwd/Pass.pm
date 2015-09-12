@@ -52,9 +52,8 @@ sub new {
     }
 
     bless( $self, $class );
-    $self->{pass} = $self->_run($self->{gpg}, $args{file}, $self->{passwd});
-    # need to detect failed password/etc here and croak on errors
-
+    $self->{pass} = $self->_run($self->{gpg}, $self->{file}, $self->{passwd});
+    return $self;
 }
 
 sub _run {
@@ -107,6 +106,7 @@ sub _run {
     my @plaintext    = <$output>;    # reading the output
     my @error_output = <$error>;     # reading the error
     my @status_info  = <$status_fh>; # read the status info
+    chomp(@plaintext);
 
     for (@status_info) {
         croak @error_output if (/BAD_PASSPHRASE|DECRYPTION_FAILED/);
@@ -118,7 +118,6 @@ sub _run {
     close $status_fh;
 
     waitpid $pid, 0;  # clean up the finished GnuPG process
-
     return $plaintext[0];
 }
 

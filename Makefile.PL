@@ -9,6 +9,8 @@ requires       'IO::Stty'  => '0.0';
 requires       'Time::HiRes';             # core
 requires       'Getopt::Std';             # core
 requires       'Getopt::Long';            # core
+requires       'File::Temp';              # core
+requires       'Cwd';                     # core
 
 recommends     'Term::ANSIColor';         # core
 recommends     'Term::ReadKey';
