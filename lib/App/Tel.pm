@@ -8,6 +8,7 @@ use Module::Load;
 use App::Tel::HostRange qw (check_hostrange);
 use App::Tel::Passwd;
 use App::Tel::Color;
+use App::Tel::Macro;
 use Time::HiRes qw ( sleep );
 use v5.10;
 
@@ -1043,28 +1044,6 @@ sub control_loop {
         # we're kinda stuck doing this.
         $self->send("q\b" . $profile->{logoutcmd}. "\r");
     }
-}
-
-=head2 handle_backspace
-
-Handle backspace for routers that use ^H
-
-=cut
-
-sub handle_backspace {
-    ${$_[0]}->send("\b");
-    return 1;
-}
-
-=head2 handle_ctrl_z
-
-Handle ctrl_z for non-cisco boxes
-
-=cut
-
-sub handle_ctrl_z {
-    ${$_[0]}->send("exit\r");
-    return 1;
 }
 
 1;

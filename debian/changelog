@@ -1,8 +1,11 @@
+ -- Robert Drake <rdrake@cpan.org>  Sun, 13 Sep 2015 15:46:05 -0400
+
 app-tel (0.2015.08) unstable; urgency=medium
 
   * You can now use the -x command line argument multiple times to run
     multiple script files on a device
   * Support for http://passwordstore.org
+  * moved handle_backspace and handle_ctrl_z into App::Tel::Macro.pm
 
  -- Robert Drake <rdrake@cpan.org>  Tue, 08 Sep 2015 00:45:50 -0400
 
