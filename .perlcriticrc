@@ -1,7 +1,0 @@
-# allowing these because we need our replacement function to match with the
-# original function in order to replace a CORE routine (sleep) for testing.
-# technically we only need to override this for one place and maybe there is
-# provisions to do this with perlcritic, but we might want subroutine
-# prototypes somewhere else later because they have other uses (they speed up
-# method calls so it's nice for key routines)
-[-Subroutines::ProhibitSubroutinePrototypes]
