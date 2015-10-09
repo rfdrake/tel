@@ -1,4 +1,9 @@
- -- Robert Drake <rdrake@cpan.org>  Sun, 13 Sep 2015 15:46:05 -0400
+app-tel (0.2015.09) unstable; urgency=medium
+
+  * CPAN testers update :)  Fixes bugs with test cases for modules that aren't
+    installed.
+
+ -- Robert Drake <rdrake@cpan.org>  Fri, 09 Oct 2015 01:24:11 -0400
 
 app-tel (0.2015.08) unstable; urgency=medium
 

@@ -10,8 +10,8 @@ use strict;
 use warnings;
 use IO::Handle;
 use IO::File;
-use GnuPG::Interface;
 use Carp;
+use Module::Load;
 
 our $_debug = 0;
 
@@ -37,10 +37,10 @@ sub new {
     my %args = @_;
 
     my $self = { debug => $_debug,
-                 gpg => '/usr/bin/gpg',
                  %args
     };
     $self->{file} = __find_password_store($self->{file});
+    $self->{gpg} ||= ($^O=~/(freebsd|openbsd|netbsd|solaris)/) ? '/usr/local/bin/gpg' : '/usr/bin/gpg';
 
     if (! -x $self->{gpg}) {
         croak "$class: gpg executable not found.";
@@ -51,6 +51,15 @@ sub new {
         croak "$class: Can't read file $self->{file}";
     }
 
+    $self->{gnupg} = eval {
+        load GnuPG::Interface;
+        return GnuPG::Interface->new();
+    };
+
+    if ($@) {
+        croak $@;
+    }
+
     bless( $self, $class );
     $self->{pass} = $self->_run($self->{gpg}, $self->{file}, $self->{passwd});
     return $self;
@@ -59,7 +68,7 @@ sub new {
 sub _run {
     my ($self, $call, $file, $passphrase) = @_;
 
-    my $gnupg = GnuPG::Interface->new();
+    my $gnupg = $self->{gnupg};
     $gnupg->call($call);
     $gnupg->options->no_greeting(1);
     $gnupg->options->quiet(1);
