@@ -192,7 +192,7 @@ sub load_config {
 
     # load global syntax highlighting things if found
     for(@{$config->{syntax}}) {
-        App::Tel::Color::load_syntax($_,$self->{opts}->{d});
+        push(@{$self->{colors}}, App::Tel::Color::load_syntax($_,$self->{opts}->{d}));
     }
     return $config;
 }
@@ -377,7 +377,7 @@ sub profile {
         }
         # load syntax highlight
         if ($profile->{syntax}) {
-            App::Tel::Color::load_syntax($profile->{syntax},$self->{opts}->{d});
+            push(@{$self->{colors}}, App::Tel::Color::load_syntax($profile->{syntax},$self->{opts}->{d}));
         }
         $profile->{profile_name}=$_;
     }
