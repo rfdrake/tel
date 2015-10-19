@@ -32,20 +32,29 @@ Multiple files can be chain loaded by using plus:
 =cut
 
 sub load_syntax {
-    my $ret = [];
     my ($list, $debug) = @_;
-    for(split(/\+/, $list)) {
+    return () if (!defined $list);
+    my @return = ();
+    my @syntax;
+    push(@syntax, $list);
+    if (ref($list) eq 'ARRAY') {
+        @syntax = @$list;
+    }
 
-        eval {
-            my $module = 'App::Tel::Color::'.$_;
-            Module::Load::load $module;
-            push(@$ret, $module->new);
-        };
-        if ($@) {
-            carp $@ if ($debug);
+    foreach my $l (@syntax) {
+        for(split(/\+/, $l)) {
+
+            eval {
+                my $module = 'App::Tel::Color::'.$_;
+                Module::Load::load $module;
+                push(@return, $module->new);
+            };
+            if ($@) {
+                carp $@ if ($debug);
+            }
         }
     }
-    return $ret;
+    return @return;
 }
 
 1;

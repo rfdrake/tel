@@ -17,11 +17,10 @@ colors a line of input
 =cut
 
 sub colorize {
-    my $self = shift;
-    $_ = shift;
-    s/((%SEC-6-IPACCESSLOGS|%SNMP-3-AUTHFAIL|%PFINIT-SP-5-CONFIG_SYNC).*)/sprintf("%s", colored($1, 'green'))/eg;
-    s/((%SYS-5-CONFIG_I|%CONTROLLER-5-UPDOWN).*)/sprintf("%s", colored($1, 'red'))/eg;
-    return $_;
+    my ($self, $text) = @_;
+    $text =~ s/((%SEC-6-IPACCESSLOGS|%SNMP-3-AUTHFAIL|%PFINIT-SP-5-CONFIG_SYNC).*)/sprintf("%s", colored($1, 'green'))/eg;
+    $text =~ s/((%SYS-5-CONFIG_I|%CONTROLLER-5-UPDOWN).*)/sprintf("%s", colored($1, 'red'))/eg;
+    return $text;
 }
 
 1;

@@ -37,25 +37,24 @@ Given a line of text from a cisco router, this will try to colorize it.
 
 
 sub colorize {
-    my $self = shift;
-    $_ = shift;
+    my ($self, $text) = @_;
 
     # We need to define a start point in the buffer that the dot regex isn't
     # allowed to search before so that this line and ones before it with
     # dots don't get red dots.
-    if (/Sending \d+, \d+-byte ICMP Echos to/) {
+    if ($text =~ /Sending \d+, \d+-byte ICMP Echos to/) {
         $self->{ping}=1;
     }
 
     if ($self->{ping}) {
-            s/(\!)/$self->_next_color($1)/eg;
-            s/(\.)/colored('.', 'red')/eg;
-        if (/Success rate is/) {
+            $text =~ s/(\!)/$self->_next_color($1)/eg;
+            $text =~ s/(\.)/colored('.', 'red')/eg;
+        if ($text =~ /Success rate is/) {
             $self->{ping}=0;
             $self->{current_color}=0;
         }
     }
-    return $_;
+    return $text;
 }
 
 1;

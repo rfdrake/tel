@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 use Test::Most;
-plan tests => 8;
+plan tests => 11;
 
 use App::Tel::Color qw ( load_syntax );
 
@@ -40,4 +40,10 @@ is($t, $o, 'Interface name coloring works');
 $t = App::Tel::Color::Cisco->new->colorize('0 packets input, 0 bytes, 0 no buffer');
 $o = "0 packets input, 0 bytes, \e[32m0\e[0m no buffer";
 is($t, $o, 'Interface buffer match works');
+
+is(scalar load_syntax(['CiscoLog','Cisco'], 1), 2, 'Can we load two syntax by sending arrayref?');
+
+is(scalar load_syntax(['CiscoLog','Test_Syntax_Failure'], 0), 1, 'valid + invalid should be 1?');
+
+is(scalar load_syntax(['Test_Syntax_Failure','Test_Syntax_Failure'], 0), 0, 'invalid + invalid = 0?');
 

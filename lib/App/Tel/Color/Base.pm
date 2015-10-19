@@ -56,10 +56,9 @@ overridden in all child modules.
 
 
 sub colorize {
-    my $self = shift;
-    $_ = shift;
+    my ($self, $text) = @_;
 
-    return colored($_, 'cyan');
+    return colored($text, 'cyan');
 }
 
 1;

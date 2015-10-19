@@ -36,8 +36,8 @@ sub _crazy {
         my $count = $substring =~ s/(?<!\\)(?!\\)\(.*?\)/%s/g;
 
         my $args;
-        map { $args .= ",_c(\$$_)"; } 1..$count;
-        $evils .= "s/$s/sprintf(\"$substring\"$args)/e;";
+        for (1..$count) { $args .= ",_c(\$$_)"; }
+        $evils .= "\$text =~ s/$s/sprintf(\"$substring\"$args)/e;";
     }
 
     return $evils;
@@ -113,34 +113,33 @@ Given a line of text from a cisco router, this will try to colorize it.
 =cut
 
 sub colorize {
-    my $self = shift;
-    $_ = shift;
+    my ($self, $text) = @_;
 
-    s/(\S+) is (.*), line protocol is (\S+)/sprintf("%s is %s, line protocol is %s", colored($1, 'magenta'),
+    $text =~s/(\S+) is (.*), line protocol is (\S+)/sprintf("%s is %s, line protocol is %s", colored($1, 'magenta'),
             _interface($2), _interface($3))/eg;
 
     # sh cable modem phy
-    s#([a-f0-9\.]+ C\d+/\d+/U\d+\s+\d+\s+)([\d\.]+)(\s+)([\d\.]+)(\s+\!?\d+)([\s\-]+[\d\.]+)(\s+)([\d\.\-]+)#
+    $text =~ s#([a-f0-9\.]+ C\d+/\d+/U\d+\s+\d+\s+)([\d\.]+)(\s+)([\d\.]+)(\s+\!?\d+)([\s\-]+[\d\.]+)(\s+)([\d\.\-]+)#
         sprintf("%s%s%s%s%s%s%s%s", $1, _uspwr($2), $3, _ussnr($4), $5, _dspwr($6), $7, _dssnr($8))#eg;
 
     # more show interface
-    s/Full-duplex/colored('Full-duplex', 'green')/eg;
-    s/Half-duplex/colored('Half-duplex', 'yellow')/eg;
+    $text =~ s/Full-duplex/colored('Full-duplex', 'green')/eg;
+    $text =~ s/Half-duplex/colored('Half-duplex', 'yellow')/eg;
 
     # sh proc cpu
-    s#(\s+\d+\s+\d+\s+\d+\s+\d+\s+)([\d\.]+)(%\s+)([\d\.]+)(%\s+)([\d\.]+)#
+    $text =~ s#(\s+\d+\s+\d+\s+\d+\s+\d+\s+)([\d\.]+)(%\s+)([\d\.]+)(%\s+)([\d\.]+)#
         sprintf("%s%s%s%s%s%s", $1, _cpu($2), $3, _cpu($4), $5, _cpu($6))#eg;
 
     # parts of sh run
-    s/\n(ip route [^\n]+)/sprintf("\n%s", colored($1,'yellow'))/eg;
-    s/\n(ipv6 route [^\n]+)/sprintf("\n%s", colored($1,'yellow'))/eg;
-    s/\n(aaa [^\n]+)/sprintf("\n%s", colored($1,'green'))/eg;
-    s/\n(access-list [^\n]+)/sprintf("\n%s", colored($1,'cyan'))/eg;
-    s/\n(snmp-server [^\n]+)/sprintf("\n%s", colored($1,'bright_white'))/eg;
-    s/\n(tacacs-server [^\n]+)/sprintf("\n%s", colored($1,'magenta'))/eg;
-    s/\n(no tacacs-server [^\n]+)/sprintf("\n%s", colored($1,'magenta'))/eg;
-    s/\n(radius-server [^\n]+)/sprintf("\n%s", colored($1,'magenta'))/eg;
-    s/\n(ntp [^\n]+)/sprintf("\n%s", colored($1,'magenta'))/eg;
+    $text =~ s/\n(ip route [^\n]+)/sprintf("\n%s", colored($1,'yellow'))/eg;
+    $text =~ s/\n(ipv6 route [^\n]+)/sprintf("\n%s", colored($1,'yellow'))/eg;
+    $text =~ s/\n(aaa [^\n]+)/sprintf("\n%s", colored($1,'green'))/eg;
+    $text =~ s/\n(access-list [^\n]+)/sprintf("\n%s", colored($1,'cyan'))/eg;
+    $text =~ s/\n(snmp-server [^\n]+)/sprintf("\n%s", colored($1,'bright_white'))/eg;
+    $text =~ s/\n(tacacs-server [^\n]+)/sprintf("\n%s", colored($1,'magenta'))/eg;
+    $text =~ s/\n(no tacacs-server [^\n]+)/sprintf("\n%s", colored($1,'magenta'))/eg;
+    $text =~ s/\n(radius-server [^\n]+)/sprintf("\n%s", colored($1,'magenta'))/eg;
+    $text =~ s/\n(ntp [^\n]+)/sprintf("\n%s", colored($1,'magenta'))/eg;
 
     my $regexp = _crazy('(\d+) runts, (\d+) giants, (\d+) throttles',
         '(\d+) input errors, (\d+) CRC, (\d+) frame, (\d+) overrun, (\d+) ignored',
@@ -160,7 +159,7 @@ sub colorize {
 
     # the rest of show interface is in this eval
     eval $regexp; ## no critic
-    return $_;
+    return $text;
 }
 
 1;
