@@ -19,11 +19,11 @@ App::Tel - A script for logging into devices
 
 =head1 VERSION
 
-0.201509
+0.201510
 
 =cut
 
-our $VERSION = '0.201509';
+our $VERSION = '0.201510';
 
 
 =head1 SYNOPSIS
@@ -116,7 +116,7 @@ sub disconnect {
     $self->{banners} = undef;
     $self->{methods} = ();
     $self->connected(0);
-    $self->{colors}=();
+    $self->{colors}=[];
     $self->{enabled}=0;
     if ($self->{title_stack} > 0) {
         $self->{title_stack}--;
@@ -191,7 +191,7 @@ sub load_config {
     }
 
     # load global syntax highlighting things if found
-    push(@{$self->{colors}}, App::Tel::Color::load_syntax($config->{syntax},$self->{opts}->{d}));
+    push(@{$self->{colors}}, @{App::Tel::Color::load_syntax($config->{syntax},$self->{opts}->{d})});
     return $config;
 }
 
@@ -374,7 +374,7 @@ sub profile {
             }
         }
         # load syntax highlight
-        push(@{$self->{colors}}, App::Tel::Color::load_syntax($profile->{syntax},$self->{opts}->{d}));
+        push(@{$self->{colors}}, @{App::Tel::Color::load_syntax($profile->{syntax},$self->{opts}->{d})});
         $profile->{profile_name}=$_;
     }
 

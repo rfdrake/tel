@@ -33,8 +33,8 @@ Multiple files can be chain loaded by using plus:
 
 sub load_syntax {
     my ($list, $debug) = @_;
-    return () if (!defined $list);
-    my @return = ();
+    return [] if (!defined $list);
+    my $return = [];
     my @syntax;
     push(@syntax, $list);
     if (ref($list) eq 'ARRAY') {
@@ -47,14 +47,14 @@ sub load_syntax {
             eval {
                 my $module = 'App::Tel::Color::'.$_;
                 Module::Load::load $module;
-                push(@return, $module->new);
+                push(@$return, $module->new);
             };
             if ($@) {
                 carp $@ if ($debug);
             }
         }
     }
-    return @return;
+    return $return;
 }
 
 1;

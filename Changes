@@ -1,3 +1,10 @@
+app-tel (0.2015.09ubuntu1) unstable; urgency=medium
+
+  * fixed problems with loading color modules and added more tests for
+    failures
+
+ -- Robert Drake <rdrake@cpan.org>  Mon, 19 Oct 2015 15:00:17 -0400
+
 app-tel (0.2015.09) unstable; urgency=medium
 
   * CPAN testers update :)  Fixes bugs with test cases for modules that aren't
