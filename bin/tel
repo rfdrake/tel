@@ -98,7 +98,17 @@ installed for sub-second sleep values like 0.5.
 
 Example: tel -s 3 -x myfile.txt gw1-my-devices
 
+=item -v
+
+Print the version information
+
+Example: tel -v
+
 =back
+
+=cut
+
+=head1 SUBROUTINES
 
 =cut
 
@@ -121,19 +131,9 @@ sub main {
     die pod2usage() if (!scalar @ARGV && !scalar keys %opts);
 
     for (@ARGV) {
-        # default profile always loads before anything else.  replace == 1
-        $self->profile('default', 1);
-        $self->hostname($_);
-        $self->login($self->hostname);
-        if ($self->connected) {
-            $self->enable();
-            $self->logging() if ($self->{opts}->{l});
-            $self->control_loop();
-            $self->disconnect();
-        }
+        $self->go($_);
     }
 }
-
 =head2 HELP_MESSAGE
 
 Boilerplate routine for Getopt::Std
@@ -153,5 +153,6 @@ Boilerplate routine for Getopt::Std
 sub VERSION_MESSAGE {
     say "tel version " . $App::Tel::VERSION;
 }
+
 
 1;

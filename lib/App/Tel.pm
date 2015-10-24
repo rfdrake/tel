@@ -96,6 +96,33 @@ sub new {
     return $self;
 }
 
+
+=head2 go
+
+    $self->go('hostname');
+
+Handles all the routines of connecting, enable, looping and disconnection.
+This is the method called by bin/tel for each host.
+
+=cut
+
+sub go {
+    my ($self, $host) = @_;
+
+    # default profile always loads before anything else.  replace == 1
+    $self->profile('default', 1);
+    $self->hostname($_);
+    $self->login($self->hostname);
+    if ($self->connected) {
+        $self->enable();
+        $self->logging() if ($self->{opts}->{l});
+        $self->control_loop();
+        $self->disconnect();
+    }
+
+    return $self;
+}
+
 =head2 disconnect
 
     $self->disconnect($hard_close);
@@ -127,6 +154,8 @@ sub disconnect {
     } else {
         $self->session->soft_close();
     }
+
+    return $self;
 }
 
 
@@ -683,6 +712,7 @@ sub logging {
     $file ||= $self->{hostname};
     unlink ("/tmp/$file.log") if (-f "/tmp/$file.log");
     $self->session->log_file("/tmp/$file.log");
+    return $self;
 }
 
 =head2 interact
@@ -734,6 +764,7 @@ sub interact {
         @{${*$session}{exp_Listen_Group}} = ();
     }
     $session->manual_stty($old_manual_stty_val);
+    return $self;
 }
 
 =head2 interconnect
@@ -949,7 +980,7 @@ sub interconnect {
         }
     }
 
-    return;
+    return $self;
 }
 
 =head2 run_commands
@@ -972,6 +1003,8 @@ sub run_commands {
         $self->expect($self->{timeout},'-re', $self->profile->{prompt});
         sleep($opts->{s}) if ($opts->{s});
     }
+
+    return $self;
 }
 
 =head2 control_loop
@@ -1040,6 +1073,7 @@ sub control_loop {
         # we're kinda stuck doing this.
         $self->send("q\b" . $profile->{logoutcmd}. "\r");
     }
+    return $self;
 }
 
 1;
