@@ -62,6 +62,7 @@ Example:
 ## or use -x to send a script to run
 
 Example:
+
     cat <<EOF>commands.txt
     conf t
      int vlan2
