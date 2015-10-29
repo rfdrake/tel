@@ -16,7 +16,7 @@ App::Tel::Cisco - Colors for show interface and other commands
 sub _c {
     # if not a number then return the original text
     my $val = shift;
-    return $val if ($val =~ /\D/);
+    return $val if (!looks_like_number($val));
     if ($val > 0) {
         return colored($val, 'red');
     }
