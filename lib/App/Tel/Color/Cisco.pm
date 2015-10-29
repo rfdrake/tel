@@ -1,6 +1,7 @@
 package App::Tel::Color::Cisco;
 use parent 'App::Tel::Color::Base';
 use Term::ANSIColor;
+use Scalar::Util qw ( looks_like_number );
 use strict;
 use warnings;
 
@@ -26,8 +27,8 @@ sub _c {
 # not kidding, this will be crazy.
 # it simulates s/blah (\d+) blah/sprintf("blah %s blah", c($1))/e;
 sub _crazy {
+    my $text = shift;
     my @strings = @_;
-    my $evils;
 
     foreach my $s (@strings) {
         my $substring = $s;
@@ -35,12 +36,19 @@ sub _crazy {
         # for \\ (the escape \ before a parenthesis)
         my $count = $substring =~ s/(?<!\\)(?!\\)\(.*?\)/%s/g;
 
-        my $args;
-        for (1..$count) { $args .= ",_c(\$$_)"; }
-        $evils .= "\$text =~ s/$s/sprintf(\"$substring\"$args)/e;";
+        my $args = '';
+        for (1..$count) { $args .= ",_c(\$$_)" }
+
+        my $eval = 'sprintf("'.$substring.'"'.$args.')';
+
+        # in theory this is safer than the old external eval.  The reason
+        # being all the evaluated data is part of the defined strings passed
+        # to the _crazy function.  That means no data coming from a router can
+        # be evaluated.
+        $text =~ s/$s/eval $eval/e;
     }
 
-    return $evils;
+    return $text;
 }
 
 sub _uspwr {
@@ -141,7 +149,8 @@ sub colorize {
     $text =~ s/\n(radius-server [^\n]+)/sprintf("\n%s", colored($1,'magenta'))/eg;
     $text =~ s/\n(ntp [^\n]+)/sprintf("\n%s", colored($1,'magenta'))/eg;
 
-    my $regexp = _crazy('(\d+) runts, (\d+) giants, (\d+) throttles',
+    $text = _crazy($text,
+        '(\d+) runts, (\d+) giants, (\d+) throttles',
         '(\d+) input errors, (\d+) CRC, (\d+) frame, (\d+) overrun, (\d+) ignored',
         '(\d+) input packets with dribble condition detected',
         'Total output drops: (\d+)',
@@ -157,8 +166,6 @@ sub colorize {
         '(\d+) lost carrier, (\d+) no carrier',
     );
 
-    # the rest of show interface is in this eval
-    eval $regexp; ## no critic
     return $text;
 }
 
