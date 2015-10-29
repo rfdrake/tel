@@ -54,21 +54,21 @@ sub _crazy {
 sub _uspwr {
     my $pwr = shift;
     my $color = 'red';
-    if ( $pwr < 30 ) { $color = 'red'; }
-    if ( $pwr >= 30 && $pwr <= 33 ) { $color = 'yellow'; }
-    if ( $pwr >= 33 && $pwr <= 45 ) { $color = 'green'; }
-    if ( $pwr >= 45 && $pwr <= 50 ) { $color = 'yellow'; }
-    if ( $pwr > 50 ) { $color = 'red'; }
+    if    ( $pwr < 30 ) { $color = 'red'; }
+    elsif ( $pwr >= 30 && $pwr <= 33 ) { $color = 'yellow'; }
+    elsif ( $pwr >= 33 && $pwr <= 45 ) { $color = 'green'; }
+    elsif ( $pwr >= 45 && $pwr <= 50 ) { $color = 'yellow'; }
+    elsif ( $pwr > 50 ) { $color = 'red'; }
     return colored($pwr, $color);
 }
 
 sub _ussnr {
-    my $pwr = shift;
+    my $snr = shift;
     my $color = 'red';
-    if ( $pwr < 20 ) { $color = 'red'; }
-    if ( $pwr >= 20 && $pwr <= 25 ) { $color = 'yellow'; };
-    if ( $pwr > 25 ) { $color = 'green'; }
-    return colored($pwr, $color);
+    if    ( $snr < 20 ) { $color = 'red'; }
+    elsif ( $snr >= 20 && $snr <= 25 ) { $color = 'yellow'; }
+    elsif ( $snr > 25 ) { $color = 'green'; }
+    return colored($snr, $color);
 }
 
 sub _dspwr {
@@ -76,22 +76,22 @@ sub _dspwr {
     my $pwr = $input;
     $pwr =~ s/ //g;   # remove all spaces, leaving possible negative sign and value
     my $color = 'red';
-    if ( $pwr < -15 ) { $color = 'red'; }
-    if ( $pwr >= -15 && $pwr <= -9 ) { $color = 'yellow'; }
-    if ( $pwr >= -9 && $pwr <= 9 ) { $color = 'green'; }
-    if ( $pwr >= 9 && $pwr <= 15 ) { $color = 'yellow'; }
-    if ( $pwr > 15 ) { $color = 'red'; }
+    if    ( $pwr < -15 ) { $color = 'red'; }
+    elsif ( $pwr >= -15 && $pwr <= -9 ) { $color = 'yellow'; }
+    elsif ( $pwr >= -9 && $pwr <= 9 ) { $color = 'green'; }
+    elsif ( $pwr >= 9 && $pwr <= 15 ) { $color = 'yellow'; }
+    elsif ( $pwr > 15 ) { $color = 'red'; }
     return colored($input, $color);
 }
 
 sub _dssnr {
-    my $pwr = shift;
+    my $snr = shift;
     my $color = 'red';
-    if ( $pwr eq '-----' ) { $color = 'yellow'; }
-    elsif ( $pwr < 35 ) { $color = 'red'; }
-    elsif ( $pwr >= 35 && $pwr <= 35 ) { $color = 'yellow'; }
-    elsif ( $pwr > 35 ) { $color = 'green'; }
-    return colored($pwr, $color);
+    if ( $snr eq '-----' ) { $color = 'yellow'; }
+    elsif ( $snr < 35 ) { $color = 'red'; }
+    elsif ( $snr >= 35 && $snr <= 35 ) { $color = 'yellow'; }
+    elsif ( $snr > 35 ) { $color = 'green'; }
+    return colored($snr, $color);
 }
 
 sub _cpu {
