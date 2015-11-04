@@ -48,8 +48,8 @@ sub colorize {
     if ($text =~ /Sending \d+, \d+-byte ICMP Echos to/) {
         $self->{ping}=1;
     } elsif ($self->{ping}) {
-            $text =~ s/(\!)/$self->_next_color($1)/eg;
-            $text =~ s/(\.)/colored('.', 'red')/eg;
+        $text =~ s/(\!)/$self->_next_color($1)/eg;
+        $text =~ s/(\.)/colored('.', 'red')/eg;
         if ($text =~ /Success rate is/) {
             $self->{ping}=0;
             $self->{current_color}=0;

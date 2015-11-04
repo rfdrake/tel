@@ -1,6 +1,7 @@
 use strict;
 use warnings;
 use Test::Most;
+use Term::ANSIColor;
 plan tests => 9;
 
 use App::Tel::Color;
@@ -48,10 +49,15 @@ my $o = "Nov 22 21:59:54 EST: \e[31m%SYS-5-CONFIG_I: Configured from console by 
 is($t, $o, 'colorized output match?');
 
 use App::Tel::Color::CiscoPingRainbow;
-$t = App::Tel::Color::CiscoPingRainbow->new->parse('Sending 5, 100-byte ICMP Echos to 1.2.3.4, timeout is 2 seconds:
-!!!!!
-Success rate is 100 percent (5/5), round-trip min/avg/max = 1/1/4 ms');
-$o = "Sending 5, 100-byte ICMP Echos to 1.2.3.4, timeout is 2 seconds:\n\e[32;33;34;35;36;37;92;93;94;95;96;97m!\e[0m\e[33m!\e[0m\e[34m!\e[0m\e[35m!\e[0m\e[36m!\e[0m\nSuccess rate is 100 percent (5/5), round-trip min/avg/max = 1/1/4 ms";
+$t = App::Tel::Color::CiscoPingRainbow->new->parse('Sending 20, 100-byte ICMP Echos to 1.2.3.4, timeout is 2 seconds:
+!!!!!!!!!!!!!....!!!
+Success rate is 100 percent (20/20), round-trip min/avg/max = 1/1/4 ms');
+
+if ($Term::ANSIColor::VERSION >= 3.00) {
+    $o = "Sending 20, 100-byte ICMP Echos to 1.2.3.4, timeout is 2 seconds:\n\e[32;33;34;35;36;37;92;93;94;95;96;97m!\e[0m\e[33m!\e[0m\e[34m!\e[0m\e[35m!\e[0m\e[36m!\e[0m\e[37m!\e[0m\e[92m!\e[0m\e[93m!\e[0m\e[94m!\e[0m\e[95m!\e[0m\e[96m!\e[0m\e[97m!\e[0m\e[32;33;34;35;36;37;92;93;94;95;96;97m!\e[0m\e[31m.\e[0m\e[31m.\e[0m\e[31m.\e[0m\e[31m.\e[0m\e[33m!\e[0m\e[34m!\e[0m\e[35m!\e[0m\nSuccess rate is 100 percent (20/20), round-trip min/avg/max = 1/1/4 ms";
+} else {
+    $o = "Sending 20, 100-byte ICMP Echos to 1.2.3.4, timeout is 2 seconds:\n\e[32;33;34;35;36;37m!\e[0m\e[33m!\e[0m\e[34m!\e[0m\e[35m!\e[0m\e[36m!\e[0m\e[37m!\e[0m\e[32;33;34;35;36;37m!\e[0m\e[33m!\e[0m\e[34m!\e[0m\e[35m!\e[0m\e[36m!\e[0m\e[37m!\e[0m\e[32;33;34;35;36;37m!\e[0m\e[31m.\e[0m\e[31m.\e[0m\e[31m.\e[0m\e[31m.\e[0m\e[33m!\e[0m\e[34m!\e[0m\e[35m!\e[0m\nSuccess rate is 100 percent (20/20), round-trip min/avg/max = 1/1/4 ms";
+}
 is($t, $o, 'pingrainbow output match?');
 
 
