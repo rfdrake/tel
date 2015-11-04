@@ -17,7 +17,7 @@ App::Tel::Color - Methods for managing App::Tel::Color:: modules
 
 =head2 load_syntax
 
-   my $mod = $self->load_syntax('Cisco');
+    $self->load_syntax('Cisco');
 
 This attempts to load syntax highlighting modules.  In the above example,
 Cisco would append Colors to the end and get CiscoColors.pm.  If it can't find
@@ -27,14 +27,13 @@ Returns an arrayref of module references.
 
 Multiple files can be chain loaded by using plus:
 
-    my $ret = $self->load_syntax('Default+Cisco');
+    $self->load_syntax('Default+Cisco');
 
 =cut
 
 sub load_syntax {
-    my ($list, $debug) = @_;
-    return [] if (!defined $list);
-    my $return = [];
+    my ($self, $list, $debug) = @_;
+    return $self if (!defined $list);
     my @syntax;
     push(@syntax, $list);
     if (ref($list) eq 'ARRAY') {
@@ -44,17 +43,51 @@ sub load_syntax {
     foreach my $l (@syntax) {
         for(split(/\+/, $l)) {
 
+            my $module = "App::Tel::Color::$_";
+            next if defined($self->{colors}->{$module});
+
             eval {
-                my $module = 'App::Tel::Color::'.$_;
                 Module::Load::load $module;
-                push(@$return, $module->new);
+                $self->{colors}->{$module}=$module->new;
             };
             if ($@) {
                 carp $@ if ($debug);
             }
         }
     }
-    return $return;
+
+    return $self;
+}
+
+=head2 new
+
+    my $colors = App::Tel::Color->new;
+
+Initializes a color library.  You can load syntax parsers by calling
+load_syntax.
+
+=cut
+
+sub new {
+    bless( {
+        colors => {},
+    }, shift);
+}
+
+=head2 colorize
+
+    my $output = $self->colorize($input);
+
+Calls the parser routine for all the loaded syntax modules.
+
+=cut
+
+sub colorize {
+    my ($self, $input) = @_;
+    while (my ($name, $mod) = each %{$self->{colors}}) {
+        $input = $mod->parse($input);
+    }
+    return $input;
 }
 
 1;

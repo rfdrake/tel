@@ -139,15 +139,17 @@ sub colorize {
         sprintf("%s%s%s%s%s%s", $1, _cpu($2), $3, _cpu($4), $5, _cpu($6))#eg;
 
     # parts of sh run
-    $text =~ s/\n(ip route [^\n]+)/sprintf("\n%s", colored($1,'yellow'))/eg;
-    $text =~ s/\n(ipv6 route [^\n]+)/sprintf("\n%s", colored($1,'yellow'))/eg;
-    $text =~ s/\n(aaa [^\n]+)/sprintf("\n%s", colored($1,'green'))/eg;
-    $text =~ s/\n(access-list [^\n]+)/sprintf("\n%s", colored($1,'cyan'))/eg;
-    $text =~ s/\n(snmp-server [^\n]+)/sprintf("\n%s", colored($1,'bright_white'))/eg;
-    $text =~ s/\n(tacacs-server [^\n]+)/sprintf("\n%s", colored($1,'magenta'))/eg;
-    $text =~ s/\n(no tacacs-server [^\n]+)/sprintf("\n%s", colored($1,'magenta'))/eg;
-    $text =~ s/\n(radius-server [^\n]+)/sprintf("\n%s", colored($1,'magenta'))/eg;
-    $text =~ s/\n(ntp [^\n]+)/sprintf("\n%s", colored($1,'magenta'))/eg;
+    if ($text =~ /^(ip|ipv6) route /) {
+        $text = colored($text, 'yellow');
+    } elsif ($text =~ /^aaa/) {
+        $text = colored($text, 'green');
+    } elsif ($text =~ /^(?:(?:no )?tacacs-server|radius-server|ntp)/) {
+        $text = colored($text, 'magenta');
+    } elsif ($text =~ /^(?:mac )?access-list/) {
+        $text = colored($text, 'cyan');
+    } elsif ($text =~ /^snmp-server/) {
+        $text = colored($text, 'bright_white');
+    }
 
     $text = _crazy($text,
         '(\d+) runts, (\d+) giants, (\d+) throttles',

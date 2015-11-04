@@ -31,7 +31,7 @@ install_script  'bin/tel';
 install_script  'bin/mktelrc';
 
 test_requires q(Test::Most) => 0.25;
-test_requires q(Test::Exception);         # included with Test::Most, but we use it directly in places
+test_requires q(Test::Fatal);
 bugtracker q(https://github.com/rfdrake/tel/issues);
 homepage q(http://search.cpan.org/dist/App-Tel);
 repository q(git://github.com/rfdrake/tel.git);

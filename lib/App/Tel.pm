@@ -90,6 +90,7 @@ sub new {
         'title_stack'   => 0,
         'log_stdout'    => 1,
         'profile'       => {},
+        'colors'        => App::Tel::Color->new,
     };
 
     bless($self, 'App::Tel');
@@ -143,7 +144,7 @@ sub disconnect {
     $self->{banners} = undef;
     $self->{methods} = ();
     $self->connected(0);
-    $self->{colors}=[];
+    $self->{colors}=App::Tel::Color->new;
     $self->{enabled}=0;
     if ($self->{title_stack} > 0) {
         $self->{title_stack}--;
@@ -220,7 +221,7 @@ sub load_config {
     }
 
     # load global syntax highlighting things if found
-    push(@{$self->{colors}}, @{App::Tel::Color::load_syntax($config->{syntax},$self->{opts}->{d})});
+    $self->{colors}->load_syntax($config->{syntax},$self->{opts}->{d});
     return $config;
 }
 
@@ -403,7 +404,7 @@ sub profile {
             }
         }
         # load syntax highlight
-        push(@{$self->{colors}}, @{App::Tel::Color::load_syntax($profile->{syntax},$self->{opts}->{d})});
+        $self->{colors}->load_syntax($profile->{syntax},$self->{opts}->{d});
         $profile->{profile_name}=$_;
     }
 
@@ -889,9 +890,7 @@ sub interconnect {
 
                 # don't bother trying to colorize input from the user
                 if ($read_handle->fileno() != $self->{stdin_fileno}) {
-                    foreach my $color (@{$self->{colors}}) {
-                        ${*$read_handle}{exp_Pty_Buffer} = $color->colorize(${*$read_handle}{exp_Pty_Buffer});
-                    }
+                    ${*$read_handle}{exp_Pty_Buffer} = $self->{colors}->colorize(${*$read_handle}{exp_Pty_Buffer});
                 }
                 # Appease perl -w
                 $nread = 0 unless defined($nread);

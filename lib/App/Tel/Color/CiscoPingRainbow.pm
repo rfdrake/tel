@@ -6,7 +6,7 @@ use warnings;
 
 =head2 new
 
-    my $color = App::Tel::CiscoPingRainbowColors->new;
+    my $color = App::Tel::Color::CiscoPingRainbow->new;
 
 New color object..
 
@@ -16,15 +16,18 @@ sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
 
-    return bless( {
+    my $self = bless( {
         'current_color' => 0,
         'ping' => 0,
     }, $class);
+
+    $self->{'color_count'} = scalar $self->get_colors();
+    return $self;
 }
 
 sub _next_color {
     my $self = shift;
-    return colored(shift, $App::Tel::ColorObject::colors[$self->{current_color}++ % scalar(@App::Tel::ColorObject::colors)]);
+    return colored(@_, $self->get_colors($self->{current_color}++ % $self->{color_count}));
 }
 
 =head2 colorize
@@ -44,9 +47,7 @@ sub colorize {
     # dots don't get red dots.
     if ($text =~ /Sending \d+, \d+-byte ICMP Echos to/) {
         $self->{ping}=1;
-    }
-
-    if ($self->{ping}) {
+    } elsif ($self->{ping}) {
             $text =~ s/(\!)/$self->_next_color($1)/eg;
             $text =~ s/(\.)/colored('.', 'red')/eg;
         if ($text =~ /Success rate is/) {
