@@ -33,7 +33,7 @@ if ($Term::ANSIColor::VERSION >= 3.00) {
 
     my $colorobject = new App::Tel::Base;
 
-Initializes a new colorobject.
+Initializes a new color object.
 
 =cut
 

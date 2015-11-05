@@ -16,3 +16,7 @@ keyring
 enablecmd
 autocmds
 HostRanges
+conf
+gw
+ver
+myfile

@@ -19,7 +19,7 @@ our $_debug = 0;
 
     my $passwd = App::Tel::Passwd::KeePass->new( file => $filename, passwd => $password );
 
-Initializes a new passwdobject.  This will return a Passwd::KeePass Object if the module
+Initializes a new passwd object.  This will return a Passwd::KeePass Object if the module
 exists and return undef if it doesn't.
 
 Requires filename and password for the file.

@@ -25,7 +25,7 @@ $tel->login("$path_to_perl t/fake_routers/loopback");
 #  password lines so the errors don't happen
 print "\n";
 is($tel->connected, 1, 'Did we make it through login?');
-is($tel->enable, 1, 'Did we enable successfully?');
+is($tel->enable->enabled, 1, 'Did we enable successfully?');
 
 $tel->send("sh ver\r");
 $tel->expect('#');
