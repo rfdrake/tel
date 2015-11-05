@@ -18,14 +18,13 @@ our $_debug = 0;
 =head1 METHODS
 
 A note on private subroutines in this file:  Anything with two underscores
-preceeding it is a private non-class sub.
+proceeding it is a private non-method sub.
 
 =head2 new
 
     my $passwd = App::Tel::Passwd::Pass->new( file => $filename, passwd => $password );
 
-Initializes a new passwdobject.  This will return a Passwd::Pass Object if the module
-exists and return undef if it doesn't.
+This will return a Passwd::Pass Object if the module exists and return undef if it doesn't.
 
 Requires filename and password for the file.
 

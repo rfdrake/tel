@@ -27,7 +27,7 @@ Options:
     -m          connection method
     -x          runs script file
     -c          runs commands
-    -a          autocommands
+    -a          auto commands
     -t          sets the timeout
     -s          sleep between commands
 
@@ -63,7 +63,7 @@ Example: tel -x changes.txt gw1-my-device
 
 =item -a
 
-Specify autocommands to run.  This overrides any commands loaded from profiles
+Specify auto commands to run.  This overrides any commands loaded from profiles
 and is used for all devices during the session.
 
 Example: tel -a "sh run int vlan35; conf t" gw1-my-device

@@ -19,11 +19,10 @@ App::Tel::Color - Methods for managing App::Tel::Color:: modules
 
     $self->load_syntax('Cisco');
 
-This attempts to load syntax highlighting modules.  In the above example,
-Cisco would append Colors to the end and get CiscoColors.pm.  If it can't find
-the module it just won't load it.
+This attempts to load syntax highlighting modules.  If it can't find the
+module it just won't load it.
 
-Returns an arrayref of module references.
+Returns $self.
 
 Multiple files can be chain loaded by using plus:
 

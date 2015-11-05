@@ -46,7 +46,7 @@ sub new {
 
 =head2 colorize
 
-    $colorobject->colorize('text');
+    my $output = $colorobject->colorize('text');
 
 Normally this will consume text from an input buffer and have some logic that
 determines how it will color the output.  This method is designed to be
@@ -54,11 +54,7 @@ overridden in all child modules.
 
 =cut
 
-sub colorize {
-    my ($self, $text) = @_;
-
-    return colored($text, 'cyan');
-}
+sub colorize { undef }
 
 =head2 parse
 

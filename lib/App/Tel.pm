@@ -115,10 +115,7 @@ sub go {
     $self->hostname($_);
     $self->login($self->hostname);
     if ($self->connected) {
-        $self->enable();
-        $self->logging() if ($self->{opts}->{l});
-        $self->control_loop();
-        $self->disconnect();
+        $self->enable->logging->control_loop->disconnect;
     }
 
     return $self;
@@ -369,10 +366,10 @@ sub rtr_find {
 =head2 profile
 
    $profile = $self->profile;
-   $profile = $self->profile('profilename', $replace);
+   $profile = $self->profile('a_example_profile', $replace);
 
 Called without arguments this will return the current profile.  If called with
-a profilename it will load that new profile on top of whatever profile
+a profile name it will load that new profile on top of whatever profile
 currently exists.  You can set the second argument to true if you want to
 replace the current profile with the new one.
 
@@ -552,9 +549,10 @@ sub connected {
 
 =head2 enable
 
-    my $enabled = $self->enable;
+    $self->enable;
 
-if enablecmd is set then this method attempts to enable the user
+if enablecmd is set then this method attempts to enable the user.  Returns
+$self.
 
 =cut
 
@@ -577,16 +575,25 @@ sub enable {
     }
 
     $self->{enabled}=1;
-    return $self->{enabled};
+    return $self;
 }
+
+=head2 enabled
+
+    my $enabled = $self->enabled;
+
+Check if enabled.  This returns true if the $self->enable() method succeeds.
+
+=cut
+
+sub enabled { $_[0]->{enabled} };
 
 =head2 login
 
-    my $something = $self->login("hostname");
+    $self->login("hostname");
 
 Cycles through the connection methods trying each in the order specified by
-the profile until we successfully connect to the host.  Returns connected
-status (true or false).
+the profile until we successfully connect to the host.  Returns $self.
 
 =cut
 
@@ -695,7 +702,7 @@ sub login {
     $rtr->{prompt} ||= '#';
 
     warn "Connection to $hostname failed.\n" if !$self->connected;
-    return $self->connected;
+    return $self;
 }
 
 =head2 logging
@@ -709,6 +716,8 @@ Turns on logging for this session.  If you specify a filename it will log to
 
 sub logging {
     my $self = shift;
+    return $self if (!$self->{opts}->{l});
+
     my $file = shift;
     $file ||= $self->{hostname};
     unlink ("/tmp/$file.log") if (-f "/tmp/$file.log");
@@ -778,7 +787,7 @@ winch handler.
 
 Future versions might support AnyEvent::IO or AnyEvent::Socket, but I might
 contribute that back to Expect's core stuff.  I might also try to figure out
-how to make the colorize stuff more hookable so we could use Expect's methods
+how to make the colorize stuff more hook-able so we could use Expect's methods
 without rewriting them.
 
 =cut
@@ -1012,7 +1021,7 @@ sub run_commands {
 
 This is where control should be passed once the session is logged in.  This
 handles CLI commands passed via the -c option, or scripts executed with the -x
-option.  It also handles autocommands passed via either option -a on the
+option.  It also handles auto commands passed via either option -a on the
 command line, or via autocmds in the profile.
 
 Calling this without any commands will just run interact()
