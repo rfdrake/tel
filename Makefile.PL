@@ -12,6 +12,7 @@ requires       'Getopt::Std';             # core
 requires       'Getopt::Long';            # core
 requires       'File::Temp';              # core
 requires       'Cwd';                     # core
+requires       'Scalar::Util';            # core
 
 recommends     'Term::ANSIColor';         # core
 recommends     'Term::ReadKey';
