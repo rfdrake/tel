@@ -134,8 +134,7 @@ If you supply a true value, it will hard_close the session.
 =cut
 
 sub disconnect {
-    my $self = shift;
-    my $hard = shift;
+    my ($self, $hard) = @_;
     $self->{profile} = {};
     $self->{timeout} = $self->{opts}->{t} ? $self->{opts}->{t} : 90;
     $self->{banners} = undef;
@@ -143,16 +142,17 @@ sub disconnect {
     $self->connected(0);
     $self->{colors}=App::Tel::Color->new;
     $self->{enabled}=0;
+
     if ($self->{title_stack} > 0) {
         $self->{title_stack}--;
         print "\e[23t";
     }
+
     if ($hard) {
         $self->session->hard_close();
     } else {
         $self->session->soft_close();
     }
-
     return $self;
 }
 

@@ -30,6 +30,6 @@ is($tel->enable->enabled, 1, 'Did we enable successfully?');
 $tel->send("sh ver\r");
 $tel->expect('#');
 $tel->send("exit\r");
-$tel->disconnect;
-
+$tel->disconnect;    # soft close
+$tel->disconnect(1); # hard close
 
