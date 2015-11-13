@@ -12,7 +12,6 @@ use App::Tel::Macro;
 use Time::HiRes qw ( sleep );
 use v5.10;
 
-
 =head1 NAME
 
 App::Tel - A script for logging into devices
@@ -79,12 +78,8 @@ Creates a new App::Tel object.
 =cut
 
 sub new {
-    my $infile = IO::File->new;
-    $infile->IO::File::fdopen( \*STDIN, 'r' );
-
     my $self = {
-        'stdin'         => Expect->exp_init($infile),
-        'stdin_fileno'  => $infile->fileno,
+        'stdin'         => Expect->exp_init(\*STDIN),
         'connected'     => 0,
         'enabled'       => 0,
         'title_stack'   => 0,
@@ -793,8 +788,8 @@ without rewriting them.
 =cut
 
 sub interconnect {
-    my $self = shift;
-    my @handles = ($self->{'session'}, $_[0]);
+    my ($self, $inobject) = @_;
+    my @handles = ($self->{'session'}, $inobject);
 
     my ( $nread );
     my ( $rout, $emask, $eout );
@@ -898,7 +893,7 @@ sub interconnect {
                 );
 
                 # don't bother trying to colorize input from the user
-                if ($read_handle->fileno() != $self->{stdin_fileno}) {
+                if ($read_handle->fileno != $inobject->fileno) {
                     ${*$read_handle}{exp_Pty_Buffer} = $self->{colors}->colorize(${*$read_handle}{exp_Pty_Buffer});
                 }
                 # Appease perl -w
