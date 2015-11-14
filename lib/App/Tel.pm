@@ -923,12 +923,8 @@ sub interconnect {
 
                             # I'm going to make the esc. seq. pretty because it will
                             # probably contain unprintable characters.
-                            print STDERR "\tEscape Sequence: '"
-                                . _trim_length(
-                                undef,
-                                _make_readable($escape_sequence)
-                                ) . "'\r\n";
-                            print STDERR "\tMatched by string: '" . _trim_length( undef, _make_readable($match) ) . "'\r\n";
+                            print STDERR "\tEscape Sequence: '$escape_sequence'\r\n";
+                            print STDERR "\tMatched by string: '$match'\r\n";
                         }
 
                         # Print out stuff before the escape.
