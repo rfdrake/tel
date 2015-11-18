@@ -635,7 +635,7 @@ sub login {
         my $p = $self->{port};
 
         if ($_ eq 'ssh')        { $p ||= 22; $self->connect("ssh -p $p -l $rtr->{user} $ssho $cipher $hostname"); }
-        elsif ($_ eq 'telnet')  { $p ||= 23; $self->connect("telnet $hostname $p"); }
+        elsif ($_ eq 'telnet')  { $p ||= ''; $self->connect("telnet $hostname $p"); }
         # for testing. can pass an expect script to the other side and use it's output as our input.
         elsif ($_ eq 'exec')    { $self->connect($hostname); }
         else { die "No program defined for method $_\n"; }
