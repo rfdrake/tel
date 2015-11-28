@@ -62,8 +62,7 @@ blank string if the entry wasn't found.
 
 
 sub passwd {
-    my $self = shift;
-    my $entry = shift;
+    my ($self, $entry) = @_;
 
     foreach my $record ($self->{vault}->getrecords()) {
         if ($record->title eq $entry) {
