@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::Stream -V1;
+use Test::Most;
 
 eval 'require Crypt::PWSafe3; 1' or skip_all('Optional Module Crypt::PWSafe3 is not installed');
 
