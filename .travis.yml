@@ -2,7 +2,7 @@ language: perl
 
 os:
   - linux
-  - osx
+#  - osx
 
 perl:
     - "blead"
