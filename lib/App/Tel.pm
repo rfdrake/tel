@@ -194,8 +194,9 @@ by calling load_config with an argument:
 
 sub load_config {
     my $self = shift;
+    my $xdg = $ENV{XDG_CONFIG_HOME} || "$ENV{HOME}/.config/";
     my @configs = @_;
-    @configs = ( "/etc/telrc", "/usr/local/etc/telrc", "$ENV{HOME}/.telrc2") if (!@configs);
+    @configs = ( "/etc/telrc", "/usr/local/etc/telrc", "$ENV{HOME}/.telrc2", "$xdg/telrc") if (!@configs);
     push(@configs, $ENV{TELRC}) if (defined($ENV{TELRC}));
     our $telrc;
     my $config;

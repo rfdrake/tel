@@ -23,5 +23,13 @@ cat <<EOF>$TMPFILE
 };
 EOF
 
-mv -i $TMPFILE $HOME/.telrc2
-chmod 400 $HOME/.telrc2
+LOCATION=$HOME/.telrc2
+
+if [[ -x $XDG_CONFIG_HOME ]]; then
+    LOCATION=$XDG_CONFIG_HOME/telrc
+elif [[ -x $HOME/.config ]]; then
+    LOCATION=$HOME/.config/telrc
+fi
+
+mv -i $TMPFILE $LOCATION
+chmod 400 $LOCATION
