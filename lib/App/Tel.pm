@@ -634,9 +634,12 @@ sub login {
         my $allied_shit=0;
 
         my $p = $self->{port};
+        my $family = '';
+        $family = '-4' if ($self->{opts}->{4});
+        $family = '-6' if ($self->{opts}->{6});
 
-        if ($_ eq 'ssh')        { $p ||= 22; $self->connect("ssh -p $p -l $rtr->{user} $ssho $cipher $hostname"); }
-        elsif ($_ eq 'telnet')  { $p ||= ''; $self->connect("telnet $hostname $p"); }
+        if ($_ eq 'ssh')        { $p ||= 22; $self->connect("ssh $family -p $p -l $rtr->{user} $ssho $cipher $hostname"); }
+        elsif ($_ eq 'telnet')  { $p ||= ''; $self->connect("telnet $family $hostname $p"); }
         # for testing. can pass an expect script to the other side and use it's output as our input.
         elsif ($_ eq 'exec')    { $self->connect($hostname); }
         else { die "No program defined for method $_\n"; }

@@ -30,6 +30,8 @@ Options:
     -a          auto commands
     -t          sets the timeout
     -s          sleep between commands
+    -4          force IPv4 connection
+    -6          force IPv6 connection
 
 =head1 OPTIONS
 
@@ -98,6 +100,12 @@ installed for sub-second sleep values like 0.5.
 
 Example: tel -s 3 -x myfile.txt gw1-my-devices
 
+=item -4 or -6
+
+Force the connection to only use IPv4 or IPv6.
+
+Example: tel -4 gw1-my-device
+
 =item -v
 
 Print the version information
@@ -118,7 +126,7 @@ sub main {
 
     my %opts;
     GetOptions("xcript=s@" => \$opts{x});   # scripts to run
-    getopts('vhlda:c:t:m:p:s:', \%opts);
+    getopts('46vhlda:c:t:m:p:s:', \%opts);
 
     $self->{timeout} = $opts{t} ? $opts{t} : 90;
     $self->{opts} = \%opts;
