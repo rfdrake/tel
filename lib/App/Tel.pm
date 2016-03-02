@@ -489,7 +489,7 @@ sub session {
     my $session = $self->{'session'};
 
     $session->soft_close() if ($session && $session->pid());
-    $session = new Expect;
+    $session = Expect->new;
 
     # install sig handler for window size change
     $SIG{WINCH} = \&_winch_handler;
@@ -605,11 +605,10 @@ sub login {
 
     my $ssho = '-o StrictHostKeyChecking=no';
     if (defined($rtr->{sshoptions}) && scalar $rtr->{sshoptions} > 0) {
-        my @sshoptions = @{$rtr->{sshoptions}};
-        $ssho = '-o '. join(' -o ', @sshoptions);
+        $ssho = '-o '. join(' -o ', @{$rtr->{sshoptions}});
     }
+    $ssho .= $rtr->{ciphertype} ? " -c $rtr->{ciphertype}" : '';
 
-    my $cipher = $rtr->{ciphertype} ? ('-c ' . $rtr->{ciphertype}) : '';
 
     # because we use last METHOD; in anonymous subs this suppresses the
     # warning of "exiting subroutine via last;"
@@ -624,21 +623,18 @@ sub login {
     $rtr->{username_prompt} ||= qr/[Uu]ser[Nn]ame:|[Ll]ogin:/;
     $rtr->{password_prompt} ||= qr/[Pp]ass[Ww]ord/;
 
-    $self->{port} ||= $self->{opts}->{p}; # get port from CLI
-    $self->{port} ||= $rtr->{port};       # or the profile
+    $self->{port} ||= $self->{opts}->{p} || $rtr->{port}; # get port from CLI or the profile
     # if it's not set in the profile or CLI above, it gets set in the
     # method below, but needs to be reset on each loop to change from
     # telnet to ssh defaults
 
+    my $family = '';
+    $family = '-4' if ($self->{opts}->{4});
+    $family = '-6' if ($self->{opts}->{6});
+
     METHOD: for (@{$self->methods}) {
-        my $allied_shit=0;
-
         my $p = $self->{port};
-        my $family = '';
-        $family = '-4' if ($self->{opts}->{4});
-        $family = '-6' if ($self->{opts}->{6});
-
-        if ($_ eq 'ssh')        { $p ||= 22; $self->connect("ssh $family -p $p -l $rtr->{user} $ssho $cipher $hostname"); }
+        if ($_ eq 'ssh')        { $p ||= 22; $self->connect("ssh $family -p $p -l $rtr->{user} $ssho $hostname"); }
         elsif ($_ eq 'telnet')  { $p ||= ''; $self->connect("telnet $family $hostname $p"); }
         # for testing. can pass an expect script to the other side and use it's output as our input.
         elsif ($_ eq 'exec')    { $self->connect($hostname); }
@@ -652,6 +648,8 @@ sub login {
         print "\e[22t\033]0;$_ $hostname\007";
         $self->{title_stack}++;
         $SIG{INT} = sub { for (1..$self->{title_stack}) { print "\e[23t"; } $self->{title_stack}=0; };
+
+        my $allied_shit=0;
         $self->expect($self->{timeout},
                 @{$self->_banners},
                 @dynamic,
