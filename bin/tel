@@ -84,10 +84,17 @@ Example: tel -p 22 gw1-my-devices
 =item -P or --profile
 
 Override the loaded profiles with another defined in telrc.  This is useful if
-you're logging into an out of band console server and the connected device is
-made by one vendor while the console server is made by another.
+you're logging into the IP of a server rather than using the DNS name.
 
-Example: tel -P zhone oob-test-lab:2004
+Example: tel -P zhone 10.9.9.9
+
+=item -A
+
+This overrides the profile after you've logged into the server.  You might
+need this if you're logging into an out of band server made by one vendor to
+access the console of a device made by another vendor.
+
+Example: tel -A zhone oob-test-lab:2004
 
 =item -m
 
@@ -138,7 +145,7 @@ sub main {
 
     my %opts;
     GetOptions("script=s@" => \$opts{x}, 'profile=s' => \$opts{P});
-    getopts('46vhlda:c:t:m:p:P:s:', \%opts);
+    getopts('46vhlda:c:t:m:p:P:A:s:', \%opts);
 
     $self->{timeout} = $opts{t} ? $opts{t} : 90;
     $self->{opts} = \%opts;

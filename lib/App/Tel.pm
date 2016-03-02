@@ -107,9 +107,10 @@ sub go {
 
     # default profile always loads before anything else.  replace == 1
     $self->profile('default', 1);
-    $self->profile($self->{opts}->{P}, 1) if ($self->{opts}->{P});
+    $self->profile($self->{opts}->{P}) if ($self->{opts}->{P});
     $self->hostname($_);
     $self->login($self->hostname);
+    $self->profile($self->{opts}->{A}) if ($self->{opts}->{A});
     if ($self->connected) {
         $self->enable->logging->control_loop->disconnect;
     }
