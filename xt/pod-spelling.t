@@ -20,3 +20,5 @@ conf
 gw
 ver
 myfile
+telrc
+zhone

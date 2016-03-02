@@ -24,9 +24,10 @@ Options:
     -d          debug mode
     -v          version
     -p          connection port
+    -P          override profile
     -m          connection method
-    -x          runs script file
-    -c          runs commands
+    -x          run script file
+    -c          run commands
     -a          auto commands
     -t          sets the timeout
     -s          sleep between commands
@@ -56,10 +57,13 @@ load.
 
 Example: tel -d gw1-my-device
 
-=item -x
+=item -x or --script
 
-Runs a script file, which is a list of commands for the device.  Can be
+Runs a command-file file, which is a list of commands for the device.  Can be
 specified multiple times to run multiple scripts.
+
+If you need to use a newline in the script to get through a prompt then you
+can use \r.  An example of this might be "reload\ry"
 
 Example: tel -x changes.txt gw1-my-device
 
@@ -76,6 +80,14 @@ Specify connection port.  This overrides any specific port in loaded profiles
 and is used for all devices during the session.
 
 Example: tel -p 22 gw1-my-devices
+
+=item -P or --profile
+
+Override the loaded profiles with another defined in telrc.  This is useful if
+you're logging into an out of band console server and the connected device is
+made by one vendor while the console server is made by another.
+
+Example: tel -P zhone oob-test-lab:2004
 
 =item -m
 
@@ -125,8 +137,8 @@ sub main {
     $self->{config} = $self->load_config();
 
     my %opts;
-    GetOptions("xcript=s@" => \$opts{x});   # scripts to run
-    getopts('46vhlda:c:t:m:p:s:', \%opts);
+    GetOptions("script=s@" => \$opts{x}, 'profile=s' => \$opts{P});
+    getopts('46vhlda:c:t:m:p:P:s:', \%opts);
 
     $self->{timeout} = $opts{t} ? $opts{t} : 90;
     $self->{opts} = \%opts;

@@ -107,6 +107,7 @@ sub go {
 
     # default profile always loads before anything else.  replace == 1
     $self->profile('default', 1);
+    $self->profile($self->{opts}->{P}, 1) if ($self->{opts}->{P});
     $self->hostname($_);
     $self->login($self->hostname);
     if ($self->connected) {
@@ -372,12 +373,8 @@ replace the current profile with the new one.
 =cut
 
 sub profile {
-    my $self = shift;
-    my $profile_arg = shift;
-    my $replace = shift;
+    my ($self, $profile_arg, $replace) = @_;
     my $stdin = $self->{'stdin'};
-    my $config = $self->{'config'};
-    my $session = $self->{'session'};
     my $profile = $self->{'profile'};
 
     return $profile if (!defined($profile_arg));
@@ -388,7 +385,7 @@ sub profile {
     }
 
     foreach(split(/\+/, $profile_arg)) {
-        $profile = merge($profile, $config->{profile}{$_});
+        $profile = merge($profile, $self->{'config'}->{profile}{$_});
 
         # load handlers for profile
         if ($profile->{handlers}) {
