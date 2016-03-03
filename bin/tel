@@ -57,7 +57,7 @@ load.
 
 Example: tel -d gw1-my-device
 
-=item -x or --script
+=item -x or --xscript
 
 Runs a command-file file, which is a list of commands for the device.  Can be
 specified multiple times to run multiple scripts.
@@ -144,7 +144,7 @@ sub main {
     $self->{config} = $self->load_config();
 
     my %opts;
-    GetOptions("script=s@" => \$opts{x}, 'profile=s' => \$opts{P});
+    GetOptions("xscript=s@" => \$opts{x}, 'profile=s' => \$opts{P});
     getopts('46vhlda:c:t:m:p:P:A:s:', \%opts);
 
     $self->{timeout} = $opts{t} ? $opts{t} : 90;
