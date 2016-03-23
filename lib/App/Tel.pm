@@ -3,12 +3,12 @@ use strict;
 use warnings;
 use Expect qw( exp_continue );
 use POSIX qw(:sys_wait_h :unistd_h); # For WNOHANG
-use Hash::Merge::Simple qw (merge);
 use Module::Load;
 use App::Tel::HostRange qw (check_hostrange);
 use App::Tel::Passwd;
 use App::Tel::Color;
 use App::Tel::Macro;
+use App::Tel::Merge qw ( merge );
 use Time::HiRes qw ( sleep );
 use v5.10;
 

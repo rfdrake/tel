@@ -1,4 +1,3 @@
-requires       'Hash::Merge::Simple'  => '0.0';
 requires       'Expect'  => '0.0';
 requires       'IO::Stty'  => '0.0';
 requires       'Time::HiRes';             # core
