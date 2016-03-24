@@ -11,6 +11,14 @@ our @EXPORT_OK = qw/ merge /;
 # I stole it because I wanted to get rid of the dependancy on Clone which
 # needs to be compiled by cpanm when we weren't using it.
 
+=head2 merge
+
+    my $merged = merge($left, @right);
+
+Used to merge two hash references together.  Returns a hashref.
+
+=cut
+
 sub merge (@);
 sub merge (@) {
     shift unless ref $_[0]; # Take care of the case we're called like Hash::Merge::Simple->merge(...)
