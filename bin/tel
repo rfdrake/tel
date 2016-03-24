@@ -119,6 +119,16 @@ installed for sub-second sleep values like 0.5.
 
 Example: tel -s 3 -x myfile.txt gw1-my-devices
 
+=item -S
+
+Specify timeout in seconds to sleep between commands.  This applies to
+interactive sessions as well as login commands.  This will use Time::HiRes
+if it's installed for sub-second sleep values like 0.5.
+
+If both -S and -s are set, then -S overwrites the value of -s.
+
+Example: tel -S 3 gw1-my-devices
+
 =item -4 or -6
 
 Force the connection to only use IPv4 or IPv6.
@@ -145,7 +155,8 @@ sub main {
 
     my %opts;
     GetOptions("xscript=s@" => \$opts{x}, 'profile=s' => \$opts{P});
-    getopts('46vhlda:c:t:m:p:P:A:s:', \%opts);
+    getopts('46vhlda:c:t:m:p:P:A:s:S:', \%opts);
+    $opts{s}=$opts{S} || $opts{s};
 
     $self->{timeout} = $opts{t} ? $opts{t} : 90;
     $self->{opts} = \%opts;

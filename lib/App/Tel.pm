@@ -878,15 +878,6 @@ sub interconnect {
         #    print "Ebits: $eout\r\n";
         foreach my $read_handle (@handles) {
             if ( $bits[ $read_handle->fileno() ] ) {
-                # it would be nice if we could say read until TELNET_GA or the
-                # equivilant, but that's not something we can be sure would be
-                # there.  Cisco doesn't always fill the buffers just because
-                # they could, so there is a chance even though we tell them we
-                # can accept 10k they'll only send 1k and we split the middle
-                # of a regex.  With escape sequences that isn't a big deal.
-                # With colorizing it causes problems because it's data already
-                # written to the screen so you can't take it back (without big
-                # work)
                 $nread = sysread(
                     $read_handle, ${*$read_handle}{exp_Pty_Buffer},
                     10240
@@ -895,6 +886,8 @@ sub interconnect {
                 # don't bother trying to colorize input from the user
                 if ($read_handle->fileno != $inobject->fileno) {
                     ${*$read_handle}{exp_Pty_Buffer} = $self->{colors}->colorize(${*$read_handle}{exp_Pty_Buffer});
+                } else {
+                    sleep($self->{opts}->{S}) if ($self->{opts}->{S} && ${*$read_handle}{exp_Pty_Buffer} =~ /\r/);
                 }
                 # Appease perl -w
                 $nread = 0 unless defined($nread);
