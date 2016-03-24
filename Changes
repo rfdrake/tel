@@ -1,3 +1,14 @@
+app-tel (0.2015.10) unstable; urgency=medium
+
+  * added support for -P and -A to override profiles
+  * added support for -4 and -6 to override address family
+  * adding XDG_CONFIG_HOME support
+  * more code cleanup and new tests
+  * fix syntax highlight loading
+  * added support for -S to sleep between lines during interactive sessions
+
+ -- Robert Drake <rdrake@cpan.org>  Thu, 24 Mar 2016 00:41:20 -0400
+
 app-tel (0.2015.09ubuntu1) unstable; urgency=medium
 
   * fixed problems with loading color modules and added more tests for
