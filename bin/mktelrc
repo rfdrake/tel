@@ -10,7 +10,16 @@ if [ "x$pass" = "x" ]; then
    pass="\$ENV{ROUTER_PASSWORD}"
 fi
 
-TMPFILE=$(mktemp --tmpdir mktelrc.XXXXXX)
+SYSTEM=$(uname -s)
+
+case $SYSTEM in
+    Darwin)
+        TMPFILE=$(mktemp -t mktelrc.XXXXXX)
+        ;;
+    *)
+        TMPFILE=$(mktemp --tmpdir mktelrc.XXXXXX)
+        ;;
+esac
 
 cat <<EOF>$TMPFILE
 \$telrc = {
