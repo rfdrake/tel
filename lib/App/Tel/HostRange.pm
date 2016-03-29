@@ -57,12 +57,14 @@ function.
 
 This should support the following types of ranges:
 
-# 192.168.13.17-192.168.32.128
-# 192.168.13.17-22
-# fe80::1-fe80::256
-# 192.168.13.0/24
-# fe80::/64
-# 192.168.13.17-192.168.32.128,172.16.0.2-172.16.0.13,172.28.0.0/24
+# 1. 192.168.13.17-192.168.32.128
+# 2. 192.168.13.17-22
+# 3. fe80::1-fe80::256
+# 4. 192.168.13.0/24
+# 5. fe80::/64
+# 6. 192.168.13.17-192.168.32.128,172.16.0.2-172.16.0.13,172.28.0.0/24
+# 7. 192.168.13.12
+
 
 =cut
 
@@ -79,7 +81,11 @@ sub check_hostrange {
         } else {
             my ($host1, $host2) = split(/-/);
             $host1 = NetAddr::IP->new($host1) || return 0;
-            # if they only supplied the last octet
+            # if it's a single IP, like #7
+            if (!defined($host2)) {
+                return $host == $host1 ? 1 : 0;
+            }
+            # if they only supplied the last octet like #2
             if ($host2 =~ /^[\da-f]+$/i) {
                 my $tmp = $host1->addr;
                 # drop the last octet

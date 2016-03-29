@@ -30,5 +30,7 @@ is(check_hostrange('fe80::5-7', 'fe80::5'), 1, 'last octet ipv6 success');
 is(check_hostrange('fe80::5-7', 'fe80::1'), 0, 'last octet ipv6 failure');
 is(check_hostrange('192.168.2.13-27', '192.168.2.27'), 1, 'last octet ipv4 success');
 is(check_hostrange('192.168.2.13-27', '192.168.2.1'), 0, 'last octet ipv4 failure');
+is(check_hostrange('192.168.2.3', '192.168.2.1'), 0, 'last octet ipv4 failure');
+is(check_hostrange('192.168.2.1', '192.168.2.1'), 1, 'last octet ipv4 success');
 
 done_testing();
