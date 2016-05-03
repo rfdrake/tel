@@ -887,6 +887,10 @@ sub interconnect {
                 if ($read_handle->fileno != $inobject->fileno) {
                     ${*$read_handle}{exp_Pty_Buffer} = $self->{colors}->colorize(${*$read_handle}{exp_Pty_Buffer});
                 } else {
+                    # this doesn't work because the paste buffer ends up with
+                    # all the text and we send it all at once.  We need to
+                    # break up the read_handle before sending it, then loop on
+                    # with expect/send/sleep
                     sleep($self->{opts}->{S}) if ($self->{opts}->{S} && ${*$read_handle}{exp_Pty_Buffer} =~ /\r/);
                 }
                 # Appease perl -w
