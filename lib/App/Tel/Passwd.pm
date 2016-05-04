@@ -75,7 +75,6 @@ try to store it in the keyring.
 sub keyring {
     my ($user, $domain, $group) = @_;
 
-    # TODO: needs to warn on some kind of failure?
     eval {
         load Passwd::Keyring::Auto, 'get_keyring';
         my $keyring = get_keyring(app=>"tel script", group=>$group);
@@ -86,6 +85,8 @@ sub keyring {
         }
         return $pass;
     };
+
+    warn $@ if ($@);
 }
 
 =head2 load_from_profile
