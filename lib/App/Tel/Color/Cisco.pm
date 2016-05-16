@@ -139,8 +139,8 @@ sub colorize {
         sprintf("%s%s%s%s%s%s", $1, _cpu($2), $3, _cpu($4), $5, _cpu($6))#eg;
 
     # 4500x sh proc cpu
-    $text =~ s#(\d+\s+\d+\s+\d+\s+\d+\s+)([\d\.]+)(\s+)([\d\.]+)(\s+)([\d\.]+)#
-        sprintf("%s%s%s%s%s%s", $1, _cpu($2), $3, _cpu($4), $5, _cpu($6))#eg;
+    $text =~ s#((?<!\.)\d+\s+\d+\s+\d+\s+\d+\s+)([\d\.]+)(\s+)([\d\.]+)(\s+)([\d\.]+)(\s+\d+\s+\S+)#
+        sprintf("%s%s%s%s%s%s%s", $1, _cpu($2), $3, _cpu($4), $5, _cpu($6), $7)#eg;
 
     # parts of sh run
     if ($text =~ /^(ip|ipv6) route /) {
