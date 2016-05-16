@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use Test::Most;
 use Term::ANSIColor;
-plan tests => 9;
+plan tests => 10;
 
 use App::Tel::Color;
 use App::Tel::Color::Cisco;
