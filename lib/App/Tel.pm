@@ -217,7 +217,8 @@ sub load_config {
 
     # load global syntax highlighting things if found
     $self->{colors}->load_syntax($config->{syntax},$self->{opts}->{d});
-    return $config;
+    $self->{config} = $config;
+    return $self;
 }
 
 =head2 hostname
@@ -235,8 +236,7 @@ translated because of an alias.  The final hostname is stored and returned.
 =cut
 
 sub hostname {
-    my $self = shift;
-    my $hostname = shift;
+    my ($self, $hostname) = @_;
 
     if (!defined($hostname)) {
         return $self->{hostname};
@@ -336,11 +336,17 @@ sub _banners {
 Find the router by hostname/regex and load the config associated with it.
 Load a profile for it if there is one.
 
+If none of the router lines match then this does not merge another profile,
+but will return the existing profile.  That may not be what you want in all
+cases.  The workaround for it would be to clear profiles before calling this
+with $self->profile('default',1);
+
+I'm trying to decide if there should be a better way to do this.
+
 =cut
 
 sub rtr_find {
-    my $self = shift;
-    my $host = shift;
+    my ($self, $host) = @_;
     my $profile = $self->{'profile'};
     my $config = $self->{'config'};
 
@@ -355,10 +361,10 @@ sub rtr_find {
 
     # if the host specified a profile to load then load it here
     if (defined($profile->{profile})) {
-        return $self->profile($profile->{profile});
+        $self->profile($profile->{profile});
     }
 
-    return $profile;
+    return $self;
 }
 
 =head2 profile
@@ -430,8 +436,7 @@ you can call it with $self->password('enable');
 =cut
 
 sub password {
-    my $self = shift;
-    my $type = shift;
+    my ($self, $type) = @_;
     my $profile = $self->profile;
     my $router = $self->{hostname};
 
@@ -480,8 +485,7 @@ session.
 =cut
 
 sub session {
-    my $self = shift;
-    my $renew = shift;
+    my ($self, $renew) = @_;
 
     return $self->{'session'} if (!$renew && defined($self->{'session'}));
     my $session = $self->{'session'};
@@ -507,8 +511,7 @@ This sets up the session.  If there already is a session open it closes and open
 =cut
 
 sub connect {
-    my $self = shift;
-    my @arguments = shift;
+    my ($self, @arguments) = @_;
 
     $self->connected(0);
     my $session = $self->session(1);
@@ -532,8 +535,7 @@ is at a prompt of some kind.
 =cut
 
 sub connected {
-    my $self = shift;
-    my $status = shift;
+    my ($self, $status) = @_;
     if ($status) {
         $self->{connected}=$status;
     }
@@ -592,8 +594,7 @@ the profile until we successfully connect to the host.  Returns $self.
 =cut
 
 sub login {
-    my $self = shift;
-    my $hostname = shift;
+    my ($self, $hostname) = @_;
 
     # dumb stuff to alias $rtr to the contents of $self->{'profile'}
     # needed because we reload the profile in the expect loop and can't update
@@ -731,10 +732,8 @@ mainly a setup script for the call to interconnect().
 =cut
 
 sub interact {
-    my $self = shift;
+    my ($self, $in_object, $escape_sequence) = @_;
     my $session = $self->{'session'};
-    my $in_object = shift;
-    my $escape_sequence = shift;
 
     my @old_group = $session->set_group();
     # we know the input is STDIN and that it's an object.

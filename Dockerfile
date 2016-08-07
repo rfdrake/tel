@@ -20,8 +20,7 @@ RUN     apk -U add \
 RUN curl -L https://cpanmin.us | perl - App::cpanminus
 WORKDIR /tel
 RUN git clone --depth 1 http://github.com/rfdrake/tel.git /tel
-RUN cpanm --notest --installdeps .
-RUN cpanm --notest Module::Install
+RUN cpanm --notest --installdeps . && cpanm --notest Module::Install
 RUN perl Makefile.PL && make && make install
 
 ENTRYPOINT ["tel"]

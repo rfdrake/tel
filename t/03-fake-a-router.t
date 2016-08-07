@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 our $telrc;
-require 't/dottelrc.testing';
+require 't/rc/fakerouter.rc';
 use Test::More;
 plan tests => 2;
 use App::Tel;

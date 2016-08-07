@@ -6,7 +6,7 @@ eval 'exec perl  -S $0 ${1+"$@"}'
 use strict;
 use IO::Stty;
 
-print "Password:\n";
+print "Password:";
 IO::Stty::stty(\*STDIN,'-echo');
 my $password = <STDIN>;
 IO::Stty::stty(\*STDIN,'echo');
@@ -18,7 +18,11 @@ print "router-name>";
 # get "enable" command
 my $temp = <STDIN>;
 
-print "Password:\n";
+# test enable user
+print "Username:";
+my $temp = <STDIN>;
+
+print "Password:";
 IO::Stty::stty(\*STDIN,'-echo');
 $password = <STDIN>;
 IO::Stty::stty(\*STDIN,'echo');

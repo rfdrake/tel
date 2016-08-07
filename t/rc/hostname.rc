@@ -1,0 +1,7 @@
+$telrc = {
+          'rtr' => [   # this is an array so order matters
+                   { 'regex' => '^\d{4}$', method => 'telnet', 'hostname' => sub { '172.18.0.'.($_[0] -2000+90); } },
+                   { 'regex' => '^cerf$', 'method' => 'telnet', 'hostname' => 'route-server.cerf.net', 'prompt' => 'route-server>' },
+                 ],
+};
+
