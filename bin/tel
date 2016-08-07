@@ -150,6 +150,8 @@ Example: tel -v
 =cut
 
 sub main {
+    # override process name to make it easy to kill
+    $0 = 'tel ' . join(' ', @ARGV);
     my $self = App::Tel->new();
     $self->{config} = $self->load_config();
 
