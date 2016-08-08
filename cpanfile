@@ -9,7 +9,7 @@ recommends     'Crypt::PWSafe3';
 recommends     'File::KeePass';
 recommends     'GnuPG';                   # needed for App::Tel::Passwd::Pass
 recommends     'File::Which';             # needed for App::Tel::Passwd::Pass
-recommends     'Passwd::Keyring::Auto';
+recommends     'Passwd::Keyring::Auto' => '0.70';
 recommends     'NetAddr::IP';
 recommends     'XML::Parser';             # required for File::KeePass, it's not listed as a dependency there
 recommends     'Compress::Raw::Zlib';     # required for File::KeePass, it's not listed as a dependency there

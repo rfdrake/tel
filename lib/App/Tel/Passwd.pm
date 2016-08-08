@@ -11,13 +11,17 @@ our @ISA = qw(Exporter);
 our @EXPORT = qw();
 our @EXPORT_OK = qw ( keyring input_password );
 
+# unit test override variables
+our $appname = 'tel script';
+our $test_password;
+
 =head1 NAME
 
 App::Tel::Passwd - Methods for managing App::Tel::Passwd:: modules
 
 =cut
 
-my $plugins = [ 'KeePass', 'PWSafe', 'Pass' ];
+my $plugins = [ 'KeePass', 'PWSafe', 'Pass', 'Mock' ];
 
 =head2 load_module
 
@@ -51,6 +55,7 @@ line and returns it.
 
 
 sub input_password {
+    return $test_password if ($test_password);
     my $prompt = shift;
     $prompt ||= '';
     die 'STDIN not a tty' if (!POSIX::isatty(\*STDIN));
@@ -75,9 +80,9 @@ try to store it in the keyring.
 sub keyring {
     my ($user, $domain, $group) = @_;
 
-    eval {
+    my $p = eval {
         load Passwd::Keyring::Auto, 'get_keyring';
-        my $keyring = get_keyring(app=>"tel script", group=>$group);
+        my $keyring = get_keyring(app=>$appname, group=>$group);
         my $pass = $keyring->get_password($user, $domain);
         if (!$pass) {
             $pass = input_password($domain);
@@ -87,6 +92,7 @@ sub keyring {
     };
 
     warn $@ if ($@);
+    return $p;
 }
 
 =head2 load_from_profile
