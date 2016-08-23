@@ -101,3 +101,28 @@ is($t, $o, 'Interface name coloring works');
 $t = $cisco->parse('0 packets input, 0 bytes, 0 no buffer');
 $o = "0 packets input, 0 bytes, \e[32m0\e[0m no buffer";
 is($t, $o, 'Interface buffer match works');
+
+subtest failures => sub {
+    my ($t, $raw);
+
+    # sh diag on CMTS getting colored
+    $raw = '
+          0x00: 04 FF 40 06 75 C1 8B 43 41 54 31 39 33 30 45 31
+          0x30: 33 20 C6 8A 49 50 55 43 41 59 30 42 41 42 88 00
+          0x40: 00 00 00 02 02 03 00 81 00 00 00 00 04 00 8B 00
+          0x80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00';
+    $t = $cisco->parse($raw);
+    is($t,$raw,'Is sh diag mangled by colors?');
+
+
+    # show c7200 getting colored:
+    $raw = '
+          0x00: 04 FF 40 01 76 01 06 41 01 05 C0 46 03 20 00 15
+          0x10: 43 03 42 41 30 80 00 00 00 00 02 03 C1 8B 53 44
+          0x20: 41 30 36 30 35 30 30 36 33 C2 8B 53 43 41 30 36
+          0x40: 00 03 00 81 00 00 00 00 04 00 C7 20 01 00 02 BE
+          0x20: 04 42 45 30 C1 8B 4A 41 46 31 35 33 37 42 50 4A';
+
+    $t = $cisco->parse($raw);
+    is($t,$raw,'Is sh c7200 mangled by colors?');
+};
