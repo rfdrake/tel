@@ -2,10 +2,11 @@ use strict;
 use warnings;
 use Test::More;
 use Test::Exception;
+eval 'use Passwd::Keyring::Auto; 1' ## no critic qw(BuiltinFunctions::ProhibitStringyEval)
+    or plan skip_all => 'Optional module Passwd::Keyring::Auto required';
 
 $ENV{PASSWD_KEYRING_FORCE}='Memory'; # requires 0.70 or greater of P::K::Auto
 
-eval 'use Passwd::Keyring::Auto; 1' or plan skip_all => 'Optional module Passwd::Keyring::Auto required';
 
 use App::Tel::Passwd qw ( keyring );
 

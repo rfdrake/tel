@@ -3,7 +3,8 @@ use warnings;
 use Test::Most;
 use Test::Exception;
 
-eval 'require Crypt::PWSafe3; 1' or plan skip_all => 'Optional Module Crypt::PWSafe3 is not installed';
+eval 'require Crypt::PWSafe3; 1' ## no critic qw(BuiltinFunctions::ProhibitStringyEval)
+    or plan skip_all => 'Optional Module Crypt::PWSafe3 is not installed';
 
 my $mod = 'PWSafe';
 my $good_file = 't/pass/pwsafe.psafe3';

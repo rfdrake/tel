@@ -19,8 +19,8 @@ Used to merge two hash references together.  Returns a hashref.
 
 =cut
 
-sub merge (@);
-sub merge (@) {
+sub merge (@);  ## no critic qw(Subroutines::ProhibitSubroutinePrototypes)
+sub merge (@) {  ## no critic qw(Subroutines::ProhibitSubroutinePrototypes)
     shift unless ref $_[0]; # Take care of the case we're called like Hash::Merge::Simple->merge(...)
     my ($left, @right) = @_;
 

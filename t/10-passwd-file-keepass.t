@@ -2,7 +2,8 @@ use strict;
 use warnings;
 use Test::More;
 use Test::Exception;
-eval 'use File::KeePass; 1' or plan skip_all => 'Optional module File::KeePass required';
+eval 'use File::KeePass; 1' ## no critic qw(BuiltinFunctions::ProhibitStringyEval)
+    or plan skip_all => 'Optional module File::KeePass required';
 plan tests => 6;
 
 my $mod = 'KeePass';

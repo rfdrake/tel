@@ -3,7 +3,9 @@ use warnings;
 use Test::More;
 use Test::Exception;
 use Cwd qw ( abs_path );
-eval 'use GnuPG::Interface; 1' or plan skip_all => 'Optional module GnuPG::Interface required';
+eval 'use GnuPG::Interface; 1' ## no critic qw(BuiltinFunctions::ProhibitStringyEval)
+    or plan skip_all => 'Optional module GnuPG::Interface required';
+
 plan tests => 8;
 
 my $mod = 'Pass';

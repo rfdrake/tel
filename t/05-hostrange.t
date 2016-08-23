@@ -1,8 +1,10 @@
-#!/usr/bin/env perl
+use strict;
+use warnings;
 use lib qw(lib);
 use Test::More;
 use App::Tel::HostRange qw ( check_hostrange );
-eval 'use NetAddr::IP; 1' or plan skip_all => 'Optional module NetAddr::IP required';
+eval 'use NetAddr::IP; 1'  ## no critic qw (BuiltinFunctions::ProhibitStringyEval)
+    or plan skip_all => 'Optional module NetAddr::IP required';
 
 
 # 192.168.13.17-192.168.32.128
