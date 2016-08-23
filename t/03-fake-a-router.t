@@ -1,7 +1,5 @@
 use strict;
 use warnings;
-our $telrc;
-require 't/rc/fakerouter.rc';
 use Test::More;
 plan tests => 2;
 use App::Tel;
@@ -10,7 +8,7 @@ use Config;
 my $path_to_perl = $Config{perlpath};
 
 my $tel = App::Tel->new();
-$tel->{config} = $telrc;
+$tel->load_config('t/rc/fakerouter.rc');
 
 # loading the default profile to pickup the vty password
 $tel->profile('default', 1);
