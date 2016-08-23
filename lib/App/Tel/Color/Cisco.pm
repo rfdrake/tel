@@ -85,13 +85,15 @@ sub _dspwr {
 }
 
 sub _dssnr {
-    my $snr = shift;
+    my $input = shift;
+    my $snr = $input;
+    $snr =~ s/ //g;   # remove all spaces, leaving possible negative sign and value
     my $color = 'red';
     if ( $snr eq '-----' ) { $color = 'yellow'; }
     elsif ( $snr < 35 ) { $color = 'red'; }
     elsif ( $snr >= 35 && $snr <= 35 ) { $color = 'yellow'; }
     elsif ( $snr > 35 ) { $color = 'green'; }
-    return colored($snr, $color);
+    return colored($input, $color);
 }
 
 sub _cpu {
@@ -122,24 +124,29 @@ Given a line of text from a cisco router, this will try to colorize it.
 
 sub colorize {
     my ($self, $text) = @_;
+    my $CISCO_MAC = q{(?:[a-f0-9]{4}\.){2}[a-f0-9]{4}};
+    my $CABLE_INT = q{C\d+/\d+/U\d+};
+    my $F = q{\d+\.\d+};                    # 00.00 floating point number
+    my $NEG = q{(?:\s+\-?)};
+
 
     $text =~s/(\S+) is (.*), line protocol is (\S+)/sprintf("%s is %s, line protocol is %s", colored($1, 'magenta'),
             _interface($2), _interface($3))/eg;
 
     # sh cable modem phy
-    $text =~ s#([a-f0-9\.]+ C\d+/\d+/U\d+\s+\d+\s+)([\d\.]+)(\s+)([\d\.]+)(\s+\!?\d+)([\s\-]+[\d\.]+)(\s+)([\d\.\-]+)#
-        sprintf("%s%s%s%s%s%s%s%s", $1, _uspwr($2), $3, _ussnr($4), $5, _dspwr($6), $7, _dssnr($8))#eg;
+    $text =~ s#($CISCO_MAC $CABLE_INT\s+\d+\s+)($F)(\s+)($F)(\s+\!?\d+)($NEG$F)($NEG$F|\s+\-{5})#
+        sprintf("%s%s%s%s%s%s%s", $1, _uspwr($2), $3, _ussnr($4), $5, _dspwr($6), _dssnr($7))#eg;
 
     # more show interface
     $text =~ s/Full-duplex/colored('Full-duplex', 'green')/eg;
     $text =~ s/Half-duplex/colored('Half-duplex', 'yellow')/eg;
 
     # sh proc cpu
-    $text =~ s#(\s+\d+\s+\d+\s+\d+\s+\d+\s+)([\d\.]+)(%\s+)([\d\.]+)(%\s+)([\d\.]+)#
+    $text =~ s#(\s+\d+\s+\d+\s+\d+\s+\d+\s+)($F)(%\s+)($F)(%\s+)($F)#
         sprintf("%s%s%s%s%s%s", $1, _cpu($2), $3, _cpu($4), $5, _cpu($6))#eg;
 
     # 4500x sh proc cpu
-    $text =~ s#((?<!\.)\d+\s+\d+\s+\d+\s+\d+\s+)([\d\.]+)(\s+)([\d\.]+)(\s+)([\d\.]+)(\s+\d+\s+\S+)#
+    $text =~ s#((?<!\.)\d+\s+\d+\s+\d+\s+\d+\s+)($F)(\s+)($F)(\s+)($F)(\s+\d+\s+\w+)#
         sprintf("%s%s%s%s%s%s%s", $1, _cpu($2), $3, _cpu($4), $5, _cpu($6), $7)#eg;
 
     # parts of sh run

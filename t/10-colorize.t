@@ -2,10 +2,13 @@ use strict;
 use warnings;
 use Test::Most;
 use Term::ANSIColor;
-plan tests => 10;
+plan tests => 11;
 
 use App::Tel::Color;
 use App::Tel::Color::Cisco;
+
+#use Data::Dumper;
+#$Data::Dumper::Useqq =1;
 
 my $colors = App::Tel::Color->new;
 my $cisco = App::Tel::Color::Cisco->new;
@@ -75,10 +78,11 @@ e86d.526f.424d C1/0/U1       1     32.25  28.51 2379  -10.00  33.90  atdma* 1.1
 e86d.526f.424d C1/0/U2       1     46.25  23.00 2379    6.00  35.00  atdma* 1.1
 e86d.526f.424d C1/0/U3       1     55.25  30.79 2380   10.20  37.90  atdma* 1.1
 e86d.526f.424d C1/0/U3       1     55.25  30.79 2380   19.20  37.90  atdma* 1.1
+e86d.526f.424d C1/0/U3       1     55.25  30.79 !2380  19.20  37.90  atdma* 1.1
 SCM
 
 $t = $cisco->parse($scm);
-$o = "e86d.526f.424d C1/0/U0       1     \e[32m35.25\e[0m  \e[31m19.01\e[0m 2407\e[31m  -15.20\e[0m  \e[33m-----\e[0m  atdma* 1.1\ne86d.526f.424d C1/0/U1       1     \e[33m32.25\e[0m  \e[32m28.51\e[0m 2379\e[33m  -10.00\e[0m  \e[31m33.90\e[0m  atdma* 1.1\ne86d.526f.424d C1/0/U2       1     \e[33m46.25\e[0m  \e[33m23.00\e[0m 2379\e[32m    6.00\e[0m  \e[33m35.00\e[0m  atdma* 1.1\ne86d.526f.424d C1/0/U3       1     \e[31m55.25\e[0m  \e[32m30.79\e[0m 2380\e[33m   10.20\e[0m  \e[32m37.90\e[0m  atdma* 1.1\ne86d.526f.424d C1/0/U3       1     \e[31m55.25\e[0m  \e[32m30.79\e[0m 2380\e[31m   19.20\e[0m  \e[32m37.90\e[0m  atdma* 1.1\n";
+$o = "e86d.526f.424d C1/0/U0       1     \e[32m35.25\e[0m  \e[31m19.01\e[0m 2407\e[31m  -15.20\e[0m\e[33m  -----\e[0m  atdma* 1.1\ne86d.526f.424d C1/0/U1       1     \e[33m32.25\e[0m  \e[32m28.51\e[0m 2379\e[33m  -10.00\e[0m\e[31m  33.90\e[0m  atdma* 1.1\ne86d.526f.424d C1/0/U2       1     \e[33m46.25\e[0m  \e[33m23.00\e[0m 2379\e[32m    6.00\e[0m\e[33m  35.00\e[0m  atdma* 1.1\ne86d.526f.424d C1/0/U3       1     \e[31m55.25\e[0m  \e[32m30.79\e[0m 2380\e[33m   10.20\e[0m\e[32m  37.90\e[0m  atdma* 1.1\ne86d.526f.424d C1/0/U3       1     \e[31m55.25\e[0m  \e[32m30.79\e[0m 2380\e[31m   19.20\e[0m\e[32m  37.90\e[0m  atdma* 1.1\ne86d.526f.424d C1/0/U3       1     \e[31m55.25\e[0m  \e[32m30.79\e[0m !2380\e[31m  19.20\e[0m\e[32m  37.90\e[0m  atdma* 1.1\n";
 is($t, $o, 'cisco scm phy color match');
 
 # sh proc cpu
