@@ -14,6 +14,7 @@ our $_have_netaddr;  # can't set a default because this happens after the BEGIN 
 our $VERSION = '0.201503';
 
 BEGIN {
+    # uncoverable branch false
     if (eval { Module::Load::load NetAddr::IP; 1; }) {
         $_have_netaddr=1;
     } else {
