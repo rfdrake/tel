@@ -21,7 +21,7 @@ App::Tel::Passwd - Methods for managing App::Tel::Passwd:: modules
 
 =cut
 
-my $plugins = [ 'KeePass', 'PWSafe', 'Pass', 'Mock' ];
+my $plugins = [ 'KeePass', 'PWSafe', 'Pass', 'KeyRing', 'Mock' ];
 
 =head2 load_module
 
@@ -62,7 +62,8 @@ sub input_password {
     my $old_mode=IO::Stty::stty(\*STDIN,'-g');
     print "Enter password for $prompt: ";
     IO::Stty::stty(\*STDIN,'-echo');
-    chomp(my $password=<STDIN>);
+    my $password=<STDIN>;
+    chomp($password);
     IO::Stty::stty(\*STDIN,$old_mode);
     return $password;
 }
