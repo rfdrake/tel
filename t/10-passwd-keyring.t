@@ -7,18 +7,17 @@ eval 'use Passwd::Keyring::Auto; 1' ## no critic qw(BuiltinFunctions::ProhibitSt
 
 $ENV{PASSWD_KEYRING_FORCE}='Memory'; # requires 0.70 or greater of P::K::Auto
 
-
 use App::Tel::Passwd qw ( keyring );
 
 $App::Tel::Passwd::appname = 'tel script test interface';
-$App::Tel::Passwd::test_password = 'test123';
+$App::Tel::Passwd::_mock = 1;
+*STDIN = *DATA;
 
 is(keyring('test','test','test'), 'test123', 'Does keyring() return the password we set');
 
-# this line does nothing but ensure we're reading the password from
+# this test ensures we are reading the password from
 # Passwd::Keyring::Auto.  If we are still reading from input_password then
 # the next tests will fail.
-$App::Tel::Passwd::test_password = 'testing 2';
 
 is(keyring('test','test','test'), 'test123', 'Does keyring return the original password');
 
@@ -31,3 +30,8 @@ my $e = App::Tel::Passwd::load_from_profile({ mock_passwd => 'KEYRING', mock_fil
 is($e,'mock password', 'password correct if load_from_profile used with KEYRING?');
 
 done_testing();
+
+
+__DATA__
+test123
+testing 2

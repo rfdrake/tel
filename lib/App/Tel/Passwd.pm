@@ -13,7 +13,7 @@ our @EXPORT_OK = qw ( keyring input_password );
 
 # unit test override variables
 our $appname = 'tel script';
-our $test_password;
+our $_mock = 0;
 
 =head1 NAME
 
@@ -53,18 +53,26 @@ line and returns it.
 
 =cut
 
-
 sub input_password {
-    return $test_password if ($test_password);
     my $prompt = shift;
     $prompt ||= '';
-    die 'STDIN not a tty' if (!POSIX::isatty(\*STDIN));
-    my $old_mode=IO::Stty::stty(\*STDIN,'-g');
+    my $old_mode;
+    # uncoverable branch true
+    if (!$_mock) {
+        die 'STDIN not a tty' if (!POSIX::isatty(\*STDIN));
+        $old_mode=IO::Stty::stty(\*STDIN,'-g');
+        IO::Stty::stty(\*STDIN,'-echo');
+    }
     print "Enter password for $prompt: ";
-    IO::Stty::stty(\*STDIN,'-echo');
     my $password=<STDIN>;
+
     chomp($password);
-    IO::Stty::stty(\*STDIN,$old_mode);
+    # uncoverable branch true
+    if (!$_mock) {
+        IO::Stty::stty(\*STDIN,$old_mode);
+    } else {
+        print "\n";
+    }
     return $password;
 }
 
