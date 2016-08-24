@@ -60,18 +60,14 @@ sub colorize { undef }
 
     $colorobject->parse($buffer, $callback);
 
-Breaks a string up into substrings by line.  It then calls the callback with
-the substring.  The callback defaults to $self->colorize();
+Breaks a string up into substrings by line.  It then calls colorize with the
+substring.
 
 =cut
 
 sub parse {
-    my ($self, $buffer, $cb) = @_;
+    my ($self, $buffer) = @_;
     my $output = '';
-
-    if (!defined $cb) {
-        $cb = sub { my ($self, $val) = @_; $self->colorize($val) };
-    }
 
     while(1) {
         my $string;
@@ -81,11 +77,11 @@ sub parse {
         }
 
         last unless $string;
-        $output .= $cb->($self, $string);
+        $output .= $self->colorize($string);
     }
 
     if (length $buffer) {
-        $output .= $cb->($self, $buffer);
+        $output .= $self->colorize($buffer);
     }
     return $output;
 }
@@ -93,7 +89,7 @@ sub parse {
 =head2 get_colors
 
     my @colors = $self->get_colors();
-    my $color = $self->get_color(1);
+    my $color = $self->get_colors(1);
 
 Returns a list of available colors by their names.  This list excludes the RED
 color because it's used for errors and these colors are specifically for the

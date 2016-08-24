@@ -83,7 +83,8 @@ Calls the parser routine for all the loaded syntax modules.
 
 sub colorize {
     my ($self, $input) = @_;
-    while (my ($name, $mod) = each %{$self->{colors}}) {
+
+    foreach my $mod (values %{$self->{colors}}) {
         $input = $mod->parse($input);
     }
     return $input;

@@ -5,15 +5,13 @@ use Term::ANSIColor;
 plan tests => 11;
 
 use App::Tel::Color;
-use App::Tel::Color::Cisco;
 
 #use Data::Dumper;
 #$Data::Dumper::Useqq =1;
 
-my $colors = App::Tel::Color->new;
-my $cisco = App::Tel::Color::Cisco->new;
 
 subtest load_syntax => sub {
+    my $colors = App::Tel::Color->new;
 
     warning_is { $colors->load_syntax('Test_Syntax_Failure', 0) } undef,
         'load_syntax will not warn on loading failure with debugging off';
@@ -21,7 +19,12 @@ subtest load_syntax => sub {
     warning_like { $colors->load_syntax('Test_Syntax_Failure', 1) } qr#Can't locate App/Tel/Color/Test_Syntax_Failure.pm in \@INC#,
         'load_syntax gives warning on syntax loading failure (with debugging on)';
 
+    $colors->load_syntax('Cisco', 1);
+    my $t = $colors->colorize('0 packets input, 0 bytes, 0 no buffer');
+    my $o = "0 packets input, 0 bytes, \e[32m0\e[0m no buffer";
+    is($t, $o, 'Calling parser via Color.pm->colorize() works');
 
+    $colors->{colors} = {};
     $colors->load_syntax(['CiscoLog','Cisco'], 1);
     is(scalar keys %{$colors->{colors}}, 2, 'Can we load two syntax by sending arrayref?');
 
@@ -65,6 +68,8 @@ if ($Term::ANSIColor::VERSION >= 3.00) {
 }
 is($t, $o, 'pingrainbow output match?');
 
+use App::Tel::Color::Cisco;
+my $cisco = App::Tel::Color::Cisco->new;
 
 # color interface
 $t = $cisco->parse('0 output errors, 0 collisions, 1 interface resets');
@@ -106,7 +111,7 @@ $t = $cisco->parse('0 packets input, 0 bytes, 0 no buffer');
 $o = "0 packets input, 0 bytes, \e[32m0\e[0m no buffer";
 is($t, $o, 'Interface buffer match works');
 
-subtest failures => sub {
+subtest false_positives => sub {
     my ($t, $raw);
 
     # sh diag on CMTS getting colored
