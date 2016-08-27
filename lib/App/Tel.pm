@@ -78,6 +78,8 @@ Creates a new App::Tel object.
 =cut
 
 sub new {
+    my ($class, $opts) = @_;
+
     my $self = {
         'stdin'         => Expect->exp_init(\*STDIN),
         'connected'     => 0,
@@ -85,11 +87,11 @@ sub new {
         'title_stack'   => 0,
         'log_stdout'    => 1,
         'profile'       => {},
-        'colors'        => App::Tel::Color->new,
+        'opts'          => $opts,
+        'colors'        => App::Tel::Color->new($opts->{d}),
     };
 
-    bless($self, 'App::Tel');
-    return $self;
+    return bless($self, $class);
 }
 
 
@@ -216,7 +218,7 @@ sub load_config {
     }
 
     # load global syntax highlighting things if found
-    $self->{colors}->load_syntax($config->{syntax},$self->{opts}->{d});
+    $self->{colors}->load_syntax($config->{syntax});
     $self->{config} = $config;
     return $self;
 }
@@ -401,7 +403,7 @@ sub profile {
             }
         }
         # load syntax highlight
-        $self->{colors}->load_syntax($profile->{syntax},$self->{opts}->{d});
+        $self->{colors}->load_syntax($profile->{syntax});
         $profile->{profile_name}=$_;
     }
 

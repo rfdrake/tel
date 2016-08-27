@@ -31,7 +31,7 @@ Multiple files can be chain loaded by using plus:
 =cut
 
 sub load_syntax {
-    my ($self, $list, $debug) = @_;
+    my ($self, $list) = @_;
     return $self if (!defined $list);
     my @syntax;
     push(@syntax, $list);
@@ -50,7 +50,7 @@ sub load_syntax {
                 $self->{colors}->{$module}=$module->new;
             };
             if ($@) {
-                carp $@ if ($debug);
+                carp $@ if ($self->{debug});
             }
         }
     }
@@ -68,9 +68,12 @@ load_syntax.
 =cut
 
 sub new {
+    my ($class,$debug) = @_;
+
     bless( {
+        debug => $debug,
         colors => {},
-    }, shift);
+    }, $class);
 }
 
 =head2 colorize

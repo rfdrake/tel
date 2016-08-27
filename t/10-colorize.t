@@ -12,32 +12,33 @@ use App::Tel::Color;
 
 subtest load_syntax => sub {
     my $colors = App::Tel::Color->new;
+    my $colors_debug = App::Tel::Color->new(1);
 
-    warning_is { $colors->load_syntax('Test_Syntax_Failure', 0) } undef,
+    warning_is { $colors->load_syntax('Test_Syntax_Failure') } undef,
         'load_syntax will not warn on loading failure with debugging off';
 
-    warning_like { $colors->load_syntax('Test_Syntax_Failure', 1) } qr#Can't locate App/Tel/Color/Test_Syntax_Failure.pm in \@INC#,
+    warning_like { $colors_debug->load_syntax('Test_Syntax_Failure') } qr#Can't locate App/Tel/Color/Test_Syntax_Failure.pm in \@INC#,
         'load_syntax gives warning on syntax loading failure (with debugging on)';
 
-    $colors->load_syntax('Cisco', 1);
+    $colors->load_syntax('Cisco');
     my $t = $colors->colorize('0 packets input, 0 bytes, 0 no buffer');
     my $o = "0 packets input, 0 bytes, \e[32m0\e[0m no buffer";
     is($t, $o, 'Calling parser via Color.pm->colorize() works');
 
     $colors->{colors} = {};
-    $colors->load_syntax(['CiscoLog','Cisco'], 1);
+    $colors->load_syntax(['CiscoLog','Cisco']);
     is(scalar keys %{$colors->{colors}}, 2, 'Can we load two syntax by sending arrayref?');
 
     $colors->{colors} = {};
-    $colors->load_syntax(['CiscoLog','Test_Syntax_Failure'], 0);
+    $colors->load_syntax(['CiscoLog','Test_Syntax_Failure']);
     is(scalar keys %{$colors->{colors}} , 1, 'valid + invalid should be 1?');
 
     $colors->{colors} = {};
-    $colors->load_syntax(['Test_Syntax_Failure','Test_Syntax_Failure'], 0);
+    $colors->load_syntax(['Test_Syntax_Failure','Test_Syntax_Failure']);
     is(scalar keys %{$colors->{colors}}, 0, 'invalid array = 0?');
 
     $colors->{colors} = {};
-    $colors->load_syntax('Test_Syntax_Failure+Test_Syntax_Failure', 0);
+    $colors->load_syntax('Test_Syntax_Failure+Test_Syntax_Failure');
     is(scalar keys %{$colors->{colors}}, 0, 'invalid + invalid = 0?');
 
 

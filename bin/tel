@@ -152,16 +152,14 @@ Example: tel -v
 sub main {
     # override process name to make it easy to kill
     $0 = 'tel ' . join(' ', @ARGV);
-    my $self = App::Tel->new();
-    $self->load_config();
 
     my %opts;
     GetOptions("xscript=s@" => \$opts{x}, 'profile=s' => \$opts{P});
     getopts('46vhlda:c:t:m:p:P:A:s:S:', \%opts);
     $opts{s}=$opts{S} || $opts{s};
 
-    $self->{timeout} = $opts{t} ? $opts{t} : 90;
-    $self->{opts} = \%opts;
+    my $self = App::Tel->new(\%opts);
+    $self->load_config();
 
     if ($opts{v}) {
         VERSION_MESSAGE();
