@@ -150,8 +150,6 @@ Example: tel -v
 =cut
 
 sub main {
-    # override process name to make it easy to kill
-    $0 = 'tel ' . join(' ', @ARGV);
 
     my %opts;
     GetOptions("xscript=s@" => \$opts{x}, 'profile=s' => \$opts{P});
@@ -167,6 +165,10 @@ sub main {
 
     die HELP_MESSAGE() if ($opts{h});
     die pod2usage() if (!scalar @ARGV && !scalar keys %opts);
+
+    # override process name to make it easy to kill
+    # this needs to happen after pod2usage/HELP MESSAGE
+    $0 = 'tel ' . join(' ', @ARGV);
 
     for (@ARGV) {
         $self->go($_);
