@@ -173,18 +173,12 @@ sub send {
 
     $self->expect("text");
 
-Wrapper for Expect's expect() method.  If you don't specify a timeout this
-will use the default script timeout.
+Wrapper for Expect's expect() method.
 
 =cut
 
 sub expect {
-    my $self = shift;
-    if ($#_ < 2) {
-        return $self->{'session'}->expect($self->{'timeout'}, @_);
-    } else {
-        return $self->{'session'}->expect(@_);
-    }
+    return shift->{'session'}->expect(@_);
 }
 
 =head2 load_config
