@@ -156,13 +156,10 @@ sub main {
     getopts('46vhlda:c:t:m:p:P:A:s:S:', \%opts);
     $opts{s}=$opts{S} || $opts{s};
 
-    my $self = App::Tel->new(\%opts);
+    my $self = App::Tel->new(opts => \%opts);
     $self->load_config();
 
-    if ($opts{v}) {
-        VERSION_MESSAGE();
-    }
-
+    say VERSION_MESSAGE() if ($opts{v});
     die HELP_MESSAGE() if ($opts{h});
     die pod2usage() if (!scalar @ARGV && !scalar keys %opts);
 
@@ -191,7 +188,7 @@ Boilerplate routine for Getopt::Std
 =cut
 
 sub VERSION_MESSAGE {
-    say "tel version " . $App::Tel::VERSION;
+    "tel version " . $App::Tel::VERSION;
 }
 
 

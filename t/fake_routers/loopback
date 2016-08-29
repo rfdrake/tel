@@ -4,30 +4,31 @@ eval 'exec perl  -S $0 ${1+"$@"}'
     if 0; # not running under some shell
 
 use strict;
+use warnings;
 use IO::Stty;
 
-print "Password:";
+my @commands=();
+
+print "Password: ";
 IO::Stty::stty(\*STDIN,'-echo');
-my $password = <STDIN>;
+push(@commands, scalar <STDIN>);
 IO::Stty::stty(\*STDIN,'echo');
 print "\n";
-warn "Provided vty password is $password";
 
 print "router-name>";
 
 # get "enable" command
-my $temp = <STDIN>;
+push(@commands, scalar <STDIN>);
 
 # test enable user
-print "Username:";
-my $temp = <STDIN>;
+print "Username: ";
+push(@commands, scalar <STDIN>);
 
-print "Password:";
+print "Password: ";
 IO::Stty::stty(\*STDIN,'-echo');
-$password = <STDIN>;
+push(@commands, scalar <STDIN>);
 IO::Stty::stty(\*STDIN,'echo');
 print "\n";
-warn "Provided enable password is $password";
 
 
 sub shver {
@@ -91,16 +92,17 @@ EOF
 }
 
 
-my $input;
+my $input = '';
 do {
     if ($input eq "sh ver") {
         print shver();
     }
     print "router-name#";
     $input = <STDIN>;
-    if (!defined($input)) {
-        print "exit\n";
-        exit;
-    }
+    push(@commands, $input);
     chomp($input);
-} until ($input eq "logout" || $input eq "exit");
+    $input =~ s/ //g;
+} until ($input =~ /logout/ || $input eq "exit");
+
+chomp @commands;
+warn join(',', @commands) . "\n";

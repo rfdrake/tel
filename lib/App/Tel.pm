@@ -78,7 +78,7 @@ Creates a new App::Tel object.
 =cut
 
 sub new {
-    my ($class, $opts) = @_;
+    my ($class, %args) = @_;
 
     my $self = {
         'stdin'         => Expect->exp_init(\*STDIN),
@@ -87,8 +87,9 @@ sub new {
         'title_stack'   => 0,
         'log_stdout'    => 1,
         'profile'       => {},
-        'opts'          => $opts,
-        'colors'        => App::Tel::Color->new($opts->{d}),
+        'perl'          => $args{perl} || '',
+        'opts'          => $args{opts},
+        'colors'        => App::Tel::Color->new($args{opts}->{d}),
     };
 
     return bless($self, $class);
@@ -110,7 +111,7 @@ sub go {
     # default profile always loads before anything else.  replace == 1
     $self->profile('default', 1);
     $self->profile($self->{opts}->{P}) if ($self->{opts}->{P});
-    $self->hostname($_);
+    $self->hostname($host);
     $self->login($self->hostname);
     $self->profile($self->{opts}->{A}) if ($self->{opts}->{A});
     if ($self->connected) {
@@ -139,7 +140,7 @@ sub disconnect {
     $self->{banners} = undef;
     $self->{methods} = ();
     $self->connected(0);
-    $self->{colors}=App::Tel::Color->new;
+    $self->{colors}=App::Tel::Color->new($self->{opts}->{d});
     $self->{enabled}=0;
 
     if ($self->{title_stack} > 0) {
@@ -317,6 +318,10 @@ sub methods {
 
     return $self->{methods};
 }
+
+# this is overridable in the individual test file to connect a special
+# way if the method is listed as "test"
+sub _test_connect { shift->connect("@_"); }
 
 sub _banners {
     my $self = shift;
@@ -635,10 +640,9 @@ sub login {
 
     METHOD: for (@{$self->methods}) {
         my $p = $self->{port};
-        if ($_ eq 'ssh')        { $p ||= 22; $self->connect("ssh $family -p $p -l $rtr->{user} $ssho $hostname"); }
+        if    ($_ eq 'ssh')     { $p ||= 22; $self->connect("ssh $family -p $p -l $rtr->{user} $ssho $hostname"); }
         elsif ($_ eq 'telnet')  { $p ||= ''; $self->connect("telnet $family $hostname $p"); }
-        # for testing. can pass an expect script to the other side and use it's output as our input.
-        elsif ($_ eq 'exec')    { $self->connect($hostname); }
+        elsif ($_ eq 'test')    { $self->_test_connect($hostname); }
         else { die "No program defined for method $_\n"; }
 
         # suppress stdout if needed
@@ -997,7 +1001,10 @@ sub run_commands {
         $arg =~ s/\\r/\r/g; # fix for reload\ry.  I believe 'perldoc quotemeta' explains why this happens
         chomp($arg);
         $self->send("$arg\r");
-        $self->expect($self->{timeout},'-re', $self->profile->{prompt});
+        $self->expect($self->{timeout},
+            [ $self->profile->{prompt} => sub { } ],
+            [ 'eof' => sub { die "EOF From host.\n"; } ],
+        );
         sleep($opts->{s}) if ($opts->{s});
     }
 
@@ -1059,7 +1066,8 @@ sub control_loop {
         die 'STDIN Not a tty' if (!POSIX::isatty($self->{stdin}));
         if ($autocmds) {
             $self->expect($self->{timeout},'-re',$prompt);
-            $self->run_commands(@$autocmds);
+            eval { $self->run_commands(@$autocmds); };
+            return $self if ($@);
         }
         $self->interact($self->{stdin}, '\cD');
         # q\b is to end anything that's at a More prompt or other dialog and

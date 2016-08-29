@@ -6,28 +6,58 @@ use App::Tel;
 
 use Config;
 my $path_to_perl = $Config{perlpath};
+my $tel = App::Tel->new(perl => $path_to_perl);
 
-my $tel = App::Tel->new();
-$tel->load_config('t/rc/fakerouter.rc');
+# override the _test_connect method with something that can save a copy of STDERR
+{
+    local($^F)= 0x8000;
+    pipe( READERR, WRITEERR ) or die "pipe: $!";
+}
 
-# loading the default profile to pickup the vty password
-$tel->profile('default', 1);
+no warnings 'redefine';
+local *App::Tel::_test_connect = sub {
+    my ($self, $hostname) = @_;
 
-# suppress as much output as we can because it interferes with testing
-$tel->{log_stdout}=0;
-# using this to load the rtr config so we turn on the exec method
-$tel->rtr_find("t/fake_routers/loopback");
-$tel->login("$path_to_perl t/fake_routers/loopback");
-# add newlines to try to make sure "ok 1" is printed on it's own line.
-#  instead of this, we're just going to have to make the fake router \n after
-#  password lines so the errors don't happen
-print "\n";
-is($tel->connected, 1, 'Did we make it through login?');
-is($tel->enable->enabled, 1, 'Did we enable successfully?');
+    my $fd= fileno(WRITEERR);
+    $self->connect("$self->{perl} $hostname 2>&$fd");
+};
 
-$tel->send("sh ver\r");
-$tel->expect('#');
-$tel->send("exit\r");
-$tel->disconnect;    # soft close
-$tel->disconnect(1); # hard close
+
+subtest test_opt_a => sub {
+
+    my @expected = ( 'testvty', 'enable','tester','testenable','sh ver', ' exit' );
+    my $opts = {
+        a => 'sh ver; exit'
+    };
+    $tel->{opts} = $opts;
+    $tel->load_config('t/rc/fakerouter.rc');
+    $tel->go("t/fake_routers/loopback");
+    print "\n";
+    my @values = split(',',<READERR>);
+    chomp(@values);
+    is_deeply(\@values, \@expected, 'Does the parser work like we expect?');
+    done_testing();
+};
+
+subtest test_opt_c => sub {
+
+    my @expected = ( 'testvty', 'enable','tester','testenable','sh ver', 'logout' );
+    my $opts = {
+        c => 'sh ver'
+    };
+    $tel->{opts} = $opts;
+
+    my $tel = App::Tel->new(perl => $path_to_perl, opts => $opts);
+    $tel->load_config('t/rc/fakerouter.rc');
+    $tel->go("t/fake_routers/loopback");
+    print "\n";
+    my @values = split(',',<READERR>);
+    chomp(@values);
+    is_deeply(\@values, \@expected, 'Does the parser work like we expect?');
+    done_testing();
+};
+
+# we should close this after connect but we reuse the filehandle when we
+# connect again with go().
+close(WRITEERR);
 
