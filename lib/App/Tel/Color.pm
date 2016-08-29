@@ -60,7 +60,7 @@ sub load_syntax {
 
 =head2 new
 
-    my $colors = App::Tel::Color->new;
+    my $colors = App::Tel::Color->new($debug);
 
 Initializes a color library.  You can load syntax parsers by calling
 load_syntax.
