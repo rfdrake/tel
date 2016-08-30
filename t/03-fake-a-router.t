@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 use Test::More;
-plan tests => 2;
+plan tests => 3;
 use App::Tel;
 
 use Config;
@@ -31,7 +31,9 @@ subtest test_opt_a => sub {
     };
     $tel->{opts} = $opts;
     $tel->load_config('t/rc/fakerouter.rc');
+    is($tel->enabled, 0, 'Check if we are enabled?');
     $tel->go("t/fake_routers/loopback");
+    $tel->disconnect(1);    # hard close after the soft close
     print "\n";
     my @values = split(',',<READERR>);
     chomp(@values);
@@ -47,7 +49,25 @@ subtest test_opt_c => sub {
     };
     $tel->{opts} = $opts;
 
-    my $tel = App::Tel->new(perl => $path_to_perl, opts => $opts);
+    $tel->load_config('t/rc/fakerouter.rc');
+    $tel->go("t/fake_routers/loopback");
+    print "\n";
+    my @values = split(',',<READERR>);
+    chomp(@values);
+    is_deeply(\@values, \@expected, 'Does the parser work like we expect?');
+    done_testing();
+};
+
+subtest test_opt_x => sub {
+
+    my @expected = ( 'testvty', 'enable','tester','testenable','sh ver',
+                      'sh proc cpu', '', 'logout',
+    );
+    my $opts = {
+        x => [ 't/conf/test_x' ],
+    };
+    $tel->{opts} = $opts;
+
     $tel->load_config('t/rc/fakerouter.rc');
     $tel->go("t/fake_routers/loopback");
     print "\n";
