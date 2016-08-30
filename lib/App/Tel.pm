@@ -1052,7 +1052,7 @@ sub control_loop {
         if (ref($pagercmd) eq 'CODE') {
             $pagercmd->();
         } elsif ($pagercmd) {
-            $self->run_commands("$pagercmd\r");
+            $self->run_commands("$pagercmd");
         }
         $self->run_commands(@args);
         $self->send($profile->{logoutcmd} ."\r");
