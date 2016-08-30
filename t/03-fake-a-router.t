@@ -78,7 +78,10 @@ subtest test_login_failures => sub {
     $tel->load_config('t/rc/login_failures.rc');
     $tel->profile('default',1);
     $tel->methods('test');
-    $tel->login("t/fake_routers/eof");
+    {
+        local $SIG{__WARN__}=sub{};  # suppress warn() for this
+        $tel->login("t/fake_routers/eof");
+    }
     print "\n";
     is($tel->connected, 0, "login failure eof?");
     $tel->disconnect(0);    # soft close.

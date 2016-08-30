@@ -1,0 +1,11 @@
+$telrc = {
+          'profile' => {
+                       'default' => { 'password' => 'testvty', 'user' => 'tester',
+                                      'pagercmd' => 'term len 0',
+                                      'method' => 'test',
+                                      'enable' => 'testenable',
+                                      'enablecmd' => 'enable'
+                                    },
+                     },
+};
+
