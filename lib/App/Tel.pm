@@ -315,7 +315,7 @@ sub methods {
 
 # this is overridable in the individual test file to connect a special
 # way if the method is listed as "test"
-sub _test_connect { shift->connect("@_"); }
+sub _test_connect { undef }
 
 sub _banners {
     my $self = shift;
@@ -599,8 +599,8 @@ sub login {
     my ($self, $hostname) = @_;
 
     # dumb stuff to alias $rtr to the contents of $self->{'profile'}
-    # needed because we reload the profile in the expect loop and can't update
-    # the alias.
+    # needed because we can reload the profile inside the expect loop
+    # and can't update the alias.
     our $rtr;
     *rtr = \$self->{'profile'};
 
@@ -652,21 +652,14 @@ sub login {
         $self->expect($self->{timeout},
                 @{$self->_banners},
                 @dynamic,
-                # fucking shitty allied telesyn
-                [ qr/User Access Verification - RADIUS/ => sub { $allied_shit=1;
-                    $self->send("$rtr->{user}\r".$self->password()."\r"); exp_continue } ],
-                [ qr/User Access Verification - Local/ => sub {
-                    $self->send("$rtr->{user}\r".$self->password()."\r"); $self->connected(1); last METHOD; } ],
                 [ $rtr->{username_prompt} => sub {
-                    $self->send("$rtr->{user}\r") unless($allied_shit); exp_continue; } ],
+                    $self->send("$rtr->{user}\r");
+                    exp_continue;
+                } ],
                 [ $rtr->{password_prompt} => sub {
-                    if ($allied_shit) {
-                        exp_continue;
-                    } else {
-                        $self->send($self->password() ."\r");
-                        $self->connected(1);
-                        last METHOD;
-                    }
+                    $self->send($self->password() ."\r");
+                    $self->connected(1);
+                    last METHOD;
                 } ],
                 [ qr/Name or service not known|hostname nor servname provided, or not known|could not resolve / => sub
                     {
