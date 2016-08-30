@@ -47,7 +47,7 @@ under the same terms as Perl itself.
 
 #### GLOBALS
 # For reasons related to state I needed to make $_winch_it global
-# because it needs to be written to inside signals.
+# because it needs to be written inside signals.
 my $_winch_it=0;
 
 sub _winch_handler {
@@ -407,7 +407,8 @@ sub profile {
     }
 
     # add some sane defaults if the profile doesn't have them
-    $profile->{'user'} ||= $ENV{'USER'};
+    $profile->{'user'} ||= $ENV{'USER'} || $ENV{'LOGNAME'};
+    # need to warn if user is still not defined?
     $self->{'profile'}=$profile;
     return $profile;
 }
@@ -537,7 +538,7 @@ is at a prompt of some kind.
 
 sub connected {
     my ($self, $status) = @_;
-    if ($status) {
+    if (defined($status)) {
         $self->{connected}=$status;
     }
 
@@ -608,7 +609,6 @@ sub login {
         $ssho = '-o '. join(' -o ', @{$rtr->{sshoptions}});
     }
     $ssho .= $rtr->{ciphertype} ? " -c $rtr->{ciphertype}" : '';
-
 
     # because we use last METHOD; in anonymous subs this suppresses the
     # warning of "exiting subroutine via last;"
