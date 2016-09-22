@@ -1,5 +1,5 @@
 Name:           tel_script
-Version:        0.201510
+Version:        0.201601
 Release:        1%{?dist}
 Summary:        App::Tel Perl module
 License:        GPL+ or Artistic

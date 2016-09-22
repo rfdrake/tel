@@ -1,3 +1,16 @@
+app-tel (0.2016.01) unstable; urgency=medium
+
+  * Added Dockerfile
+  * Darwin fix for mktelrc
+  * added support for regex => '192.168.15.1'
+  * new warnings if optional modules fail to load
+  * fixes for colors in several places
+  * override process name to 'tel' for easier pkill
+  * rewrote the Expect hooks for better maintainability
+  * fix for password input
+
+ -- Robert Drake <rdrake@cpan.org>  Thu, 22 Sep 2016 18:40:22 -0400
+
 app-tel (0.2015.10) unstable; urgency=medium
 
   * added support for -P and -A to override profiles
