@@ -11,7 +11,7 @@ $tel->load_config('t/rc/fakerouter.rc');
 
 # override the _test_connect method with something that can save a copy of STDERR
 {
-    local($^F)= 0x8000;
+    local($^F)= 0x8000; # turn off close-on-exec by setting SYSTEM_FD_MAX=32768
     pipe( READERR, WRITEERR ) or die "pipe: $!";
 }
 
