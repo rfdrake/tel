@@ -9,6 +9,7 @@ use App::Tel::Passwd;
 use App::Tel::Color;
 use App::Tel::Macro;
 use App::Tel::Merge qw ( merge );
+use App::Tel::Expect;
 use Time::HiRes qw ( sleep );
 use v5.10;
 
@@ -55,7 +56,7 @@ sub _winch_handler {
 }
 
 sub _winch {
-    my $session = shift->{'session'};
+    my $session = shift->session;
     # these need to be wrapped in eval or you get Given filehandle is not a
     # tty in clone_winsize_from if you call winch() under a scripted
     # environment like rancid (or just under par, or anywhere there is no pty)
@@ -156,7 +157,6 @@ sub disconnect {
     return $self;
 }
 
-
 =head2 send
 
     $self->send("text\r");
@@ -166,7 +166,7 @@ Wrapper for Expect's send() method.
 =cut
 
 sub send {
-    return shift->{'session'}->send(@_);
+    return shift->session->send(@_);
 }
 
 =head2 expect
@@ -178,7 +178,7 @@ Wrapper for Expect's expect() method.
 =cut
 
 sub expect {
-    return shift->{'session'}->expect(@_);
+    return shift->session->expect(@_);
 }
 
 =head2 load_config
@@ -487,9 +487,9 @@ session.
 =cut
 
 sub session {
-    my ($self, $renew) = @_;
+    return $_[0]->{'session'} if (!$_[1] && defined($_[0]->{'session'}));
 
-    return $self->{'session'} if (!$renew && defined($self->{'session'}));
+    my $self = shift;
     my $session = $self->{'session'};
 
     $session->soft_close() if ($session && $session->pid());
@@ -640,7 +640,7 @@ sub login {
         else { die "No program defined for method $_\n"; }
 
         # suppress stdout if needed
-        $self->{'session'}->log_stdout($self->{log_stdout});
+        $self->session->log_stdout($self->{log_stdout});
 
         # need to make this optional
         # also need to make it display whatever the user cares about.
@@ -713,263 +713,6 @@ sub logging {
     $file ||= $self->{hostname};
     unlink ("/tmp/$file.log") if (-f "/tmp/$file.log");
     $self->session->log_file("/tmp/$file.log");
-    return $self;
-}
-
-=head2 interact
-
-    $self->interact($input, $escape);
-
-This is a copy of Expect's interact() command.  It's been rewritten in parts
-to customize it for our needs, but might be very similar otherwise.  It's
-mainly a setup script for the call to interconnect().
-
-=cut
-
-sub interact {
-    my ($self, $in_object, $escape_sequence) = @_;
-    my $session = $self->{'session'};
-
-    my @old_group = $session->set_group();
-    # we know the input is STDIN and that it's an object.
-    my $out_object = Expect->exp_init(\*STDOUT);
-    $out_object->manual_stty(1);
-    $session->set_group($out_object);
-
-    $in_object->set_group($session);
-    $in_object->set_seq($escape_sequence,undef) if defined($escape_sequence);
-    # interconnect normally sets stty -echo raw. Interact really sort
-    # of implies we don't do that by default. If anyone wanted to they could
-    # set it before calling interact, of use interconnect directly.
-    my $old_manual_stty_val = $session->manual_stty();
-    $session->manual_stty(1);
-    # I think this is right. Don't send stuff from in_obj to stdout by default.
-    # in theory whatever 'session' is should echo what's going on.
-    my $old_log_stdout_val = $session->log_stdout();
-    $session->log_stdout(0);
-    $in_object->log_stdout(0);
-    # Allow for the setting of an optional EOF escape function.
-    #  $in_object->set_seq('EOF',undef);
-    #  $session->set_seq('EOF',undef);
-    $self->interconnect($in_object);
-    $session->log_stdout($old_log_stdout_val);
-    $session->set_group(@old_group);
-    # If old_group was undef, make sure that occurs. This is a slight hack since
-    # it modifies the value directly.
-    # Normally an undef passed to set_group will return the current groups.
-    # It is possible that it may be of worth to make it possible to undef
-    # The current group without doing this.
-    unless (@old_group) {
-        @{${*$session}{exp_Listen_Group}} = ();
-    }
-    $session->manual_stty($old_manual_stty_val);
-    return $self;
-}
-
-=head2 interconnect
-
-    $self->interconnect(@handles);
-
-This is a copy of Expect's interconnect() method that has been modified to
-support the new things we needed.  The main differences are colorize and our
-winch handler.
-
-Future versions might support AnyEvent::IO or AnyEvent::Socket, but I might
-contribute that back to Expect's core stuff.  I might also try to figure out
-how to make the colorize stuff more hook-able so we could use Expect's methods
-without rewriting them.
-
-=cut
-
-sub interconnect {
-    my ($self, $inobject) = @_;
-    my @handles = ($self->{'session'}, $inobject);
-
-    my ( $nread );
-    my ( $rout, $emask, $eout );
-    my ( $escape_character_buffer );
-    my ( $read_mask, $temp_mask ) = ( '', '' );
-
-    # Get read/write handles
-    foreach my $handle (@handles) {
-        $temp_mask = '';
-        vec( $temp_mask, $handle->fileno(), 1 ) = 1;
-        $read_mask = $read_mask | $temp_mask;
-    }
-    if ($Expect::Debug) {
-        print STDERR "Read handles:\r\n";
-        foreach my $handle (@handles) {
-            print STDERR "\tRead handle: ";
-            print STDERR "'${*$handle}{exp_Pty_Handle}'\r\n";
-            print STDERR "\t\tListen Handles:";
-            foreach my $write_handle ( @{ ${*$handle}{exp_Listen_Group} } ) {
-                print STDERR " '${*$write_handle}{exp_Pty_Handle}'";
-            }
-            print STDERR ".\r\n";
-        }
-    }
-
-    #  I think if we don't set raw/-echo here we may have trouble. We don't
-    # want a bunch of echoing crap making all the handles jabber at each other.
-    foreach my $handle (@handles) {
-        unless ( ${*$handle}{"exp_Manual_Stty"} ) {
-
-            # This is probably O/S specific.
-            ${*$handle}{exp_Stored_Stty} = $handle->exp_stty('-g');
-            print STDERR "Setting tty for ${*$handle}{exp_Pty_Handle} to 'raw -echo'.\r\n"
-                if ${*$handle}{"exp_Debug"};
-            $handle->exp_stty("raw -echo");
-        }
-        foreach my $write_handle ( @{ ${*$handle}{exp_Listen_Group} } ) {
-            unless ( ${*$write_handle}{"exp_Manual_Stty"} ) {
-                ${*$write_handle}{exp_Stored_Stty} =
-                    $write_handle->exp_stty('-g');
-                print STDERR "Setting ${*$write_handle}{exp_Pty_Handle} to 'raw -echo'.\r\n"
-                    if ${*$handle}{"exp_Debug"};
-                $write_handle->exp_stty("raw -echo");
-            }
-        }
-    }
-
-    print STDERR "Attempting interconnection\r\n" if $Expect::Debug;
-
-    # Wait until the process dies or we get EOF
-    # In the case of !${*$handle}{exp_Pid} it means
-    # the handle was exp_inited instead of spawned.
-    CONNECT_LOOP:
-    while (1) {
-
-        # test each handle to see if it's still alive.
-        foreach my $read_handle (@handles) {
-            waitpid( ${*$read_handle}{exp_Pid}, WNOHANG )
-                if ( exists( ${*$read_handle}{exp_Pid} )
-                and ${*$read_handle}{exp_Pid} );
-            if (    exists( ${*$read_handle}{exp_Pid} )
-                and ( ${*$read_handle}{exp_Pid} )
-                and ( !kill( 0, ${*$read_handle}{exp_Pid} ) ) )
-            {
-                print STDERR
-                    "Got EOF (${*$read_handle}{exp_Pty_Handle} died) reading ${*$read_handle}{exp_Pty_Handle}\r\n"
-                    if ${*$read_handle}{"exp_Debug"};
-                last CONNECT_LOOP
-                    unless defined( ${ ${*$read_handle}{exp_Function} }{"EOF"} );
-                last CONNECT_LOOP
-                    unless &{ ${ ${*$read_handle}{exp_Function} }{"EOF"} }
-                    ( @{ ${ ${*$read_handle}{exp_Parameters} }{"EOF"} } );
-            }
-        }
-
-        my $nfound = select( $rout = $read_mask, undef, $eout = $emask, undef );
-
-        # Is there anything to share?  May be -1 if interrupted by a signal...
-        $self->_winch() if $_winch_it;
-        next CONNECT_LOOP if not defined $nfound or $nfound < 1;
-
-        # Which handles have stuff?
-        my @bits = split( //, unpack( 'b*', $rout ) );
-        #$eout = 0 unless defined($eout);
-        #my @ebits = split( //, unpack( 'b*', $eout ) );
-        #    print "Ebits: $eout\r\n";
-        foreach my $read_handle (@handles) {
-            if ( $bits[ $read_handle->fileno() ] ) {
-                $nread = sysread(
-                    $read_handle, ${*$read_handle}{exp_Pty_Buffer},
-                    10240
-                );
-
-                # don't bother trying to colorize input from the user
-                if ($read_handle->fileno != $inobject->fileno) {
-                    ${*$read_handle}{exp_Pty_Buffer} = $self->{colors}->colorize(${*$read_handle}{exp_Pty_Buffer});
-                } else {
-                    # this doesn't work because the paste buffer ends up with
-                    # all the text and we send it all at once.  We need to
-                    # break up the read_handle before sending it, then loop on
-                    # with expect/send/sleep
-                    sleep($self->{opts}->{S}) if ($self->{opts}->{S} && ${*$read_handle}{exp_Pty_Buffer} =~ /\r/);
-                }
-                # Appease perl -w
-                $nread = 0 unless defined($nread);
-                print STDERR "interconnect: read $nread byte(s) from ${*$read_handle}{exp_Pty_Handle}.\r\n"
-                    if ${*$read_handle}{"exp_Debug"} > 1;
-
-                # Test for escape seq. before printing.
-                # Appease perl -w
-                $escape_character_buffer = ''
-                    unless defined($escape_character_buffer);
-                $escape_character_buffer .= ${*$read_handle}{exp_Pty_Buffer};
-                foreach my $escape_sequence ( keys( %{ ${*$read_handle}{exp_Function} } ) ) {
-                    print STDERR "Tested escape sequence $escape_sequence from ${*$read_handle}{exp_Pty_Handle}"
-                        if ${*$read_handle}{"exp_Debug"} > 1;
-
-                    # Make sure it doesn't grow out of bounds.
-                    $escape_character_buffer = $read_handle->_trim_length(
-                        $escape_character_buffer,
-                        ${*$read_handle}{"exp_Max_Accum"}
-                    ) if ( ${*$read_handle}{"exp_Max_Accum"} );
-                    if ( $escape_character_buffer =~ /($escape_sequence)/ ) {
-                        my $match = $1;
-                        if ( ${*$read_handle}{"exp_Debug"} ) {
-                            print STDERR
-                                "\r\ninterconnect got escape sequence from ${*$read_handle}{exp_Pty_Handle}.\r\n";
-
-                            # I'm going to make the esc. seq. pretty because it will
-                            # probably contain unprintable characters.
-                            print STDERR "\tEscape Sequence: '$escape_sequence'\r\n";
-                            print STDERR "\tMatched by string: '$match'\r\n";
-                        }
-
-                        # Print out stuff before the escape.
-                        # Keep in mind that the sequence may have been split up
-                        # over several reads.
-                        # Let's get rid of it from this read. If part of it was
-                        # in the last read there's not a lot we can do about it now.
-                        if ( ${*$read_handle}{exp_Pty_Buffer} =~ /([\w\W]*)($escape_sequence)/ ) {
-                            $read_handle->_print_handles($1);
-                        } else {
-                            $read_handle->_print_handles( ${*$read_handle}{exp_Pty_Buffer} );
-                        }
-
-                        # Clear the buffer so no more matches can be made and it will
-                        # only be printed one time.
-                        ${*$read_handle}{exp_Pty_Buffer} = '';
-                        $escape_character_buffer = '';
-
-                        # Do the function here. Must return non-zero to continue.
-                        # More cool syntax. Maybe I should turn these in to objects.
-                        last CONNECT_LOOP
-                            unless &{ ${ ${*$read_handle}{exp_Function} }{$escape_sequence} }
-                            ( @{ ${ ${*$read_handle}{exp_Parameters} }{$escape_sequence} } );
-                    }
-                }
-                $nread = 0 unless defined($nread); # Appease perl -w?
-                waitpid( ${*$read_handle}{exp_Pid}, WNOHANG )
-                    if ( defined( ${*$read_handle}{exp_Pid} )
-                    && ${*$read_handle}{exp_Pid} );
-                if ( $nread == 0 ) {
-                    print STDERR "Got EOF reading ${*$read_handle}{exp_Pty_Handle}\r\n"
-                        if ${*$read_handle}{"exp_Debug"};
-                    last CONNECT_LOOP
-                        unless defined( ${ ${*$read_handle}{exp_Function} }{"EOF"} );
-                    last CONNECT_LOOP
-                        unless &{ ${ ${*$read_handle}{exp_Function} }{"EOF"} }
-                        ( @{ ${ ${*$read_handle}{exp_Parameters} }{"EOF"} } );
-                }
-                last CONNECT_LOOP if ( $nread < 0 ); # This would be an error
-                $read_handle->_print_handles( ${*$read_handle}{exp_Pty_Buffer} );
-            }
-        }
-    }
-    foreach my $handle (@handles) {
-        unless ( ${*$handle}{"exp_Manual_Stty"} ) {
-            $handle->exp_stty( ${*$handle}{exp_Stored_Stty} );
-        }
-        foreach my $write_handle ( @{ ${*$handle}{exp_Listen_Group} } ) {
-            unless ( ${*$write_handle}{"exp_Manual_Stty"} ) {
-                $write_handle->exp_stty( ${*$write_handle}{exp_Stored_Stty} );
-            }
-        }
-    }
-
     return $self;
 }
 
@@ -1058,7 +801,21 @@ sub control_loop {
             eval { $self->run_commands(@$autocmds); };
             return $self if ($@);
         }
-        $self->interact($self->{stdin}, '\cD');
+
+        my $color_cb = sub {
+            my ($session) = @_;
+            $self->_winch() if $_winch_it;
+            ${*$session}{exp_Pty_Buffer} = $self->{colors}->colorize(${*$session}{exp_Pty_Buffer});
+            return 1;
+        };
+
+        my $sleep_cb = sub {
+            sleep($self->{opts}->{S});
+            return 1;
+        };
+        $self->session->set_cb($self->session,$color_cb, [ \${$self->session} ]);
+        $self->{stdin}->set_seq("\r",$sleep_cb) if ($self->{opts}->{S});
+        $self->session->interact($self->{stdin}, '\cD');
         # q\b is to end anything that's at a More prompt or other dialog and
         # get you back to the command prompt
         # would be nice to detect if the session is closing down and not send
