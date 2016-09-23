@@ -417,7 +417,7 @@ sub _stty_rows {
     my $new_rows = shift;
     eval {
         Module::Load::load Term::ReadKey;
-        my ($columns, $rows, $xpix, $ypix) = GetTerminalSize(\*STDOUT);
+        my ($columns, undef, $xpix, $ypix) = GetTerminalSize(\*STDOUT);
         SetTerminalSize($columns, $new_rows, $xpix, $ypix, \*STDOUT);
     };
 
@@ -648,7 +648,6 @@ sub login {
         $self->{title_stack}++;
         $SIG{INT} = sub { for (1..$self->{title_stack}) { print "\e[23t"; } $self->{title_stack}=0; };
 
-        my $allied_shit=0;
         $self->expect($self->{timeout},
                 @{$self->_banners},
                 @dynamic,

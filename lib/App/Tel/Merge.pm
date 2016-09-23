@@ -7,6 +7,13 @@ require Exporter;
 our @ISA = qw/ Exporter /;
 our @EXPORT_OK = qw/ merge /;
 
+=head1 NAME
+
+App::Tel::Merge - simple hash merge
+
+=cut
+
+
 # This was stoled from Hash::Merge::Simple, which stoled from Catalyst::Utils
 # I stole it because I wanted to get rid of the dependancy on Clone which
 # needs to be compiled by cpanm when we weren't using it.

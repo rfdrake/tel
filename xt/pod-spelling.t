@@ -22,3 +22,4 @@ ver
 myfile
 telrc
 zhone
+xscript

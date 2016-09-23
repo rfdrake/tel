@@ -43,7 +43,6 @@ a blank string if the entry wasn't found.
 =cut
 
 sub passwd {
-    my ($self, $entry) = @_;
     return $mock_pass;
 }
 
