@@ -70,7 +70,7 @@ subtest test_opt_x => sub {
     print "\n";
     my @values = split(',',<READERR>);
     chomp(@values);
-    is_deeply(\@values, \@expected, 'can we simulate an opt X login?');
+    is_deeply(\@values, \@expected, 'can we simulate an opt x login?');
     done_testing();
 };
 
