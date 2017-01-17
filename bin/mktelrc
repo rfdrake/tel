@@ -16,6 +16,9 @@ case $SYSTEM in
     Darwin)
         TMPFILE=$(mktemp -t mktelrc.XXXXXX)
         ;;
+    FreeBSD)
+        TMPFILE=$(mktemp /tmp/mktelrc.XXXXXX)
+        ;;
     *)
         TMPFILE=$(mktemp --tmpdir mktelrc.XXXXXX)
         ;;
