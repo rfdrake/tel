@@ -193,6 +193,7 @@ by calling load_config with an argument:
 
 sub load_config {
     my $self = shift;
+    $ENV{HOME} ||= '/tmp';
     my $xdg = $ENV{XDG_CONFIG_HOME} || "$ENV{HOME}/.config/";
     my @configs = @_;
     @configs = ( "/etc/telrc", "/usr/local/etc/telrc", "$ENV{HOME}/.telrc2", "$xdg/telrc") if (!@configs);
