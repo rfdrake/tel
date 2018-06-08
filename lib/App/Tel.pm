@@ -453,7 +453,7 @@ sub password {
 
     # if enable is blank but password has something then use the same password
     # for enable.
-    if ($type eq 'enable' and $profile->{$type} eq '' && $profile->{'password'} ne '') {
+    if ($type eq 'enable' && $profile->{'password'} ne '') {
         return $profile->{'password'};
     }
 
