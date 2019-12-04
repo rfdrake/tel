@@ -97,7 +97,7 @@ their use.
 Once you've done that you may need to install a couple of things to get it
 running.  Here is the easy route if you're running a debian-based OS:
 
-    sudo apt-get install libmodule-install-perl libtest-most-perl libhash-merge-simple-perl libexpect-perl libio-stty-perl make
+    sudo apt-get install libmodule-install-perl libtest-most-perl libexpect-perl libio-stty-perl make
 
 Now you can run the usual build commands to install:
 

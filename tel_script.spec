@@ -12,7 +12,6 @@ BuildRequires:  perl >= 0:5.10.0
 BuildRequires:  perl(Expect) >= 0.0
 BuildRequires:  perl(ExtUtils::MakeMaker)
 BuildRequires:  perl(File::KeePass)
-BuildRequires:  perl(Hash::Merge::Simple) >= 0.0
 BuildRequires:  perl(IO::Stty) >= 0.0
 BuildRequires:  perl(Passwd::Keyring::Auto)
 BuildRequires:  perl(Term::ANSIColor)
@@ -20,7 +19,6 @@ BuildRequires:  perl(Term::ReadKey)
 BuildRequires:  perl(Test::Most) >= 0.31
 Requires:       perl(Expect) >= 0.0
 Requires:       perl(File::KeePass)
-Requires:       perl(Hash::Merge::Simple) >= 0.0
 Requires:       perl(IO::Stty) >= 0.0
 Requires:       perl(Passwd::Keyring::Auto)
 Requires:       perl(Term::ANSIColor)
