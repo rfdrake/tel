@@ -655,11 +655,11 @@ sub login {
                 @{$self->_banners},
                 @dynamic,
                 [ $rtr->{username_prompt} => sub {
-                    $self->send("$rtr->{user}\r");
+                    $self->send("$rtr->{user}\r") unless ($rtr->{nologin});
                     exp_continue;
                 } ],
                 [ $rtr->{password_prompt} => sub {
-                    $self->send($self->password() ."\r");
+                    $self->send($self->password() ."\r") unless ($rtr->{nologin});
                     $self->connected(1);
                     last METHOD;
                 } ],
@@ -677,15 +677,6 @@ sub login {
                        }
                     }
                 ],
-                # almost never needed anymore.  Some people might not want a
-                # fallback to des.  If anyone does we need to make it optional
-                #[ qr/cipher type \S+ not supported/ => sub { $rtr->{ciphertype}="des"; redo METHOD; } ],
-
-                # removing these 4, they should be handled by eof anyway
-                #[ qr/ssh_exchange_identification/ => sub { next METHOD; } ],
-                #[ qr/[Cc]onnection (refused|closed)/ => sub { next METHOD; } ],
-                #[ qr/key_verify failed/ => sub { next METHOD; } ],
-                #[ qr/Corrupted/ => sub { next METHOD; } ],
                 [ 'eof' => sub { next METHOD; } ],
                 [ 'timeout' => sub { next METHOD; } ],
         );

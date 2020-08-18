@@ -46,6 +46,17 @@ Example:
 
    { 'sshflags' => '-c 3des -i ~/.ssh/my_router_key' },
 
+## nologin
+
+This is a flag for when you are using ssh identities and don't need to specify a login 
+username or password.  Normally this wouldn't be needed, but sometimes the motd/banner has
+the word "Login:" in the text so you end up sending the username despite not needing it.
+
+Here is the example that tripped me up:
+Last login: Tue Aug 18 07:54:30 2020 from x.x.x.x
+
+   { 'nologin' => 1 },
+
 ## hostname
 
 Hostname is a router directive.  It has two uses which are outlined below.
