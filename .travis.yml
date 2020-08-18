@@ -5,8 +5,6 @@ os:
 #  - osx
 
 perl:
-    - "blead"
-    - "dev"
     - "5.20"
     - "5.18"
     - "5.16"
@@ -16,11 +14,8 @@ perl:
 
 matrix:
   include:
-    - perl: 5.18
+    - perl: 5.20
       env: COVERAGE=1   # enables coverage+coveralls reporting
-  allow_failures:
-    - perl: blead       # ignore failures for blead perl
-    - perl: dev         # ignore failures for dev perl
 sudo: false             # faster builds as long as you don't need sudo access
 
 before_install:
