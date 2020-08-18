@@ -661,9 +661,13 @@ sub login {
                     exp_continue;
                 } ],
                 [ $rtr->{password_prompt} => sub {
-                    $self->send($self->password() ."\r") unless ($rtr->{nologin});
-                    $self->connected(CONN_PASSWORD);
-                    last METHOD;
+		    # password failures mean that we get stuck here.  We need a good way to handle this,
+		    # but I like having it fallthrough in an interactive session.  Not sure how to fix this yet.
+		    if (!$rtr->{nologin}) {
+                        $self->send($self->password() ."\r");
+                        $self->connected(CONN_PASSWORD);
+                        last METHOD;
+		    }
                 } ],
                 [ qr/Name or service not known|hostname nor servname provided, or not known|could not resolve / => sub
                     {
