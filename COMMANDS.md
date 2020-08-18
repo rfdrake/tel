@@ -19,6 +19,33 @@ Example:  Dlink doesn't use the normal backspace, it uses \b.  We check for a
 banner screen that says DES-3(\d\d\d) and load the dlink profile when we see
 it.
 
+## sshoptions
+
+Allows you to set cli options for ssh.  Example to turn off host key checking 
+(insecure, I do not recommend this for production)
+
+    'sshoptions' => [ 'UserKnownHostsFile=/dev/null', 'StrictHostKeyChecking=no' ]
+
+## ciphertype
+
+Allows overriding the ssh cipher.  Example:
+
+   { 'ciphertype' => '3des' },
+
+## identity
+
+Allows overriding the ssh identity.  Example:
+
+   { 'identity' => "$ENV{HOME}/.ssh/my_router_key" },
+
+## sshflags
+
+For ssh options not covered in the above examples.  This allows you to add any ssh command.
+
+Example:
+
+   { 'sshflags' => '-c 3des -i ~/.ssh/my_router_key' },
+
 ## hostname
 
 Hostname is a router directive.  It has two uses which are outlined below.

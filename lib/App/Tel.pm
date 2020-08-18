@@ -609,7 +609,9 @@ sub login {
     if (defined($rtr->{sshoptions}) && scalar $rtr->{sshoptions} > 0) {
         $ssho = '-o '. join(' -o ', @{$rtr->{sshoptions}});
     }
-    $ssho .= $rtr->{ciphertype} ? " -c $rtr->{ciphertype}" : '';
+    $ssho .= " -c $rtr->{ciphertype}" if ($rtr->{ciphertype});
+    $ssho .= " -i $rtr->{identity}" if ($rtr->{identity});
+    $ssho .= $rtr->{sshflags} if ($rtr->{sshflags});
 
     # because we use last METHOD; in anonymous subs this suppresses the
     # warning of "exiting subroutine via last;"
