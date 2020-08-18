@@ -13,6 +13,8 @@ use App::Tel::Expect;
 use Time::HiRes qw ( sleep );
 use v5.10;
 
+use enum qw(CONN_OFFLINE CONN_PASSWORD CONN_PROMPT);
+
 =head1 NAME
 
 App::Tel - A script for logging into devices
@@ -83,7 +85,7 @@ sub new {
 
     my $self = {
         'stdin'         => Expect->exp_init(\*STDIN),
-        'connected'     => 0,
+        'connected'     => CONN_OFFLINE,
         'enabled'       => 0,
         'title_stack'   => 0,
         'log_stdout'    => 1,
@@ -140,7 +142,7 @@ sub disconnect {
     $self->{timeout} = $self->{opts}->{t} ? $self->{opts}->{t} : 90;
     $self->{banners} = undef;
     $self->{methods} = ();
-    $self->connected(0);
+    $self->connected(CONN_OFFLINE);
     $self->{colors}=App::Tel::Color->new($self->{opts}->{d});
     $self->{enabled}=0;
 
@@ -516,7 +518,7 @@ This sets up the session.  If there already is a session open it closes and open
 sub connect {
     my ($self, @arguments) = @_;
 
-    $self->connected(0);
+    $self->connected(CONN_OFFLINE);
     my $session = $self->session(1);
     $session->spawn(@arguments);
     return $session;
@@ -619,7 +621,7 @@ sub login {
     # handle MOTD profile loading, and other things parsed from the config
     my @dynamic;
     if (defined($rtr->{prompt})) {
-        push @dynamic, [ qr/$rtr->{prompt}/, sub { $self->connected(1); last METHOD; } ];
+        push @dynamic, [ qr/$rtr->{prompt}/, sub { $self->connected(CONN_PROMPT); last METHOD; } ];
     }
 
     # handle prompts in foreign languages or other things we didn't think of
@@ -660,7 +662,7 @@ sub login {
                 } ],
                 [ $rtr->{password_prompt} => sub {
                     $self->send($self->password() ."\r") unless ($rtr->{nologin});
-                    $self->connected(1);
+                    $self->connected(CONN_PASSWORD);
                     last METHOD;
                 } ],
                 [ qr/Name or service not known|hostname nor servname provided, or not known|could not resolve / => sub
@@ -779,7 +781,7 @@ sub control_loop {
     }
 
     if (@args) {
-        $self->expect($self->{timeout},'-re',$prompt);
+        $self->expect($self->{timeout},'-re',$prompt) if ($self->connected() != CONN_PROMPT);
         if (ref($pagercmd) eq 'CODE') {
             $pagercmd->();
         } elsif ($pagercmd) {
