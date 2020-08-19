@@ -728,12 +728,13 @@ sub run_commands {
     my $self = shift;
     my $opts = $self->{opts};
 
-    foreach my $arg (@_) {
+    CMD: foreach my $arg (@_) {
         $arg =~ s/\\r/\r/g; # fix for reload\ry.  I believe 'perldoc quotemeta' explains why this happens
         chomp($arg);
         $self->send("$arg\r");
         $self->expect($self->{timeout},
             [ $self->profile->{prompt} => sub { } ],
+	    [ 'timeout' => sub { warn "Timeout waiting for prompt.\n"; last CMD; } ],
             [ 'eof' => sub { die "EOF From host.\n"; } ],
         );
         sleep($opts->{s}) if ($opts->{s});
