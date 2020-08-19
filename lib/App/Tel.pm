@@ -95,6 +95,7 @@ sub new {
         'colors'        => App::Tel::Color->new($args{opts}->{d}),
     };
 
+    $self->{timeout} = $self->{opts}->{t} ? $self->{opts}->{t} : 90;
     return bless($self, $class);
 }
 
