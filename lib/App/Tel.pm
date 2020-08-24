@@ -733,6 +733,7 @@ sub run_commands {
         $arg =~ s/\\r/\r/g; # fix for reload\ry.  I believe 'perldoc quotemeta' explains why this happens
         chomp($arg);
         $self->send("$arg\r");
+        no warnings 'exiting';
         $self->expect($self->{timeout},
             [ $self->profile->{prompt} => sub { } ],
 	    [ 'timeout' => sub { warn "Timeout waiting for prompt.\n"; last CMD; } ],
