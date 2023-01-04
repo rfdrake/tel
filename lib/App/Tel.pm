@@ -657,6 +657,11 @@ sub login {
         $self->expect($self->{timeout},
                 @{$self->_banners},
                 @dynamic,
+                # workaround for mikrotiks that have ssh key login
+                [ qr!\r/command\s+Use command at the base level\r\n! => sub {
+                     $self->connected(CONN_PASSWORD);
+                     last METHOD;
+                } ],
                 [ $rtr->{username_prompt} => sub {
                     $self->send("$rtr->{user}\r") unless ($rtr->{nologin});
                     exp_continue;
