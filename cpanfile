@@ -3,6 +3,7 @@ requires       'IO::Stty'  => '0.0';
 requires       'Time::HiRes';             # core
 requires       'Getopt::Std';             # core
 requires       'Getopt::Long';            # core
+requires       'enum'
 recommends     'Term::ANSIColor';         # core
 recommends     'Term::ReadKey';
 recommends     'Crypt::PWSafe3';
