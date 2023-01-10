@@ -1,22 +1,28 @@
+# see https://metacpan.org/pod/Devel::Cover::Report::Coveralls for a good
+# example workflow.
+
 on:
   push:
     branches:
       - "master"
+      - "github-ci-testing"
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: ['ubuntu-latest', 'macos-latest', 'windows-latest']
-        perl: [ '5.34', '5.32', '5.30' ]
-    name: Perl ${{ matrix.perl }} on ${{ matrix.os }}
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - name: Set up perl
         uses: shogo82148/actions-setup-perl@v1
         with:
-          perl-version: ${{ matrix.perl }}
+          perl-version: '5.34'
+          install-modules-with: cpanm
+          install-modules-args: --with-develop --with-configure --with-all-features
       - run: perl -V
-      - run: cpanm --installdeps .
-      - run: prove -lv t
+      - run: perl Makefile.PL
+      - run: prove -l t
+      - name: Run tests with coverage
+        env:
+          COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
+        run: cover -test -ignore local/ -report Coveralls
+

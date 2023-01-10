@@ -47,7 +47,7 @@ is($hostname, 'router', 'regular non-weird hostname works');
 $hostname = $tel->hostname();
 is($hostname, 'router', 'Hostname with no arguments returns current hostname');
 
-$tel->load_config('t/rc/hostname.rc');
+$tel->load_config("$ENV{PWD}/t/rc/hostname.rc");
 
 $hostname = $tel->hostname('2001');
 is($tel->{hostname}, '172.18.0.91', 'hostname sub {} statements work');

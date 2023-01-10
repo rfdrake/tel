@@ -667,13 +667,13 @@ sub login {
                     exp_continue;
                 } ],
                 [ $rtr->{password_prompt} => sub {
-		    # password failures mean that we get stuck here.  We need a good way to handle this,
-		    # but I like having it fallthrough in an interactive session.  Not sure how to fix this yet.
-		    if (!$rtr->{nologin}) {
+            # password failures mean that we get stuck here.  We need a good way to handle this,
+            # but I like having it fallthrough in an interactive session.  Not sure how to fix this yet.
+            if (!$rtr->{nologin}) {
                         $self->send($self->password() ."\r");
                         $self->connected(CONN_PASSWORD);
                         last METHOD;
-		    }
+            }
                 } ],
                 [ qr/Name or service not known|hostname nor servname provided, or not known|could not resolve / => sub
                     {
@@ -741,7 +741,7 @@ sub run_commands {
         no warnings 'exiting';
         $self->expect($self->{timeout},
             [ $self->profile->{prompt} => sub { } ],
-	    [ 'timeout' => sub { warn "Timeout waiting for prompt.\n"; last CMD; } ],
+            [ 'timeout' => sub { warn "Timeout waiting for prompt.\n"; last CMD; } ],
             [ 'eof' => sub { die "EOF From host.\n"; } ],
         );
         sleep($opts->{s}) if ($opts->{s});

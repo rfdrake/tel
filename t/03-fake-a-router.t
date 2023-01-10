@@ -7,7 +7,7 @@ use App::Tel;
 use Config;
 my $path_to_perl = $Config{perlpath};
 my $tel = App::Tel->new(perl => $path_to_perl);
-$tel->load_config('t/rc/fakerouter.rc');
+$tel->load_config("$ENV{PWD}/t/rc/fakerouter.rc");
 
 # override the _test_connect method with something that can save a copy of STDERR
 {
@@ -24,6 +24,11 @@ local *App::Tel::_test_connect = sub {
 };
 
 subtest test_opt_a => sub {
+
+    # override isatty for this test because it doesn't matter if we're running
+    # under a tty.
+    no warnings 'redefine';
+    *POSIX::isatty = sub { 1 };
 
     my @expected = ( 'testvty', 'enable','tester','testenable','sh ver', ' exit' );
     my $opts = {
@@ -75,7 +80,7 @@ subtest test_opt_x => sub {
 };
 
 subtest test_login_failures => sub {
-    $tel->load_config('t/rc/login_failures.rc');
+    $tel->load_config("$ENV{PWD}/t/rc/login_failures.rc");
     $tel->profile('default',1);
     $tel->methods('test');
     {

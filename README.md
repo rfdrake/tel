@@ -1,7 +1,7 @@
 # Tel: Login script for routers and other devices
 
-[![Build Status](https://travis-ci.org/rfdrake/tel.svg?branch=master)](https://travis-ci.org/rfdrake/tel)
-[![Coverage](https://coveralls.io/repos/rfdrake/tel/badge.png?branch=master)](https://coveralls.io/r/rfdrake/tel)
+[![.github/workflows/main.yml](https://github.com/rfdrake/tel/actions/workflows/main.yml/badge.svg)](https://github.com/rfdrake/tel/actions/workflows/main.yml)
+[![Coverage Status](https://coveralls.io/repos/github/rfdrake/tel/badge.svg?branch=master)](https://coveralls.io/github/rfdrake/tel?branch=master)
 [![CPANTS kwalitee](http://cpants.cpanauthors.org/dist/App-Tel.png)](http://cpants.cpanauthors.org/dist/App-Tel)
 
 # What it does
