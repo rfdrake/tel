@@ -658,7 +658,7 @@ sub login {
                 @{$self->_banners},
                 @dynamic,
                 # workaround for mikrotiks that have ssh key login
-                [ qr!\rMikroTik RouterOS [\d\.]+ (c) \d+-\d+\s+https://www\.mikrotik\.com/! => sub {
+                [ qr!MikroTik RouterOS [\d\.]+ \(c\) \d+-\d+\s+http(?:s)?://www\.mikrotik\.com/! => sub {
                      $self->connected(CONN_PASSWORD);
                      last METHOD;
                 } ],
