@@ -1,9 +1,9 @@
-requires       'Expect'  => '0.0';
-requires       'IO::Stty'  => '0.0';
+requires       'Expect'  => '>= 1.35';
+requires       'IO::Stty'  => '>= 0.04';
 requires       'Time::HiRes';             # core
 requires       'Getopt::Std';             # core
 requires       'Getopt::Long';            # core
-requires       'enum';
+requires       'enum' => '>= 1.12';
 recommends     'Term::ANSIColor';         # core
 recommends     'Term::ReadKey';
 
