@@ -32,21 +32,3 @@ feature 'hostrange', 'Hostrange Support' => sub {
     requires 'NetAddr::IP';
 };
 
-feature 'keypass', 'Keepass support' => sub {
-    requires     'File::KeePass';
-    requires     'XML::Parser';             # required for File::KeePass, it's not listed as a dependency there
-    requires     'Compress::Raw::Zlib';     # required for File::KeePass, it's not listed as a dependency there
-};
-
-feature 'pass', 'Pass support' => sub {
-    requires     'GnuPG';                   # needed for App::Tel::Passwd::Pass
-    requires     'File::Which';             # needed for App::Tel::Passwd::Pass
-};
-
-feature 'keyring', 'Keyring support' => sub {
-    requires 'Passwd::Keyring::Auto' => '0.70';
-};
-
-#feature 'pwsafe3', 'PWSafe3 support' => sub {
-#    requires 'Crypt::PWSafe3';
-#};

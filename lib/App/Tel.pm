@@ -5,7 +5,6 @@ use Expect qw( exp_continue );
 use POSIX qw(:sys_wait_h :unistd_h); # For WNOHANG
 use Module::Load;
 use App::Tel::HostRange qw (check_hostrange);
-use App::Tel::Passwd;
 use App::Tel::Color;
 use App::Tel::Macro;
 use App::Tel::Merge qw ( merge );
@@ -412,8 +411,13 @@ sub profile {
 
     # add some sane defaults if the profile doesn't have them
     $profile->{'user'} ||= $ENV{'USER'} || $ENV{'LOGNAME'};
-    # need to warn if user is still not defined?
-    $self->{'profile'}=$profile;
+    # these need defaults.  They used to be set in the login method after
+    # a login succeeds, but I think it's safe to move them here.
+    $profile->{logoutcmd} ||= "logout";
+    $profile->{prompt} ||= '#';
+    # handle prompts in foreign languages or other things we didn't think of
+    $profile->{username_prompt} ||= qr/[Uu]ser[Nn]ame:|[Ll]ogin:/;
+    $profile->{password_prompt} ||= qr/[Pp]ass[Ww]ord/;
     return $profile;
 }
 
@@ -426,57 +430,6 @@ sub _stty_rows {
     };
 
     warn $@ if ($@);
-}
-
-=head2 password
-
-    my $password = $self->password;
-
-This pulls the password from the config.  If the password is blank it checks
-to see if you have a password manager, then tries to load the password from
-there.  It then tries to use an OS keyring.
-
-By default it will pull the regular password.  To pull the enable password
-you can call it with $self->password('enable');
-
-=cut
-
-sub password {
-    my ($self, $type) = @_;
-    my $profile = $self->profile;
-    my $router = $self->{hostname};
-
-    $type ||= 'password';
-
-    warn "Unknown password type $type" if ($type ne 'password' && $type ne 'enable');
-
-    if (defined($profile->{$type}) && $profile->{$type} ne '') {
-        return $profile->{$type};
-    }
-
-    # if enable is blank but password has something then use the same password
-    # for enable.
-    if ($type eq 'enable' && $profile->{'password'} ne '') {
-        return $profile->{'password'};
-    }
-
-    # if we get here, the password is blank so try other means
-    my $pass = App::Tel::Passwd::load_from_profile($profile);
-    if ($pass ne '') {
-        return $pass;
-    }
-
-    # I was wondering how to decide what to prompt for, but I think it should
-    # be whichever profile loaded.  So maybe we check for hostname and check
-    # for profile name and then save as profile name. If they want to be
-    # explicit they should specify the password format as KEYRING or
-    # something.. I dunno.
-    App::Tel::Passwd::keyring($profile->{user}, $profile->{profile_name}, $profile->{profile_name});
-
-    # if they make it here and still don't have a password then none was
-    # defined anywhere and we probably should prompt for one.  Consider
-    # turning off echo then normal read.
-    return App::Tel::Passwd::input_password($router);
 }
 
 =head2 session
@@ -566,13 +519,14 @@ sub enable {
         $profile->{ena_username_prompt} ||= qr/[Uu]ser[Nn]ame:|Login:/;
         $profile->{ena_password_prompt} ||= qr/[Pp]ass[Ww]ord/;
         $profile->{ena_regular_prompt} ||= '>';
+        my $enable = $profile->{enable} ? $profile->{enable} : $profile->{password};
 
         # we need to be able to handle routers that prompt for username and password
         # need to check the results to see if enable succeeded
         $self->expect($self->{timeout},
                 [ $profile->{ena_regular_prompt} => sub { $self->send($profile->{enablecmd} . "\r"); exp_continue; } ],
                 [ $profile->{ena_username_prompt} => sub { $self->send("$profile->{user}\r"); exp_continue; } ],
-                [ $profile->{ena_password_prompt} => sub { $self->send($self->password('enable') . "\r"); } ]
+                [ $profile->{ena_password_prompt} => sub { $self->send("$enable\r"); } ]
         );
     }
 
@@ -605,6 +559,13 @@ sub login {
     # dumb stuff to alias $rtr to the contents of $self->{'profile'}
     # needed because we can reload the profile inside the expect loop
     # and can't update the alias.
+
+    # TODO:  I want to rethink this.  We should be able to use something like
+    # $self->enable where it says $profile = $self->profile;  Then if the
+    # profile gets reloaded inside the expect loop, we will "redo" something.
+
+    # We need to know what the implications of this changing mid loop are and
+    # it's lazy to just say "it might change so we need this pointer."
     our $rtr;
     *rtr = \$self->{'profile'};
 
@@ -625,18 +586,18 @@ sub login {
         push @dynamic, [ qr/$rtr->{prompt}/, sub { $self->connected(CONN_PROMPT); last METHOD; } ];
     }
 
-    # handle prompts in foreign languages or other things we didn't think of
-    $rtr->{username_prompt} ||= qr/[Uu]ser[Nn]ame:|[Ll]ogin:/;
-    $rtr->{password_prompt} ||= qr/[Pp]ass[Ww]ord/;
 
     $self->{port} ||= $self->{opts}->{p} || $rtr->{port}; # get port from CLI or the profile
-    # if it's not set in the profile or CLI above, it gets set in the
+    # if port is not set in the profile or CLI above, it gets set in the
     # method below, but needs to be reset on each loop to change from
     # telnet to ssh defaults
 
     my $family = '';
     $family = '-4' if ($self->{opts}->{4});
     $family = '-6' if ($self->{opts}->{6});
+
+    # used to keep track of if we have run the hostsearched routine.
+    my $hostsearched = 0;
 
     METHOD: for (@{$self->methods}) {
         my $p = $self->{port};
@@ -655,6 +616,7 @@ sub login {
         $SIG{INT} = sub { for (1..$self->{title_stack}) { print "\e[23t"; } $self->{title_stack}=0; };
 
         $self->expect($self->{timeout},
+                # these two are where a profile might reload
                 @{$self->_banners},
                 @dynamic,
                 # workaround for mikrotiks that have ssh key login
@@ -667,20 +629,20 @@ sub login {
                     exp_continue;
                 } ],
                 [ $rtr->{password_prompt} => sub {
-            # password failures mean that we get stuck here.  We need a good way to handle this,
-            # but I like having it fallthrough in an interactive session.  Not sure how to fix this yet.
-            if (!$rtr->{nologin}) {
-                        $self->send($self->password() ."\r");
-                        $self->connected(CONN_PASSWORD);
-                        last METHOD;
-            }
+                    # password failures mean that we get stuck here.  We need a good way to handle this,
+                    # but I like having it fallthrough in an interactive session.  Not sure how to fix this yet.
+                    if (!$rtr->{nologin}) {
+                                $self->send($rtr->{'password'} ."\r");
+                                $self->connected(CONN_PASSWORD);
+                                last METHOD;
+                    }
                 } ],
                 [ qr/Name or service not known|hostname nor servname provided, or not known|could not resolve / => sub
                     {
                         # if host lookup fails then check to see if there is an alternate method defined
-                        if ($rtr->{hostsearch} && !$rtr->{hostsearched}) {
+                        if ($rtr->{hostsearch} && !$hostsearched) {
                             $hostname = &{$rtr->{hostsearch}}($hostname);
-                            $rtr->{hostsearched}=1;
+                            $hostsearched=1;
                             redo METHOD;
                         } else {
                             warn "unknown host: $hostname\n";
@@ -693,9 +655,6 @@ sub login {
                 [ 'timeout' => sub { next METHOD; } ],
         );
     }
-
-    $rtr->{logoutcmd} ||= "logout";
-    $rtr->{prompt} ||= '#';
 
     warn "Connection to $hostname failed.\n" if !$self->connected;
     return $self;

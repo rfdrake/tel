@@ -16,15 +16,9 @@ requires       'enum' => '0.0';
 
 recommends     'Term::ANSIColor';         # core
 recommends     'Term::ReadKey';
-recommends     'Crypt::PWSafe3';
-recommends     'File::KeePass';
-recommends     'GnuPG::Interface';        # needed for App::Tel::Passwd::Pass
 recommends     'IO::Handle';              # core
 recommends     'IO::File';                # core
-recommends     'Passwd::Keyring::Auto';
 recommends     'NetAddr::IP';
-recommends     'XML::Parser';             # required for File::KeePass, it's not listed as a dependency there
-recommends     'Compress::Raw::Zlib';     # required for File::KeePass, it's not listed as a dependency there
 
 
 
