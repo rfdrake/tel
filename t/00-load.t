@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use lib qw(lib);
 use Test::More;
-plan tests => 11;
+plan tests => 8;
 use_ok('App::Tel');
 use_ok('App::Tel::HostRange');
 use_ok('App::Tel::Color');
