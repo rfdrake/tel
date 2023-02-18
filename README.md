@@ -125,14 +125,6 @@ Obviously, if the router supports real ssh keys or any other secure
 authentication you should let the login be handled by that.  This script can
 still provide value without the need to login for you.
 
-# Optional Dependencies
-
-You may want to download File::KeePass, Passwd::Keyring::Auto,
-Passwd::Keyring::Gnome, Crypt::PWSafe3, or GnuPG::Interface.  If any of these are
-installed they will be used to provide additional features.  Some setup may be
-required.  Please see the [COMMANDS] file for more information.
-
-
 # History
 
 If you've worked at a NOC at any point in time you’ve probably made a script
