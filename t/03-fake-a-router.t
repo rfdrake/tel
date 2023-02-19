@@ -9,18 +9,21 @@ my $path_to_perl = $Config{perlpath};
 my $tel = App::Tel->new(perl => $path_to_perl);
 $tel->load_config("$ENV{PWD}/t/rc/fakerouter.rc");
 
-# override the _test_connect method with something that can save a copy of STDERR
 {
     local($^F)= 0x8000; # turn off close-on-exec by setting SYSTEM_FD_MAX=32768
     pipe( READERR, WRITEERR ) or die "pipe: $!";
 }
 
 no warnings 'redefine';
-local *App::Tel::_test_connect = sub {
-    my ($self, $hostname) = @_;
+local *App::Tel::connect = sub {
+    my ($self, @arguments) = @_;
 
     my $fd= fileno(WRITEERR);
-    $self->connect("$self->{perl} $hostname 2>&$fd");
+    $self->connected(0);
+    my $session = $self->session(1);
+    my $hostname = $self->{hostname};
+    $session->spawn("$self->{perl} $hostname 2>&$fd");
+    return $session;
 };
 
 subtest test_opt_a => sub {

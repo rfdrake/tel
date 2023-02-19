@@ -242,26 +242,38 @@ sub hostname {
         return $self->{hostname};
     }
 
+    # should not hardcode this business logic, but instead provide an example
+    # of how to do it with telrc.
     $hostname =~ s#/tftpboot/##;
     $hostname =~ s/-confg//;
 
+    # might look again to see if there is a good URI library to do this.  I
+    # don't want to bloat with unneeded modules, but this is a mess of
+    # unneeded regex.
+
+    # a URI style hostname with an IPv6 address or hostname.  Like ssh://[2607:f1e8:3232::5]:8000
     if ($hostname =~ qr@(ssh|telnet)://\[([a-zA-Z0-9\-\.\:]+)\](?::(\d+))?@) {
         $self->{port} = $3 if ($3);
         $self->methods($1);
         $hostname = $2;
+    # a URI style hostname with IPv4 or hostname.  Example: ssh://bigrouter:8080
     } elsif ($hostname =~ qr@(ssh|telnet)://([a-zA-Z0-9\-\.]+)(?::(\d+))?@) {
         $self->{port} = $3 if ($3);
         $self->methods($1);
         $hostname = $2;
+    # Hostname like:  [2607:f1e8:3232::5]:8000
     } elsif ($hostname =~ /\[(\S+)\](?::(\d+))?/) {
         $self->{port} = $2 if ($2);
         $self->methods('telnet') if ($2);
         $hostname = $1;
+    # Hostname like bigrouter:8080 or 10.17.17.3:8080
     } elsif (($hostname =~ tr/://) < 2 && $hostname =~ /(\S+):(\d+)$/) {
         $self->{port} = $2;
         $self->methods('telnet');
         $hostname = $1;
     }
+    # no final else.  If we get here it means the hostname is just a plain
+    # hostname, or address, or IPv6 address without a port number.
 
     # load profile based on the hostname
     $self->rtr_find($hostname);
@@ -315,10 +327,6 @@ sub methods {
 
     return $self->{methods};
 }
-
-# this is overridable in the individual test file to connect a special
-# way if the method is listed as "test"
-sub _test_connect { undef }
 
 sub _banners {
     my $self = shift;
@@ -603,7 +611,6 @@ sub login {
         my $p = $self->{port};
         if    ($_ eq 'ssh')     { $p ||= 22; $self->connect("ssh $family -p $p -l $rtr->{user} $ssho $hostname"); }
         elsif ($_ eq 'telnet')  { $p ||= ''; $self->connect("telnet $family $hostname $p"); }
-        elsif ($_ eq 'test')    { $self->_test_connect($hostname); }
         else { die "No program defined for method $_\n"; }
 
         # suppress stdout if needed

@@ -5,7 +5,7 @@ $telrc = {
                                       'pagercmd' => 'term len 0', },
                      },
           'rtr' => [   # this is an array so order matters
-                   { 'regex' => 't/fake_routers/loopback', 'method' => 'test', enable => 'testenable', enablecmd => 'enable' },
+                   { 'regex' => 't/fake_routers/loopback', 'method' => 'ssh', enable => 'testenable', enablecmd => 'enable' },
           ],
 };
 
