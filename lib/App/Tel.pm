@@ -426,6 +426,8 @@ sub profile {
     # handle prompts in foreign languages or other things we didn't think of
     $profile->{username_prompt} ||= qr/[Uu]ser[Nn]ame:|[Ll]ogin:/;
     $profile->{password_prompt} ||= qr/[Pp]ass[Ww]ord/;
+
+    $self->{'profile'}=$profile;
     return $profile;
 }
 
