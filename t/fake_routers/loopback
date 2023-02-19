@@ -94,7 +94,7 @@ EOF
 
 my $input = '';
 do {
-    if ($input eq "sh ver") {
+    if ($input eq "shver") {
         print shver();
     }
     print "router-name#";
