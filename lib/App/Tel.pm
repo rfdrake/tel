@@ -595,7 +595,7 @@ sub login {
     my ($self, $hostname) = @_;
 
     # self is inherited from the parent so no arguments need to be passed.
-    sub _banners {
+    my $banners = sub {
         my $config = $self->{'config'};
         my $banners = [];
 
@@ -603,7 +603,7 @@ sub login {
             push @$banners, [ $regex, sub { $self->profile($profile); exp_continue; } ];
         }
         return $banners;
-    }
+    };
 
     # dumb stuff to alias $rtr to the contents of $self->{'profile'}
     # needed because we can reload the profile inside the expect loop
@@ -649,7 +649,7 @@ sub login {
                 # this can reload the profile before a login, so it affects
                 # the send "user" below, as well as the nologin or any other
                 # value that would need to be looked up.
-                @{_banners()},
+                @{$banners->()},
                 @dynamic,
                 # workaround for mikrotiks that have ssh key login
                 [ qr!MikroTik RouterOS [\d\.]+ \(c\) \d+-\d+\s+http(?:s)?://www\.mikrotik\.com/! => sub {
