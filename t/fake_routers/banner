@@ -1,0 +1,75 @@
+#!/usr/bin/env perl
+
+eval 'exec perl  -S $0 ${1+"$@"}'
+    if 0; # not running under some shell
+
+use strict;
+use warnings;
+use IO::Stty;
+
+my @commands=();
+
+print "Fake A Router - v1\n";
+print "Password: ";
+IO::Stty::stty(\*STDIN,'-echo');
+push(@commands, scalar <STDIN>);
+IO::Stty::stty(\*STDIN,'echo');
+print "\n";
+
+print "router-name>";
+
+# get "enable" command
+push(@commands, scalar <STDIN>);
+
+# test enable user
+print "Username: ";
+push(@commands, scalar <STDIN>);
+
+print "Password: ";
+IO::Stty::stty(\*STDIN,'-echo');
+push(@commands, scalar <STDIN>);
+IO::Stty::stty(\*STDIN,'echo');
+print "\n";
+
+
+sub shver {
+    return <<'EOF';
+Cisco Internetwork Operating System Software
+IOS (tm) s72033_rp Software (s72033_rp-ADVIPSERVICESK9_WAN-M), Version
+12.2(18)SXF15a, RELEASE SOFTWARE (fc1)
+Technical Support: http://www.cisco.com/techsupport
+Copyright (c) 1986-2008 by cisco Systems, Inc.
+Compiled Tue 21-Oct-08 00:04 by kellythw
+Image text-base: 0x40101040, data-base: 0x42DDF3D0
+
+router-name uptime is 4 years, 4 weeks, 5 days, 22 hours, 8 minutes
+Time since router-name switched to active is 4 years, 4 weeks, 5 days, 6 hours,
+5 minutes
+System returned to ROM by Stateful Switchover (SP by power on)
+System restarted at 00:58:15 EDT Mon Apr 19 2010
+System image file is "disk0:s72033-advipservicesk9_wan-mz.122-18.SXF15a.bin"
+
+cisco WS-C6509 (R7000) processor (revision 2.0) with 458720K/65536K bytes of
+memory.
+Processor board ID SCA04300165
+SR71000 CPU at 600Mhz, Implementation 0x504, Rev 1.2, 512KB L2 Cache
+
+EOF
+
+}
+
+
+my $input = '';
+do {
+    if ($input eq "shver") {
+        print shver();
+    }
+    print "router-name#";
+    $input = <STDIN>;
+    push(@commands, $input);
+    chomp($input);
+    $input =~ s/ //g;
+} until ($input =~ /logout/ || $input eq "exit");
+
+chomp @commands;
+warn join(',', @commands) . "\n";

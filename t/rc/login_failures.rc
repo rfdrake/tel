@@ -2,7 +2,7 @@ $telrc = {
           'profile' => {
                        'default' => { 'password' => 'testvty', 'user' => 'tester',
                                       'pagercmd' => 'term len 0',
-                                      'method' => 'test',
+                                      'method' => 'ssh',
                                       'enable' => 'testenable',
                                       'enablecmd' => 'enable'
                                     },

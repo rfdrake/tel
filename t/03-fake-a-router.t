@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 use Test::More;
-plan tests => 4;
+plan tests => 5;
 use App::Tel;
 
 use Config;
@@ -82,22 +82,37 @@ subtest test_opt_x => sub {
     done_testing();
 };
 
-subtest test_login_failures => sub {
+subtest test_EOF_before_login => sub {
     $tel->load_config("$ENV{PWD}/t/rc/login_failures.rc");
     $tel->profile('default',1);
-    $tel->methods('test');
+    # need to set hostname here because login() doesn't set the hostname and
+    # connect() above is overriding based on the hostname.
+    $tel->hostname("t/fake_routers/eof");
     {
         local $SIG{__WARN__}=sub{};  # suppress warn() for this
         $tel->login("t/fake_routers/eof");
     }
     print "\n";
+
     is($tel->connected, 0, "login failure eof?");
     $tel->disconnect(0);    # soft close.
     $tel->disconnect(1);    # hard close..
     done_testing();
 };
 
-# we should close this after connect but we reuse the filehandle when we
-# connect again with go().
+subtest 'router_banner' => sub {
+    $tel->load_config("$ENV{PWD}/t/rc/banner.rc");
+    is($tel->{config}->{banners}->{'Fake A Router'}, 'fake', 'did we load t/rc/banner.rc?');
+    $tel->profile('default',1);
+    # can't use go, need to use login because go will clear the profile
+    # afterwords
+    $tel->hostname("t/fake_routers/banner");
+    $tel->login("t/fake_routers/banner");
+
+    is($tel->{profile}->{user}, 'faker', 'Banner user = faker?');
+    is($tel->connected, 1, "Did we connect using the faker profile?");
+    done_testing();
+};
+
 close(WRITEERR);
 
