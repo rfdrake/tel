@@ -92,6 +92,8 @@ sub new {
         'perl'          => $args{perl} || '',
         'opts'          => $args{opts},
         'colors'        => App::Tel::Color->new($args{opts}->{d}),
+        'family'        => $args{opts}->{4} ? '-4' : $args{opts}->{6} ?  '-6' : '',
+        'debug'         => $args{opts}->{d},
     };
 
     $self->{timeout} = $self->{opts}->{t} ? $self->{opts}->{t} : 90;
@@ -140,7 +142,6 @@ sub disconnect {
     my ($self, $hard) = @_;
     $self->{profile} = {};
     $self->{timeout} = $self->{opts}->{t} ? $self->{opts}->{t} : 90;
-    $self->{banners} = undef;
     $self->{methods} = ();
     $self->connected(CONN_OFFLINE);
     $self->{colors}=App::Tel::Color->new($self->{opts}->{d});
@@ -208,6 +209,7 @@ sub load_config {
             require $conf;
             push(@{$config->{'telrc_file'}}, $conf);
             $config = merge($config, $telrc);
+            warn "Loaded config file $conf\n" if $self->{debug};
         }
     }
 
@@ -328,18 +330,6 @@ sub methods {
     return $self->{methods};
 }
 
-sub _banners {
-    my $self = shift;
-    return $self->{banners} if ($self->{banners});
-    my $config = $self->{'config'};
-
-    # if there are no banners then we want to return an empty list
-    $self->{banners} = [];
-    while (my ($regex, $profile) = each %{$config->{banners}}) {
-        push @{$self->{banners}}, [ $regex, sub { $self->profile($profile); exp_continue; } ];
-    }
-    return $self->{banners};
-}
 
 =head2 rtr_find
 
@@ -414,7 +404,8 @@ sub profile {
         }
         # load syntax highlight
         $self->{colors}->load_syntax($profile->{syntax});
-        $profile->{profile_name}=$_;
+        warn "Loaded profile $_\n" if $self->{debug};
+        push(@{$profile->{profiles}}, $_);
     }
 
     # add some sane defaults if the profile doesn't have them
@@ -431,6 +422,7 @@ sub profile {
     return $profile;
 }
 
+# I don't think I've ever seen this work.  Should probably remove it
 sub _stty_rows {
     my $new_rows = shift;
     eval {
@@ -554,6 +546,42 @@ Check if enabled.  This returns true if the $self->enable() method succeeds.
 
 sub enabled { $_[0]->{enabled} };
 
+=head2 method_options
+
+    $self->method_options($method);
+
+Builds the options for spawn command.
+
+=cut
+
+sub method_options {
+    my ($self, $method, $hostname) = @_;
+    my $profile = $self->profile;
+
+    $self->{port} ||= $self->{opts}->{p} || $profile->{port}; # get port from CLI or the profile
+
+    if ($method eq 'ssh') {
+        my $p = $self->{port} || 22;
+        my $ssho = '-o StrictHostKeyChecking=no';
+        # does sshoptions need to only support arrays?  I'm fine with this but
+        # maybe we warn if it's not an array?
+        if (defined($profile->{sshoptions}) && scalar $profile->{sshoptions} > 0) {
+            $ssho = '-o '. join(' -o ', @{$profile->{sshoptions}});
+        }
+        $ssho .= " -c $profile->{ciphertype}" if ($profile->{ciphertype});
+        $ssho .= " -i $profile->{identity}" if ($profile->{identity});
+        $ssho .= $profile->{sshflags} if ($profile->{sshflags});
+
+        return "ssh $self->{family} -p $p -l $profile->{user} $ssho $hostname";
+    }
+    elsif ($method eq 'telnet')  {
+        my $p = $self->{port} || '';
+
+        return "telnet $self->{family} $hostname $p";
+    }
+    else { die "No program defined for method $_\n"; }
+}
+
 =head2 login
 
     $self->login("hostname");
@@ -565,6 +593,17 @@ the profile until we successfully connect to the host.  Returns $self.
 
 sub login {
     my ($self, $hostname) = @_;
+
+    # self is inherited from the parent so no arguments need to be passed.
+    sub _banners {
+        my $config = $self->{'config'};
+        my $banners = [];
+
+        while (my ($regex, $profile) = each %{$config->{banners}}) {
+            push @$banners, [ $regex, sub { $self->profile($profile); exp_continue; } ];
+        }
+        return $banners;
+    }
 
     # dumb stuff to alias $rtr to the contents of $self->{'profile'}
     # needed because we can reload the profile inside the expect loop
@@ -579,14 +618,6 @@ sub login {
     our $rtr;
     *rtr = \$self->{'profile'};
 
-    my $ssho = '-o StrictHostKeyChecking=no';
-    if (defined($rtr->{sshoptions}) && scalar $rtr->{sshoptions} > 0) {
-        $ssho = '-o '. join(' -o ', @{$rtr->{sshoptions}});
-    }
-    $ssho .= " -c $rtr->{ciphertype}" if ($rtr->{ciphertype});
-    $ssho .= " -i $rtr->{identity}" if ($rtr->{identity});
-    $ssho .= $rtr->{sshflags} if ($rtr->{sshflags});
-
     # because we use last METHOD; in anonymous subs this suppresses the
     # warning of "exiting subroutine via last;"
     no warnings 'exiting';
@@ -597,36 +628,28 @@ sub login {
     }
 
 
-    $self->{port} ||= $self->{opts}->{p} || $rtr->{port}; # get port from CLI or the profile
-    # if port is not set in the profile or CLI above, it gets set in the
-    # method below, but needs to be reset on each loop to change from
-    # telnet to ssh defaults
-
-    my $family = '';
-    $family = '-4' if ($self->{opts}->{4});
-    $family = '-6' if ($self->{opts}->{6});
-
     # used to keep track of if we have run the hostsearched routine.
     my $hostsearched = 0;
 
     METHOD: for (@{$self->methods}) {
-        my $p = $self->{port};
-        if    ($_ eq 'ssh')     { $p ||= 22; $self->connect("ssh $family -p $p -l $rtr->{user} $ssho $hostname"); }
-        elsif ($_ eq 'telnet')  { $p ||= ''; $self->connect("telnet $family $hostname $p"); }
-        else { die "No program defined for method $_\n"; }
+        # this dies if the method is not found.
+        $self->connect($self->method_options($_, $hostname));
 
         # suppress stdout if needed
         $self->session->log_stdout($self->{log_stdout});
 
         # need to make this optional
         # also need to make it display whatever the user cares about.
+        # do this after the connection is established?
         print "\e[22t\033]0;$_ $hostname\007";
         $self->{title_stack}++;
         $SIG{INT} = sub { for (1..$self->{title_stack}) { print "\e[23t"; } $self->{title_stack}=0; };
 
         $self->expect($self->{timeout},
-                # these two are where a profile might reload
-                @{$self->_banners},
+                # this can reload the profile before a login, so it affects
+                # the send "user" below, as well as the nologin or any other
+                # value that would need to be looked up.
+                @{_banners()},
                 @dynamic,
                 # workaround for mikrotiks that have ssh key login
                 [ qr!MikroTik RouterOS [\d\.]+ \(c\) \d+-\d+\s+http(?:s)?://www\.mikrotik\.com/! => sub {
