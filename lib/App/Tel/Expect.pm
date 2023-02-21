@@ -13,17 +13,15 @@ App::Tel::Expect - Monkeypatching Expect to support callbacks and large buffer r
 
 use POSIX qw(:sys_wait_h :unistd_h); # For WNOHANG and isatty
 
+# this was supposed to be to reduce the amount of errors from split reads when
+# color matching, but I think we should go back to trying to solve this
+# another way.
 $Expect::read_buffer_size = 10240;
 
-# this doesn't look like my (rdrake) code.  But I don't know where it's
-# originally from.
-
-# unconverable statement
+# it looks like set_seq was the basis for this code.
 *Expect::set_cb = sub {
     my ( $self, $object, $function, $params, @args ) = @_;
 
-    # Set an escape sequence/function combo for a read handle for interconnect.
-    # Ex: $read_handle->set_seq('',\&function,\@parameters);
     ${ ${*$object}{exp_cb_Function} } = $function;
     if ( ( !defined($function) ) || ( $function eq 'undef' ) ) {
         ${ ${*$object}{exp_cb_Function} } = \&_undef;
@@ -38,7 +36,6 @@ $Expect::read_buffer_size = 10240;
 # lots of people.
 
 no warnings 'redefine';
-# unconverable statement
 *Expect::interconnect = sub {
     my (@handles) = @_;
 

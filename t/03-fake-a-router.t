@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 use Test::More;
-plan tests => 5;
+plan tests => 6;
 use App::Tel;
 
 use Config;
@@ -46,6 +46,7 @@ subtest test_opt_a => sub {
     chomp(@values);
     is_deeply(\@values, \@expected, 'can we simulate an opt A login?');
     done_testing();
+    $tel->{opts} = {};
 };
 
 subtest test_opt_c => sub {
@@ -62,6 +63,7 @@ subtest test_opt_c => sub {
     chomp(@values);
     is_deeply(\@values, \@expected, 'can we simulate an opt C login?');
     done_testing();
+    $tel->{opts} = {};
 };
 
 subtest test_opt_x => sub {
@@ -80,6 +82,7 @@ subtest test_opt_x => sub {
     chomp(@values);
     is_deeply(\@values, \@expected, 'can we simulate an opt x login?');
     done_testing();
+    $tel->{opts} = {};
 };
 
 subtest test_EOF_before_login => sub {
@@ -100,7 +103,9 @@ subtest test_EOF_before_login => sub {
     done_testing();
 };
 
-subtest 'router_banner' => sub {
+# test router banner with no x or c options.
+subtest 'router_banner_interactive' => sub {
+    $tel->{opts} = {};
     $tel->load_config("$ENV{PWD}/t/rc/banner.rc");
     is($tel->{config}->{banners}->{'Fake A Router'}, 'fake', 'did we load t/rc/banner.rc?');
     $tel->profile('default',1);
@@ -109,8 +114,33 @@ subtest 'router_banner' => sub {
     $tel->hostname("t/fake_routers/banner");
     $tel->login("t/fake_routers/banner");
 
+    # we're doing this here to make sure we don't get stuck in interactive
+    no warnings 'redefine';
+    *Expect::interact = sub { 1 };
+    $tel->enable->logging->control_loop;
+
     is($tel->{profile}->{user}, 'faker', 'Banner user = faker?');
     is($tel->connected, 1, "Did we connect using the faker profile?");
+    done_testing();
+};
+
+
+# We need a way to test interact() and interconnect().  I think
+# we might want to setup an artificial "router" with exp_init($fh) which can be
+# read until EOF.
+subtest 'interact_and_interactive' => sub {
+    $tel->{opts} = {};
+    $tel->load_config("$ENV{PWD}/t/rc/interact.rc");
+    $tel->profile('default',1);
+    is(ref($tel->{colors}->{'colors'}->{'App::Tel::Color::CiscoPingRainbow'}), 'App::Tel::Color::CiscoPingRainbow', 'did we load the rainbow module');
+    # force a connection
+    $tel->connected(1);
+    open(my $remote, '<', 't/fake_routers/interact');
+    $tel->control_loop;
+
+    # this orchestrates the interact() call but I can't figure out a way to
+    # extract the results and check to see if it called colorize.
+
     done_testing();
 };
 
