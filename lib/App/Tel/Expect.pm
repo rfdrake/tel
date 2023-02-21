@@ -1,6 +1,8 @@
 package App::Tel::Expect;
+
 use strict;
 use warnings;
+
 
 =head1 NAME
 
@@ -13,6 +15,10 @@ use POSIX qw(:sys_wait_h :unistd_h); # For WNOHANG and isatty
 
 $Expect::read_buffer_size = 10240;
 
+# this doesn't look like my (rdrake) code.  But I don't know where it's
+# originally from.
+
+# unconverable statement
 *Expect::set_cb = sub {
     my ( $self, $object, $function, $params, @args ) = @_;
 
@@ -25,7 +31,14 @@ $Expect::read_buffer_size = 10240;
     ${ ${*$object}{exp_cb_Parameters} } = $params;
 };
 
+# I don't like overriding a crucial function of Expect and thinking it will
+# work across a wide range of versions.  I could lock my Expect requirement,
+# but I'd rather fix it so this isn't needed.  Expect development is pretty
+# conservative, and that is probably for the best, since it needs to work for
+# lots of people.
+
 no warnings 'redefine';
+# unconverable statement
 *Expect::interconnect = sub {
     my (@handles) = @_;
 
@@ -127,12 +140,16 @@ no warnings 'redefine';
             if ( $bits[ $read_handle->fileno() ] ) {
                 $nread = sysread(
                     $read_handle, ${*$read_handle}{exp_Pty_Buffer},
+                    ### tel changes here
                     $Expect::read_buffer_size
+                    ### end of tel changes
                 );
 
+                ### tel changes here
                 if (${*$read_handle}{exp_cb_Function}) {
                     &{ ${ ${*$read_handle}{exp_cb_Function} } }( @{ ${ ${*$read_handle}{exp_cb_Parameters} } } )
                 }
+                ### end of tel changes
 
                 # Appease perl -w
                 $nread = 0 unless defined($nread);
