@@ -1,0 +1,12 @@
+$telrc = {
+          'profile' => {
+                       'default' => { 'password' => 'testvty', 'user' => 'tester',
+                                      'sshoptions' => [ 'UserKnownHostsFile=/dev/null', 'StrictHostKeyChecking=no' ],
+                                      'pagercmd' => 'term len 0',
+                                      'syntax' => 'CiscoPingRainbow',
+                        },
+                     },
+};
+
+
+
