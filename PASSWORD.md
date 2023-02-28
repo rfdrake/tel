@@ -39,6 +39,7 @@ An Example (bitwarden) which shares the password between sessions.  Add this
 to your .bashrc file (edit it as needed to work with your password manager,
 and the name of your stored password)
 
+```
 if [[ -f /run/shm/$USER-telrc_password_env ]]; then
     export ROUTER_PASSWORD=$(cat /run/shm/$USER-telrc_password_env)
 else
@@ -49,4 +50,5 @@ else
     ln -si $FILE /run/shm/$USER-telrc_password_env
     trap "rm $FILE /run/shm/$USER-telrc_password_env" EXIT
 fi
+```
 
