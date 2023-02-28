@@ -121,6 +121,9 @@ the very act of storing passwords for your routers in a file means you are
 already defeating some security.  I advise you to only run this on a heavily
 firewalled box that is only used to allow users to access routers.
 
+There is also support for password managers, via pulling the password from
+environment variables.  Please see [PASSWORD] for more details.
+
 Obviously, if the router supports real ssh keys or any other secure
 authentication you should let the login be handled by that.  This script can
 still provide value without the need to login for you.
@@ -188,7 +191,8 @@ library files in <perl_location>/Expect/Tel/.  These are now unused and safe
 to remove.  You might run "make uninstall" on the old release before
 installing the new version.
 
-##### Copyright 2015, Robert Drake
+##### Copyright 2023, Robert Drake
 
 [COMMANDS]:     COMMANDS.md
+[PASSWORD]:     PASSWORD.md
 [ISSUES]:       https://github.com/rfdrake/tel/issues
