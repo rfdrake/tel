@@ -735,6 +735,11 @@ sub run_commands {
     my $opts = $self->{opts};
 
     CMD: foreach my $arg (@_) {
+        if ($arg =~ s/^%%perleval:(.*)/) {
+            warn "Running \"$1\" locally from %%perleval statement.\n";
+            eval "$1";
+            next CMD;
+        }
         $arg =~ s/\\r/\r/g; # fix for reload\ry.  I believe 'perldoc quotemeta' explains why this happens
         chomp($arg);
         $self->send("$arg\r");
