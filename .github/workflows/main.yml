@@ -5,13 +5,17 @@ on:
   push:
     branches:
       - "master"
+<<<<<<< Updated upstream
       - "github-ci-testing"
+=======
+      - "v1.0.0-testing"
+>>>>>>> Stashed changes
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up perl
         uses: shogo82148/actions-setup-perl@v1
         with:
