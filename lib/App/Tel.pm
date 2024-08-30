@@ -563,7 +563,7 @@ sub enable {
     my $profile = $self->profile;
 
     if ($profile->{enablecmd}) {
-        $profile->{ena_username_prompt} ||= qr/[Uu]ser[Nn]ame:|Login:/;
+        $profile->{ena_username_prompt} ||= qr/[Uu]ser[Nn]ame:|[Ll]ogin:/;
         $profile->{ena_password_prompt} ||= qr/[Pp]ass[Ww]ord/;
         $profile->{ena_regular_prompt} ||= '>';
 
@@ -626,7 +626,7 @@ sub login {
     }
 
     # handle prompts in foreign languages or other things we didn't think of
-    $rtr->{username_prompt} ||= qr/[Uu]ser[Nn]ame:|[Ll]ogin:/;
+    $rtr->{username_prompt} ||= qr/[Uu]ser[Nn]ame:|[Ll]ogin( Name)?:/;
     $rtr->{password_prompt} ||= qr/[Pp]ass[Ww]ord/;
 
     $self->{port} ||= $self->{opts}->{p} || $rtr->{port}; # get port from CLI or the profile
