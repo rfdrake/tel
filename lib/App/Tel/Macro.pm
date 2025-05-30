@@ -3,6 +3,8 @@ package App::Tel::Macro;
 use strict;
 use warnings;
 
+our $VERSION = '0';
+
 require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT = qw( handle_backspace handle_ctrl_z );

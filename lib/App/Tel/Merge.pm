@@ -3,6 +3,8 @@ package App::Tel::Merge;
 use strict;
 use warnings;
 
+our $VERSION = '0';
+
 require Exporter;
 our @ISA = qw/ Exporter /;
 our @EXPORT_OK = qw/ merge /;

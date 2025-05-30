@@ -8,6 +8,8 @@ use Getopt::Std;
 use Pod::Usage;
 use v5.10;
 
+our $VERSION = '0';
+
 __PACKAGE__->main() unless caller;
 
 =head1 NAME

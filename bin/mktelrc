@@ -1,4 +1,8 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+# our is a no-op function to allow us to set the version
+function our { :; }
+our $VERSION = '0';
 
 read -p "Enter username (default = $USER): " user
 read -s -p "Enter Password (default = \$ENV{ROUTER_PASSWORD}): " pass

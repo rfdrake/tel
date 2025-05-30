@@ -3,6 +3,7 @@ package App::Tel::Expect;
 use strict;
 use warnings;
 
+our $VERSION = '0';
 
 =head1 NAME
 
