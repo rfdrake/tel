@@ -18,11 +18,11 @@ App::Tel - A script for logging into devices
 
 =head1 VERSION
 
-0.201601
+1.000001
 
 =cut
 
-our $VERSION = '0.201601';
+our $VERSION = '1.000001';
 
 
 =head1 SYNOPSIS
