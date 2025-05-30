@@ -201,7 +201,8 @@ sub load_config {
     my $config;
 
     foreach my $conf (@configs) {
-        if (-r $conf) {
+        # make sure it's a file (not a directory) and it's readable
+        if (-f $conf && -r $conf) {
             require $conf;
             push(@{$config->{'telrc_file'}}, $conf);
             $config = merge($config, $telrc);
@@ -213,7 +214,6 @@ sub load_config {
         warn "No configuration files loaded. You may need to run mktelrc.";
     }
 
-    # load global syntax highlighting things if found
     $self->{config} = $config;
     return $self;
 }
