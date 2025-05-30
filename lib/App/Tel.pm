@@ -87,6 +87,7 @@ sub new {
         'title_stack'   => 0,
         'log_stdout'    => 1,
         'profile'       => {},
+        'interactive'   => 0,
         'perl'          => $args{perl} || '',
         'opts'          => $args{opts},
         'family'        => $args{opts}->{4} ? '-4' : $args{opts}->{6} ?  '-6' : '',
@@ -140,6 +141,7 @@ sub disconnect {
     $self->{profile} = {};
     $self->{timeout} = $self->{opts}->{t} ? $self->{opts}->{t} : 90;
     $self->{methods} = ();
+    $self->{interactive} = 0;
     $self->connected(CONN_OFFLINE);
     $self->{enabled}=0;
 
@@ -799,6 +801,7 @@ sub control_loop {
             return 1;
         };
         $self->{stdin}->set_seq("\r",$sleep_cb) if ($self->{opts}->{S});
+        $self->{interactive}=1;
         $self->session->interact($self->{stdin}, '\cD');
         # q\b is to end anything that's at a More prompt or other dialog and
         # get you back to the command prompt

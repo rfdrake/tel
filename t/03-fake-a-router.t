@@ -136,7 +136,7 @@ subtest 'interact_and_interactive' => sub {
     $tel->connected(1);
     open(my $remote, '<', 't/fake_routers/interact');
     $tel->control_loop;
-
+    is($tel->{interactive}, 1, "Did we make it to interact()?");
     done_testing();
 };
 
