@@ -132,14 +132,10 @@ subtest 'interact_and_interactive' => sub {
     $tel->{opts} = {};
     $tel->load_config("$ENV{PWD}/t/rc/interact.rc");
     $tel->profile('default',1);
-    is(ref($tel->{colors}->{'colors'}->{'App::Tel::Color::CiscoPingRainbow'}), 'App::Tel::Color::CiscoPingRainbow', 'did we load the rainbow module');
     # force a connection
     $tel->connected(1);
     open(my $remote, '<', 't/fake_routers/interact');
     $tel->control_loop;
-
-    # this orchestrates the interact() call but I can't figure out a way to
-    # extract the results and check to see if it called colorize.
 
     done_testing();
 };

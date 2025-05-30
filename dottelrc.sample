@@ -42,10 +42,24 @@ $telrc = {
                 'JUNOS' => 'juniper',
                 'VyOS' => 'vyos',
         },
+        'colors' => {
+            'cisco' => [
+                {
+                  'regex' => '(\d+) runts, (\d+) giants, (\d+) throttles',
+                  'handlers' => 'nonzeromatch(RED, GREEN), default, nonzeromatch(RED, GREEN), default, nonzeromatch(RED, GREEN), default',
+                },
+                { 'regex' => 'Full-duplex', 'handlers' => 'green' },
+                { 'regex' => 'Half-duplex', 'handlers' => 'yellow' },
+                { 'regex' => "$RE{'profanity'}", 'handlers' => 'bold red' },
+
+
+            ],
+        },
 
         # if these exist they will be loaded when the config file is parsed
         'syntax' => [
             'MyCompanyName',
         ],
+
 };
 

@@ -2,10 +2,8 @@ package App::Tel;
 use strict;
 use warnings;
 use Expect qw( exp_continue );
-use POSIX qw(:sys_wait_h :unistd_h); # For WNOHANG
 use Module::Load;
 use App::Tel::HostRange qw (check_hostrange);
-use App::Tel::Color;
 use App::Tel::Macro;
 use App::Tel::Merge qw ( merge );
 use App::Tel::Expect;
@@ -91,7 +89,6 @@ sub new {
         'profile'       => {},
         'perl'          => $args{perl} || '',
         'opts'          => $args{opts},
-        'colors'        => App::Tel::Color->new($args{opts}->{d}),
         'family'        => $args{opts}->{4} ? '-4' : $args{opts}->{6} ?  '-6' : '',
         'debug'         => $args{opts}->{d},
     };
@@ -144,7 +141,6 @@ sub disconnect {
     $self->{timeout} = $self->{opts}->{t} ? $self->{opts}->{t} : 90;
     $self->{methods} = ();
     $self->connected(CONN_OFFLINE);
-    $self->{colors}=App::Tel::Color->new($self->{opts}->{d});
     $self->{enabled}=0;
 
     if ($self->{title_stack} > 0) {
@@ -218,7 +214,6 @@ sub load_config {
     }
 
     # load global syntax highlighting things if found
-    $self->{colors}->load_syntax($config->{syntax});
     $self->{config} = $config;
     return $self;
 }
@@ -355,6 +350,7 @@ sub rtr_find {
     foreach my $h (@{$config->{rtr}}) {
         my $h2 = $h->{regex};
         if ($host =~ /$h2/i || check_hostrange($h2, $host)) {
+            warn "Loaded router config for $h2\n" if $self->{debug};
             $profile=merge($profile, $h);
             last;
         }
@@ -402,8 +398,6 @@ sub profile {
                 $stdin->set_seq($v, $profile->{handlers}{$v}, [ \$self ]);
             }
         }
-        # load syntax highlight
-        $self->{colors}->load_syntax($profile->{syntax});
         warn "Loaded profile $_\n" if $self->{debug};
         push(@{$profile->{profiles}}, $_);
     }
@@ -800,18 +794,10 @@ sub control_loop {
             return $self if ($@);
         }
 
-        my $color_cb = sub {
-            my ($session) = @_;
-            $self->_winch() if $_winch_it;
-            ${*$session}{exp_Pty_Buffer} = $self->{colors}->colorize(${*$session}{exp_Pty_Buffer});
-            return 1;
-        };
-
         my $sleep_cb = sub {
             sleep($self->{opts}->{S});
             return 1;
         };
-        $self->session->set_cb($self->session,$color_cb, [ \${$self->session} ]);
         $self->{stdin}->set_seq("\r",$sleep_cb) if ($self->{opts}->{S});
         $self->session->interact($self->{stdin}, '\cD');
         # q\b is to end anything that's at a More prompt or other dialog and

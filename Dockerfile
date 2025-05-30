@@ -1,9 +1,5 @@
-# This doesn't really work for things like Pass/KeePass/Keyring.  It could
-# probably be hacked together but I was only interested in getting it working
-# as an experiment.
-
-# docker build --no-cache -t rfdrake/tel .
-# docker run -v /etc/telrc:/etc/telrc -v ~/.telrc2:/root/.telrc2 -i rfdrake/tel hostname
+# docker buildx build --no-cache -t rfdrake/tel .
+# docker run -v /etc/telrc:/etc/telrc -v ~/.config/telrc:/telscript/.config/telrc -i rfdrake/tel hostname
 
 FROM    alpine:edge
 RUN     apk -U add \
@@ -17,11 +13,19 @@ RUN     apk -U add \
             g++ \
             openssh-client
 
+
+# This command needs to run as root to install cpanm, so it happens before the
+# USER command.
 RUN curl -L https://cpanmin.us | perl - App::cpanminus
 WORKDIR /tel
 RUN git clone --depth 1 http://github.com/rfdrake/tel.git /tel
 RUN cpanm --notest --installdeps . && cpanm --notest Module::Install
 RUN perl Makefile.PL && make && make install
+
+# I would rather this run as a user, but I suspect there might be permissions
+# problems with the telrc files.
+RUN adduser -D telscript
+USER telscript
 
 ENTRYPOINT ["tel"]
 CMD ["-h"]
