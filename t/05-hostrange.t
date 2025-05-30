@@ -1,4 +1,3 @@
-use Test2::Require::Module 'NetAddr::IP';
 use Test2::V0;
 use App::Tel::HostRange qw ( check_hostrange );
 
