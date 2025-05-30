@@ -1,8 +1,8 @@
-# Tel: Login script for routers and other devices
-
 [![.github/workflows/main.yml](https://github.com/rfdrake/tel/actions/workflows/main.yml/badge.svg)](https://github.com/rfdrake/tel/actions/workflows/main.yml)
 [![Coverage Status](https://coveralls.io/repos/github/rfdrake/tel/badge.svg?branch=master)](https://coveralls.io/github/rfdrake/tel?branch=master)
 [![CPANTS kwalitee](http://cpants.cpanauthors.org/dist/App-Tel.png)](http://cpants.cpanauthors.org/dist/App-Tel)
+
+# Tel: Login script for routers and other devices
 
 # What it does
 
