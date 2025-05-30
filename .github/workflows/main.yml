@@ -13,15 +13,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set up perl
-        uses: shogo82148/actions-setup-perl@v1
+      - name: Installing dependencies and testing all using dzil
+        uses: jonasbn/github-action-perl-dist-zilla@0.5.5
         with:
-          perl-version: '5.34'
-          install-modules-with: cpanm
-          install-modules-args: --with-develop --with-configure --with-all-features
-      - run: perl -V
-      - run: perl Makefile.PL
-      - run: prove -l t
+          dzil-arguments: 'test --all'
+
       - name: Run tests with coverage
         env:
           COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
