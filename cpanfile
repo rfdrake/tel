@@ -4,7 +4,6 @@ requires       'Time::HiRes';             # core
 requires       'Getopt::Std';             # core
 requires       'Getopt::Long';            # core
 requires       'enum' => '>= 1.12';
-recommends     'Term::ANSIColor' => '>= 3.00';  # core
 recommends     'Term::ReadKey';
 
 on 'build' => sub {
