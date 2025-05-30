@@ -2,25 +2,14 @@ package App::Tel::HostRange;
 
 use strict;
 use warnings;
-use Module::Load;
+use NetAddr::IP 4.079;
 
 require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT = qw();
 our @EXPORT_OK = qw ( check_hostrange );
-our $_have_netaddr;  # can't set a default because this happens after the BEGIN block
 
-# needed because CPAN won't index undef since it's a lower version number
-our $VERSION = '0.201503';
-
-BEGIN {
-    # uncoverable branch false
-    if (eval { Module::Load::load NetAddr::IP; 1; }) {
-        $_have_netaddr=1;
-    } else {
-        $_have_netaddr=0;
-    }
-}
+our $VERSION = '0';
 
 =head1 NAME
 
@@ -71,7 +60,6 @@ This should support the following types of ranges:
 
 sub check_hostrange {
     my ($rangelist, $host) = @_;
-    return 0 if (!$_have_netaddr);
     $host = NetAddr::IP->new($host) || return 0;
 
     for(split(/,/,$rangelist)) {
