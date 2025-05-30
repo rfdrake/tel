@@ -9,6 +9,7 @@
 /Makefile.old
 /MANIFEST
 /MANIFEST.bak
+/App-Tel*/
 /App-Tel*tar
 /App-Tel*tar.gz
 *swp
@@ -18,3 +19,4 @@
 /debian/app-tel/
 /debian/files
 /cover_db/
+.build/
