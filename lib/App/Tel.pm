@@ -514,7 +514,7 @@ sub enable {
     my $profile = $self->profile;
 
     if ($profile->{enablecmd}) {
-        $profile->{ena_username_prompt} ||= qr/[Uu]ser[Nn]ame:|Login:/;
+        $profile->{ena_username_prompt} ||= qr/[Uu]ser[Nn]ame:|[Ll]ogin:/;
         $profile->{ena_password_prompt} ||= qr/[Pp]ass[Ww]ord/;
         $profile->{ena_regular_prompt} ||= '>';
         my $enable = $profile->{enable} ? $profile->{enable} : $profile->{password};
@@ -623,6 +623,12 @@ sub login {
         push @dynamic, [ qr/$rtr->{prompt}/, sub { $self->connected(CONN_PROMPT); last METHOD; } ];
     }
 
+<<<<<<< HEAD
+=======
+    # handle prompts in foreign languages or other things we didn't think of
+    $rtr->{username_prompt} ||= qr/[Uu]ser[Nn]ame:|[Ll]ogin( Name)?:/;
+    $rtr->{password_prompt} ||= qr/[Pp]ass[Ww]ord/;
+>>>>>>> 0b1efff1ae6bec75673e0bf7ce5cac9f322c800f
 
     # used to keep track of if we have run the hostsearched routine.
     my $hostsearched = 0;
@@ -722,6 +728,11 @@ sub run_commands {
     my $opts = $self->{opts};
 
     CMD: foreach my $arg (@_) {
+        if ($arg =~ s/^%%perleval:(.*)/) {
+            warn "Running \"$1\" locally from %%perleval statement.\n";
+            eval "$1";
+            next CMD;
+        }
         $arg =~ s/\\r/\r/g; # fix for reload\ry.  I believe 'perldoc quotemeta' explains why this happens
         chomp($arg);
         $self->send("$arg\r");
