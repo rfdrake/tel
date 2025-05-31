@@ -24,11 +24,10 @@ jobs:
       - uses: actions/checkout@v4
       - name: Test
         run: |
-          dzil authordeps --missing | cpanm --notest
-          dzil listdeps --author --missing | cpanm --notest
-          dzil test --all
-
-      - name: Run tests with coverage
+          dzil authordeps --missing | cpm install --global -w 16 --no-test -
+          dzil listdeps --author --missing | cpm install --global -w 16 --no-test -
+          dzil test --all --keep
+          (cd .build/latest/ && cover -test -ignore local/ -report Coveralls)
         env:
           COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
-        run: cover -test -ignore local/ -report Coveralls
+
