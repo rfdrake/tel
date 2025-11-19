@@ -44,11 +44,9 @@ if [[ -f /run/shm/$USER-telrc_password_env ]]; then
     export ROUTER_PASSWORD=$(cat /run/shm/$USER-telrc_password_env)
 else
     export ROUTER_PASSWORD=$(bw get password "My Router")
-    # I'm using mktemp here for file permission reasons
-    FILE=$(mktemp --tmpdir=/run/shm)
-    echo "$ROUTER_PASSWORD" > $FILE
-    ln -si $FILE /run/shm/$USER-telrc_password_env
-    trap "rm $FILE /run/shm/$USER-telrc_password_env" EXIT
+    umask 077
+    echo "$ROUTER_PASSWORD" > /run/shm/$USER-telrc_password_env
+    trap "rm /run/shm/$USER-telrc_password_env" EXIT
 fi
 ```
 
