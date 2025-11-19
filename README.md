@@ -13,7 +13,6 @@ tel provides the following:
 * clogin-style CLI arguments (via -c and -x).
 * Color highlighting.
 * Optional global config that supports multiple users.
-* Keepass and Keyring support
 * Handles automatic logins for text-based user interfaces common on older
 networking devices.
 * Highly customizable

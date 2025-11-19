@@ -27,6 +27,8 @@ RUN --mount=type=cache,target=/root/.perl-cpm \
 RUN dzil test --all
 RUN dzil install
 
+RUN cpm install pp
+
 # I would rather this run as a user, but I suspect there might be permissions
 # problems with the telrc files.
 RUN useradd telscript
