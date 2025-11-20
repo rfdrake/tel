@@ -524,7 +524,10 @@ sub enable {
         $self->expect($self->{timeout},
                 [ $profile->{ena_regular_prompt} => sub { $self->send($profile->{enablecmd} . "\r"); exp_continue; } ],
                 [ $profile->{ena_username_prompt} => sub { $self->send("$profile->{user}\r"); exp_continue; } ],
-                [ $profile->{ena_password_prompt} => sub { $self->send("$enable\r"); } ]
+                [ $profile->{ena_password_prompt} => sub { $self->send("$enable\r"); } ],
+                # some routers just enable with no password prompt, they just
+                # need an enable command.
+                [ $profile->{prompt} => sub { } ],
         );
     }
 
