@@ -517,17 +517,18 @@ sub enable {
         $profile->{ena_username_prompt} ||= qr/[Uu]ser[Nn]ame:|[Ll]ogin( Name)?:/;
         $profile->{ena_password_prompt} ||= qr/[Pp]ass[Ww]ord/;
         $profile->{ena_regular_prompt} ||= '>';
-        my $enable = $profile->{enable} ? $profile->{enable} : $profile->{password};
+        my $enable_pw = $profile->{enable} ? $profile->{enable} : $profile->{password};
 
         # we need to be able to handle routers that prompt for username and password
         # need to check the results to see if enable succeeded
         $self->expect($self->{timeout},
                 [ $profile->{ena_regular_prompt} => sub { $self->send($profile->{enablecmd} . "\r"); exp_continue; } ],
                 [ $profile->{ena_username_prompt} => sub { $self->send("$profile->{user}\r"); exp_continue; } ],
-                [ $profile->{ena_password_prompt} => sub { $self->send("$enable\r"); } ],
+                [ $profile->{ena_password_prompt} => sub { $self->send("$enable_pw\r"); } ],
                 # some routers just enable with no password prompt, they just
-                # need an enable command.
-                [ $profile->{prompt} => sub { } ],
+                # need an enable command. Change the state machine to show
+                # we've already found the PROMPT and exit this routine.
+                [ $profile->{prompt} => sub { $self->connected(CONN_PROMPT) } ],
         );
     }
 
@@ -622,6 +623,10 @@ sub login {
     no warnings 'exiting';
     # handle MOTD profile loading, and other things parsed from the config
     my @dynamic;
+
+    # This will break things if the prompt shows up before the prompt. Like in
+    # the MOTD. This has always been a problem, somewhat mitigated by putting
+    # detailed prompts in the code.
     if (defined($rtr->{prompt})) {
         push @dynamic, [ qr/$rtr->{prompt}/, sub { $self->connected(CONN_PROMPT); last METHOD; } ];
     }
