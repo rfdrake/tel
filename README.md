@@ -184,6 +184,6 @@ when possible to fix or enhance something, or to improve the testing.
 
 ##### Copyright 2025, Robert Drake
 
-[COMMANDS]:     COMMANDS.md
-[PASSWORD]:     PASSWORD.md
+[COMMANDS]:     docs/COMMANDS.md
+[PASSWORD]:     docs/PASSWORD.md
 [ISSUES]:       https://github.com/rfdrake/tel/issues
