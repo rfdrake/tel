@@ -83,6 +83,7 @@ sub new {
     my $self = {
         'stdin'         => Expect->exp_init(\*STDIN),
         'connected'     => CONN_OFFLINE,
+        'current_method'=> undef,
         'enabled'       => 0,
         'title_stack'   => 0,
         'log_stdout'    => 1,
@@ -418,18 +419,6 @@ sub profile {
     return $profile;
 }
 
-# I don't think I've ever seen this work.  Should probably remove it
-sub _stty_rows {
-    my $new_rows = shift;
-    eval {
-        Module::Load::load Term::ReadKey;
-        my ($columns, undef, $xpix, $ypix) = GetTerminalSize(\*STDOUT);
-        SetTerminalSize($columns, $new_rows, $xpix, $ypix, \*STDOUT);
-    };
-
-    warn $@ if ($@);
-}
-
 =head2 session
 
     my $session = $self->session;
@@ -635,6 +624,7 @@ sub login {
     my $hostsearched = 0;
 
     METHOD: for (@{$self->methods}) {
+        $self->{'current_method'} = $_;
         # this dies if the method is not found.
         $self->connect($self->method_options($_, $hostname));
 
@@ -691,7 +681,12 @@ sub login {
         );
     }
 
-    warn "Connection to $hostname failed.\n" if !$self->connected;
+    if (!$self->connected) {
+        warn "Connection to $hostname failed.\n";
+    } else {
+        warn "\nConnected to $hostname via $self->{'current_method'}\n" if $self->{'debug'};
+    }
+
     return $self;
 }
 
